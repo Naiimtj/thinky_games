@@ -97,3 +97,23 @@ revision message:
 # Run an on-demand backup now (defaults: daily tier, keep 5).
 backup-now tier="daily" keep="5":
     docker compose run --rm backup /usr/local/bin/run_backup.sh {{tier}} {{keep}}
+
+# ---------------------------------------------------------------------------
+# Production server (docker-compose.prod.yml)
+# ---------------------------------------------------------------------------
+
+# Rebuild and recreate only backend + frontend (keeps db/backup and volumes untouched).
+prod-rebuild-app:
+    docker compose -f docker-compose.prod.yml up -d --build backend frontend
+
+# Truncate all pregenerated daily puzzles so they get regenerated on next backend start.
+prod-reset-puzzles:
+    docker exec -it thinky-mysql mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "TRUNCATE TABLE thinky_games.daily_puzzles;"
+
+# Truncate puzzles for a single game type, e.g. `just prod-reset-puzzle tango`.
+prod-reset-puzzle game_type:
+    docker exec -it thinky-mysql mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "DELETE FROM thinky_games.daily_puzzles WHERE game_type='{{game_type}}';"
+
+# Reset all puzzles and restart the backend so the buffer regenerates them.
+prod-rebuild-puzzles: prod-reset-puzzles
+    docker restart thinky-backend

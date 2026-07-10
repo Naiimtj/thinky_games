@@ -1,0 +1,117 @@
+# =============================================================================
+# Thinky Games — despliegue en el servidor Debian compartido.
+#
+# Este stack NO crea su propio proxy/TLS: se conecta a la red externa donde
+# ya corre `nginx-proxy` + `acme-companion` (el mismo stack que usas para
+# Komga/NexReel). nginx-proxy detecta este contenedor por las variables
+# VIRTUAL_HOST/LETSENCRYPT_HOST y genera el certificado automáticamente.
+#
+# Requisitos previos en el servidor:
+#   1. El stack de nginx-proxy + acme-companion ya está levantado (docker-compose-original.yml).
+#   2. Averigua el nombre real de esa red externa:  docker network ls | grep web
+#      y ajusta `networks.web.name` más abajo si no es "naiteca_web".
+#   3. Un registro DNS (ej. A/CNAME en DuckDNS) apuntando al servidor para el
+#      dominio que pongas en VIRTUAL_HOST/LETSENCRYPT_HOST.
+#   4. Copia env.prod.example a .env y rellena los secretos.
+#
+# Despliegue:
+#   cd ~/thinky-games
+#   docker compose -f docker-compose.prod.yml up -d --build
+# =============================================================================
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: thinky-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-thinky_games}
+      MYSQL_USER: ${MYSQL_USER:-thinky}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}
+      TZ: ${TZ:-Europe/Madrid}
+    volumes:
+      - thinky_mysql_data:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'mysqladmin ping -h localhost -u root -p"$$MYSQL_ROOT_PASSWORD"',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Solo accesible desde el propio servidor (SSH tunnel para DataGrip/mysql client).
+    # Quita este bloque si no necesitas acceso directo a la base de datos.
+    ports:
+      - '127.0.0.1:3306:3306'
+    networks:
+      - web
+
+  backend:
+    build: ./backend
+    container_name: thinky-backend
+    restart: unless-stopped
+    environment:
+      MYSQL_HOST: db
+      MYSQL_PORT: '3306'
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-thinky_games}
+      MYSQL_USER: ${MYSQL_USER:-thinky}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
+      CORS_ORIGINS: ${CORS_ORIGINS:-["https://thinkygames.duckdns.org"]}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
+      RAE_KEY: ${RAE_KEY:-}
+      TZ: ${TZ:-Europe/Madrid}
+    volumes:
+      - ./backups:/app/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - web
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: /api
+    container_name: thinky-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      - VIRTUAL_HOST=${VIRTUAL_HOST:-thinkygames.duckdns.org}
+      - LETSENCRYPT_HOST=${LETSENCRYPT_HOST:-thinkygames.duckdns.org}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL:-tu-email@ejemplo.com}
+      - VIRTUAL_PORT=80
+    networks:
+      - web
+
+  backup:
+    build: ./backup
+    container_name: thinky-backup
+    restart: unless-stopped
+    environment:
+      MYSQL_HOST: db
+      MYSQL_PORT: '3306'
+      MYSQL_USER: root
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-thinky_games}
+      TZ: ${TZ:-Europe/Madrid}
+    volumes:
+      - ./backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - web
+
+networks:
+  web:
+    external: true
+    # Ajusta este nombre al que devuelva `docker network ls | grep web` en el servidor.
+    name: naiteca_web
+
+volumes:
+  thinky_mysql_data:
