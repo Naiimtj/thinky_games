@@ -10,7 +10,6 @@ import {
   buildSudokuGrid,
   givenMask,
   hasConflict,
-  isGroupComplete,
   isSudokuSolved,
   solveSudoku,
 } from './sudokuLogic';
@@ -25,9 +24,44 @@ const setCellValue = (grid, row, col, value) =>
 const withoutIds = (set, ids) =>
   new Set([...set].filter((id) => !ids.includes(id)));
 
-const cellTone = (isFixed, conflict) => {
+const boxMatchesSolution = (grid, solution, br, bc, boxHeight, boxWidth) => {
+  for (let i = 0; i < boxHeight; i++) {
+    for (let j = 0; j < boxWidth; j++) {
+      const value = grid[br + i][bc + j];
+      if (value === 0 || value !== solution[br + i][bc + j]) return false;
+    }
+  }
+  return true;
+};
+
+/** Rows/columns/boxes that exactly match the puzzle's unique solution. */
+const computeSolvedGroups = (grid, solution, size, boxHeight, boxWidth) => {
+  const rows = grid.map((row, r) =>
+    row.every((value, c) => value !== 0 && value === solution[r][c]),
+  );
+  const cols = Array.from({ length: size }, (_, c) =>
+    grid.every((row, r) => row[c] !== 0 && row[c] === solution[r][c]),
+  );
+  const boxes = {};
+  for (let br = 0; br < size; br += boxHeight) {
+    for (let bc = 0; bc < size; bc += boxWidth) {
+      boxes[`${br},${bc}`] = boxMatchesSolution(
+        grid,
+        solution,
+        br,
+        bc,
+        boxHeight,
+        boxWidth,
+      );
+    }
+  }
+  return { rows, cols, boxes };
+};
+
+const cellTone = (isFixed, conflict, selected) => {
   if (isFixed) return 'text-slate-800';
   if (conflict) return 'bg-red-50 text-red-600';
+  if (selected) return 'bg-indigo-100 text-indigo-600';
   return 'bg-white text-indigo-600';
 };
 
@@ -39,6 +73,7 @@ const SudokuBoard = ({ puzzle, puzzleId, mode, meta }) => {
   const [grid, setGrid] = usePersistedState(boardKey, () =>
     buildSudokuGrid(puzzle),
   );
+  const [selectedCell, setSelectedCell] = useState(null);
 
   const [flash, setFlash] = useState({
     rows: new Set(),
@@ -47,23 +82,18 @@ const SudokuBoard = ({ puzzle, puzzleId, mode, meta }) => {
   });
   const prevCompleteRef = useRef({ rows: [], cols: [], boxes: {} });
 
+  const solution = useMemo(
+    () => solveSudoku(puzzle.given, size, boxHeight, boxWidth),
+    [puzzle, size, boxHeight, boxWidth],
+  );
+
   useEffect(() => {
-    const rowsComplete = grid.map((row) => isGroupComplete(row, size));
-    const colsComplete = Array.from({ length: size }, (_, c) =>
-      isGroupComplete(
-        grid.map((row) => row[c]),
-        size,
-      ),
-    );
-    const boxesComplete = {};
-    for (let br = 0; br < size; br += boxHeight) {
-      for (let bc = 0; bc < size; bc += boxWidth) {
-        const box = [];
-        for (let i = 0; i < boxHeight; i++)
-          for (let j = 0; j < boxWidth; j++) box.push(grid[br + i][bc + j]);
-        boxesComplete[`${br},${bc}`] = isGroupComplete(box, size);
-      }
-    }
+    if (!solution) return;
+    const {
+      rows: rowsComplete,
+      cols: colsComplete,
+      boxes: boxesComplete,
+    } = computeSolvedGroups(grid, solution, size, boxHeight, boxWidth);
 
     const prev = prevCompleteRef.current;
     const newRows = rowsComplete.flatMap((complete, i) =>
@@ -95,15 +125,11 @@ const SudokuBoard = ({ puzzle, puzzleId, mode, meta }) => {
         }));
       }, FLASH_DURATION_MS);
     }
-  }, [grid, size, boxHeight, boxWidth]);
+  }, [grid, size, boxHeight, boxWidth, solution]);
 
   const solved = useMemo(
     () => isSudokuSolved(grid, size, boxHeight, boxWidth),
     [grid, size, boxHeight, boxWidth],
-  );
-  const solution = useMemo(
-    () => solveSudoku(puzzle.given, size, boxHeight, boxWidth),
-    [puzzle, size, boxHeight, boxWidth],
   );
   const session = useGameSession({
     gameId: 'sudoku',
@@ -120,8 +146,38 @@ const SudokuBoard = ({ puzzle, puzzleId, mode, meta }) => {
     setGrid((prev) => setCellValue(prev, row, col, value));
   };
 
+  const digitCounts = useMemo(() => {
+    const counts = new Array(size + 1).fill(0);
+    grid.forEach((row) =>
+      row.forEach((value) => {
+        if (value) counts[value] += 1;
+      }),
+    );
+    return counts;
+  }, [grid, size]);
+
+  const handleCellSelect = (row, col) => {
+    if (fixed[row][col]) return;
+    setSelectedCell({ row, col });
+  };
+
+  const handleDigitPress = (digit) => {
+    if (!selectedCell) return;
+    const { row, col } = selectedCell;
+    if (fixed[row][col]) return;
+    setCell(row, col, String(digit));
+  };
+
+  const handleErase = () => {
+    if (!selectedCell) return;
+    const { row, col } = selectedCell;
+    if (fixed[row][col]) return;
+    setCell(row, col, '0');
+  };
+
   const handleReset = () => {
     setGrid(buildSudokuGrid(puzzle));
+    setSelectedCell(null);
     session.reset();
   };
 
@@ -186,7 +242,7 @@ const SudokuBoard = ({ puzzle, puzzleId, mode, meta }) => {
       elapsed={session.elapsed}
       state={session.state}
       onReset={handleReset}
-      hint="Escribe un número del 1 al 6 en cada casilla."
+      hint="Toca una casilla y luego un número del teclado inferior."
     >
       <div className="relative overflow-hidden rounded-xl border-2 border-slate-500">
         <div
@@ -204,16 +260,26 @@ const SudokuBoard = ({ puzzle, puzzleId, mode, meta }) => {
                 row,
                 col,
               );
+              const selected =
+                selectedCell?.row === row && selectedCell?.col === col;
+              let ringClass = '';
+              if (selected) {
+                ringClass = 'relative z-10 ring-2 ring-inset ring-purple-500';
+              } else if (conflict) {
+                ringClass = 'relative z-10 ring-2 ring-inset ring-red-500';
+              }
               return (
-                <input
+                <button
                   key={`${row},${col}`}
-                  value={value === 0 ? '' : value}
-                  onChange={(event) => setCell(row, col, event.target.value)}
-                  readOnly={isFixed}
-                  inputMode="numeric"
+                  type="button"
+                  onClick={() => handleCellSelect(row, col)}
+                  disabled={isFixed}
                   aria-label={`Fila ${row + 1}, columna ${col + 1}`}
-                  className={`aspect-square w-full text-center text-xl font-bold outline-none transition-colors duration-300 focus:bg-indigo-50 ${boxBorders(row, col)} ${cellTone(isFixed, conflict)}`}
-                />
+                  aria-pressed={selected}
+                  className={`aspect-square w-full text-center text-xl font-bold outline-none transition-colors duration-300 bg-white ${boxBorders(row, col)} ${cellTone(isFixed, conflict, selected)} ${conflict && !isFixed ? 'line-through' : ''} ${ringClass}`}
+                >
+                  {value === 0 ? '' : value}
+                </button>
               );
             }),
           )}
@@ -232,6 +298,38 @@ const SudokuBoard = ({ puzzle, puzzleId, mode, meta }) => {
         ))}
       </div>
 
+      <div
+        className="mt-3 grid gap-2"
+        style={{ gridTemplateColumns: `repeat(${size + 1}, minmax(0, 1fr))` }}
+      >
+        {Array.from({ length: size }, (_, i) => i + 1).map((digit) => {
+          const isFull = digitCounts[digit] >= size;
+          return (
+            <button
+              key={digit}
+              type="button"
+              onClick={() => handleDigitPress(digit)}
+              disabled={isFull}
+              aria-label={`Colocar número ${digit}`}
+              className="aspect-square rounded-lg border border-indigo-200 bg-indigo-50 text-lg font-bold text-indigo-600 transition-colors disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-300"
+            >
+              {digit}
+            </button>
+          );
+        })}
+        <button
+          type="button"
+          onClick={handleErase}
+          disabled={
+            !selectedCell || grid[selectedCell.row][selectedCell.col] === 0
+          }
+          aria-label="Borrar número"
+          className="aspect-square rounded-lg border border-slate-300 bg-slate-100 text-lg font-bold text-slate-500 transition-colors disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-300"
+        >
+          ⌫
+        </button>
+      </div>
+
       <BaseButton
         variant="warning"
         outlined
@@ -246,6 +344,10 @@ const SudokuBoard = ({ puzzle, puzzleId, mode, meta }) => {
         <li>Completa la cuadrícula con números del 1 al 6.</li>
         <li>Ningún número puede repetirse en una fila, columna o caja.</li>
         <li>Las casillas sombreadas ya están fijas y no se pueden editar.</li>
+        <li>
+          Toca una casilla y luego un número del teclado inferior para
+          rellenarla.
+        </li>
       </RulesSection>
     </GameShell>
   );

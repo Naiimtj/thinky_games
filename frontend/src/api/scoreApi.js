@@ -70,3 +70,46 @@ export const fetchDailyPlayedGames = async () => {
   }
   return response.json();
 };
+
+/**
+ * Per-game personal stats for the authenticated user: today's time (if
+ * played), trend vs their historical average, and personal best/worst times.
+ */
+export const fetchDailySummary = async () => {
+  const response = await fetch(`${API_BASE_URL}/scores/daily-summary`, {
+    headers: { ...authHeaders() },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch daily summary (HTTP ${response.status})`);
+  }
+  return response.json();
+};
+
+/**
+ * The authenticated user's own daily/monthly/global rank for every game
+ * they've played (one entry per game type they have scores for).
+ */
+export const fetchMyRanks = async () => {
+  const response = await fetch(`${API_BASE_URL}/rankings/me`, {
+    headers: { ...authHeaders() },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch my ranks (HTTP ${response.status})`);
+  }
+  return response.json();
+};
+
+/** The authenticated user's own scores for a game, fastest first. */
+export const fetchMyScores = async (gameType = 'zip') => {
+  const response = await fetch(
+    `${API_BASE_URL}/scores/me?game_type=${gameType}`,
+    { headers: { ...authHeaders() } },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch my scores (HTTP ${response.status})`);
+  }
+  return response.json();
+};

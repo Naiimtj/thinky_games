@@ -7,8 +7,8 @@ import { PuzzleGate } from '../PuzzleGate';
 import { useDailyPuzzle } from '../useDailyPuzzle';
 import { useGameSession } from '../useGameSession';
 import {
-  areAdjacent,
   cellKey,
+  continuesStraightLine,
   findWordPath,
   pathIncludes,
   wordFromPath,
@@ -20,9 +20,11 @@ const readCell = (element) => {
   return { row: Number(target.dataset.row), col: Number(target.dataset.col) };
 };
 
-const cellTone = (isFound, isActive, isWrong) => {
+const cellTone = (isFound, isActive, isWrong, isHintFound, isHintActive) => {
   if (isWrong) return 'bg-red-300 text-red-900 animate-pulse';
+  if (isHintActive) return 'bg-warning text-white';
   if (isActive) return 'bg-indigo-300 text-indigo-900';
+  if (isHintFound) return 'bg-warning/30 text-warning-active';
   if (isFound) return 'bg-emerald-200 text-emerald-900';
   return 'bg-white text-slate-700 hover:bg-slate-50';
 };
@@ -37,6 +39,7 @@ const WendBoard = ({ puzzle, puzzleId, mode, meta }) => {
   const [revealedDefs, setRevealedDefs] = usePersistedState(defsKey, () => []);
   const [path, setPath] = useState([]);
   const [wrong, setWrong] = useState([]);
+  const [hinting, setHinting] = useState(false);
   const drawing = useRef(false);
   const wrongTimer = useRef(null);
 
@@ -63,12 +66,24 @@ const WendBoard = ({ puzzle, puzzleId, mode, meta }) => {
     );
     return keys;
   }, [found]);
+  const hintFoundKeys = useMemo(() => {
+    const keys = new Set();
+    found
+      .filter((entry) => entry.viaHint)
+      .forEach((entry) =>
+        entry.cells.forEach(({ row, col }) => keys.add(cellKey(row, col))),
+      );
+    return keys;
+  }, [found]);
   const activeKeys = new Set(path.map(({ row, col }) => cellKey(row, col)));
   const wrongKeys = new Set(wrong.map(({ row, col }) => cellKey(row, col)));
 
+  // Cells belonging to an already-found word stay reusable: two words may
+  // legitimately cross at a shared intersection cell, and locking that cell
+  // out the moment one word is found would make the other unwinnable.
   const begin = (cell) => {
-    if (foundKeys.has(cellKey(cell.row, cell.col))) return;
     drawing.current = true;
+    setHinting(false);
     setWrong([]);
     setPath([cell]);
   };
@@ -87,11 +102,7 @@ const WendBoard = ({ puzzle, puzzleId, mode, meta }) => {
       ) {
         return current.slice(0, -1);
       }
-      if (
-        !areAdjacent(last, cell) ||
-        pathIncludes(current, cell) ||
-        foundKeys.has(cellKey(cell.row, cell.col))
-      )
+      if (pathIncludes(current, cell) || !continuesStraightLine(current, cell))
         return current;
       return [...current, cell];
     });
@@ -100,11 +111,12 @@ const WendBoard = ({ puzzle, puzzleId, mode, meta }) => {
   const finish = () => {
     if (!drawing.current) return;
     drawing.current = false;
+    setHinting(false);
     setPath((current) => {
       const word = wordFromPath(grid, current);
       const alreadyFound = found.some((entry) => entry.word === word);
       if (current.length > 1 && answers.has(word) && !alreadyFound) {
-        setFound((prev) => [...prev, { word, cells: current }]);
+        setFound((prev) => [...prev, { word, cells: current, viaHint: false }]);
       } else if (current.length > 1) {
         setWrong(current);
         clearTimeout(wrongTimer.current);
@@ -127,12 +139,14 @@ const WendBoard = ({ puzzle, puzzleId, mode, meta }) => {
     setRevealedDefs([]);
     setPath([]);
     setWrong([]);
+    setHinting(false);
     drawing.current = false;
     session.reset();
   };
 
   const handleUndo = () => {
     drawing.current = false;
+    setHinting(false);
     setPath((current) => current.slice(0, -1));
   };
 
@@ -142,7 +156,7 @@ const WendBoard = ({ puzzle, puzzleId, mode, meta }) => {
     );
     if (!nextWord) return;
 
-    const hintPath = findWordPath(grid, nextWord, foundKeys);
+    const hintPath = findWordPath(grid, nextWord);
     if (!hintPath) return;
 
     drawing.current = false;
@@ -160,9 +174,14 @@ const WendBoard = ({ puzzle, puzzleId, mode, meta }) => {
       const base = matches ? current : [];
       const next = hintPath.slice(0, base.length + 1);
       if (next.length === hintPath.length) {
-        setFound((prev) => [...prev, { word: nextWord, cells: next }]);
+        setHinting(false);
+        setFound((prev) => [
+          ...prev,
+          { word: nextWord, cells: next, viaHint: true },
+        ]);
         return [];
       }
+      setHinting(true);
       return next;
     });
   };
@@ -185,12 +204,12 @@ const WendBoard = ({ puzzle, puzzleId, mode, meta }) => {
   return (
     <GameShell
       title={meta?.name ?? 'Wend'}
-      tagline="Encuentra 5 palabras ocultas entre las letras, en horizontal y vertical."
+      tagline="Encuentra 5 palabras ocultas entre las letras, en línea recta."
       mode={mode}
       elapsed={session.elapsed}
       state={session.state}
       onReset={handleReset}
-      hint="Arrastra por letras contiguas en horizontal y vertical (sin diagonales)."
+      hint="Arrastra en línea recta: horizontal, vertical o diagonal (sin zigzag)."
     >
       <div className="mb-2 h-6 text-center font-mono text-lg font-bold tracking-widest text-indigo-600">
         {forming}
@@ -229,6 +248,8 @@ const WendBoard = ({ puzzle, puzzleId, mode, meta }) => {
                   foundKeys.has(key),
                   activeKeys.has(key),
                   wrongKeys.has(key),
+                  hintFoundKeys.has(key),
+                  hinting && activeKeys.has(key),
                 )}`}
               >
                 {letter}
@@ -292,13 +313,13 @@ const WendBoard = ({ puzzle, puzzleId, mode, meta }) => {
       <RulesSection>
         <li>
           Hay 5 palabras ocultas entre letras de relleno: encuéntralas
-          arrastrando por letras contiguas en horizontal y vertical (sin
-          diagonales).
+          arrastrando en línea recta (horizontal, vertical o diagonal), sin
+          zigzag.
         </li>
         <li>Cada trazo debe formar una de las palabras de la lista.</li>
         <li>
-          Las palabras no se solapan y sobran letras sueltas, como en una sopa
-          de letras.
+          Algunas palabras pueden cruzarse compartiendo una letra, como en un
+          crucigrama; el resto son letras sueltas de relleno.
         </li>
         <li>
           «Pista: letra» revela la siguiente letra correcta (+10 s). «Pista:

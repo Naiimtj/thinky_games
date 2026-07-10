@@ -12,7 +12,7 @@ from enum import Enum
 from sqlalchemy.orm import Session
 
 from app.core.database.models import Score, User
-from app.core.schemas.score import RankingEntry
+from app.core.schemas.score import RankingEntry, UserGameRank
 
 DEFAULT_RANKING_LIMIT = 50
 
@@ -80,3 +80,52 @@ def _to_ranking_entries(rows) -> list[RankingEntry]:
         )
         for position, row in enumerate(rows, start=1)
     ]
+
+
+def get_user_ranks(db: Session, user_id: int) -> list[UserGameRank]:
+    """The authenticated user's daily/monthly/global rank for every game they've played."""
+    game_types = (
+        db.query(Score.game_type)
+        .filter(Score.user_id == user_id)
+        .distinct()
+        .all()
+    )
+    return [
+        UserGameRank(
+            game_type=game_type,
+            daily_rank=_rank_of_user_best(
+                db, user_id, game_type, RankingPeriod.DAILY
+            ),
+            monthly_rank=_rank_of_user_best(
+                db, user_id, game_type, RankingPeriod.MONTHLY
+            ),
+            global_rank=_rank_of_user_best(
+                db, user_id, game_type, RankingPeriod.GLOBAL
+            ),
+        )
+        for (game_type,) in game_types
+    ]
+
+
+def _rank_of_user_best(
+    db: Session, user_id: int, game_type: str, period: RankingPeriod
+) -> int | None:
+    """Position of the user's fastest time in a period's full leaderboard.
+
+    Scans every score in the period (not just the top N), ordered fastest
+    first, and returns the 1-based position of the user's first (i.e.
+    fastest) row. ``None`` if the user has no scores in that window.
+    """
+    starts_at = _period_start(period)
+    query = db.query(Score.user_id).filter(Score.game_type == game_type)
+    if starts_at is not None:
+        query = query.filter(Score.created_at >= starts_at)
+
+    rows = query.order_by(
+        Score.completion_time.asc(), Score.created_at.asc()
+    ).all()
+
+    for position, row in enumerate(rows, start=1):
+        if row.user_id == user_id:
+            return position
+    return None

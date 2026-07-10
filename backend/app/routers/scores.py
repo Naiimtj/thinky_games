@@ -6,16 +6,19 @@ from sqlalchemy.orm import Session
 from app.core.auth import get_current_user
 from app.core.crud import puzzles as puzzle_crud
 from app.core.crud import scores as score_crud
-from app.core.crud.rankings import RankingPeriod, get_rankings
+from app.core.crud.rankings import RankingPeriod, get_rankings, get_user_ranks
 from app.core.database.models import User
 from app.core.games.daily import utc_today
 from app.core.games.registry import get_game
 from app.core.schemas.score import (
     DailyPlayedGames,
     DailyStatus,
+    GameStatEntry,
+    MyScoreEntry,
     RankingEntry,
     ScoreCreate,
     ScorePublic,
+    UserGameRank,
 )
 from app.dependencies import get_db
 
@@ -96,6 +99,33 @@ def read_daily_played_games(
 
 
 @router.get(
+    "/scores/daily-summary",
+    response_model=list[GameStatEntry],
+)
+def read_daily_summary(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[GameStatEntry]:
+    """Per-game personal stats: today's time, trend vs average, best/worst."""
+    return score_crud.get_user_game_stats(db, user_id=current_user.id)
+
+
+@router.get(
+    "/scores/me",
+    response_model=list[MyScoreEntry],
+)
+def read_my_scores(
+    game_type: str = Query(default="zip", max_length=30),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[MyScoreEntry]:
+    """The authenticated user's own scores for a game, fastest first."""
+    return score_crud.get_user_scores(
+        db, user_id=current_user.id, game_type=game_type
+    )
+
+
+@router.get(
     "/rankings",
     response_model=list[RankingEntry],
     dependencies=[Depends(get_current_user)],
@@ -107,3 +137,15 @@ def read_rankings(
 ) -> list[RankingEntry]:
     """Return the leaderboard for the requested period. Requires authentication."""
     return get_rankings(db, period=period, game_type=game_type)
+
+
+@router.get(
+    "/rankings/me",
+    response_model=list[UserGameRank],
+)
+def read_my_ranks(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[UserGameRank]:
+    """Daily/monthly/global rank of the authenticated user for every game they've played."""
+    return get_user_ranks(db, user_id=current_user.id)

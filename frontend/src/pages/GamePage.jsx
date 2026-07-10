@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 
 import { fetchDailyStatus } from '../api/scoreApi';
+import Leaderboard from '../components/Leaderboard';
 import { getGame } from '../games/registry';
 import { useDailyCountdown } from '../games/useDailyCountdown';
 import { useAuthStore } from '../store/useAuthStore';
@@ -12,21 +13,29 @@ const VALID_MODES = new Set(['demo', 'daily']);
 const DailyLockedNotice = ({ game }) => {
   const countdown = useDailyCountdown();
   return (
-    <div className="mx-auto max-w-md text-center">
-      <img src={game.icon} alt="" className="mx-auto mb-3 h-16 w-16" />
-      <h1 className="text-2xl font-black text-slate-800 dark:text-slate-200">
-        {game.name}
-      </h1>
-      <p className="mt-2 text-slate-500 dark:text-slate-300">
-        Ya jugaste el reto diario de hoy. Vuelve en{' '}
-        <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">
-          {countdown}
-        </span>{' '}
-        por un nuevo reto.
-      </p>
-      <Link to="/" className="mt-4 inline-block font-semibold text-indigo-600">
-        ← Volver a los juegos
-      </Link>
+    <div className="mx-auto max-w-md">
+      <div className="text-center">
+        <img src={game.icon} alt="" className="mx-auto mb-3 h-16 w-16" />
+        <h1 className="text-2xl font-black text-slate-800 dark:text-slate-200">
+          {game.name}
+        </h1>
+        <p className="mt-2 text-slate-500 dark:text-slate-300">
+          Ya jugaste el reto diario de hoy. Vuelve en{' '}
+          <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">
+            {countdown}
+          </span>{' '}
+          por un nuevo reto.
+        </p>
+        <Link
+          to="/"
+          className="mt-4 inline-block font-semibold text-indigo-600"
+        >
+          ← Volver a los juegos
+        </Link>
+      </div>
+      <div className="mt-6">
+        <Leaderboard gameType={game.id} />
+      </div>
     </div>
   );
 };

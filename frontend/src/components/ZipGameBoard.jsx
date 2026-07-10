@@ -65,11 +65,11 @@ const ZipCheckpoints = ({ checkpoints }) =>
       <text
         x={checkpoint.col + 0.5}
         y={checkpoint.row + 0.5}
+        dy="0.4em"
         fill="#ffffff"
         fontSize={0.42}
         fontWeight="700"
         textAnchor="middle"
-        dominantBaseline="central"
       >
         {checkpoint.order}
       </text>

@@ -150,11 +150,11 @@ const TangoBoard = ({ puzzle, puzzleId, mode, meta }) => {
               <text
                 x={marker.x}
                 y={marker.y}
+                dy="0.4em"
                 fontSize={0.26}
                 fontWeight="700"
                 fill="#475569"
                 textAnchor="middle"
-                dominantBaseline="central"
               >
                 {marker.label}
               </text>

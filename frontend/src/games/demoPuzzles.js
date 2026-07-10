@@ -151,17 +151,28 @@ export const DEMO_PUZZLES = {
     fallback: false,
     payload: {
       size: 8,
+      // Every word here runs along a straight line (horizontal, vertical or
+      // diagonal, never bent) so it matches the real word-search rules —
+      // generated with the same backend algorithm as the live daily puzzle.
       grid: [
-        ['S', 'E', 'R', 'P', null, 'I', 'N', 'S'],
-        ['A', 'D', 'U', 'L', null, 'C', 'T', 'O'],
-        ['P', 'F', 'B', 'A', null, null, 'W', 'L'],
-        ['O', 'H', 'K', 'Z', 'A', 'X', 'Y', 'J'],
-        ['L', 'V', 'Q', null, 'E', 'M', 'I', 'D'],
-        ['O', 'N', 'T', null, 'U', 'A', 'B', 'C'],
-        ['M', 'A', 'E', 'I', 'K', 'R', 'G', 'F'],
-        [null, 'W', 'Y', 'G', 'A', 'T', 'O', null],
+        ['A', 'P', 'A', 'D', 'R', 'A', 'A', 'O'],
+        ['N', 'D', 'P', 'A', 'Q', 'R', 'E', 'I'],
+        ['O', 'R', 'E', 'E', 'C', 'J', 'J', 'O'],
+        ['P', 'D', 'R', 'O', 'F', 'E', 'E', 'E'],
+        ['N', 'B', 'R', 'A', 'T', 'L', 'A', 'S'],
+        ['C', 'S', 'O', 'U', 'H', 'O', 'J', 'A'],
+        ['R', 'I', 'V', 'N', 'T', 'I', 'M', 'U'],
+        ['M', 'A', 'B', 'O', 'S', 'Q', 'U', 'E'],
       ],
-      words: ['SAPO', 'SOL', 'LOMA', 'PLAZA', 'GATO', 'MAR'],
+      words: ['UVA', 'HOJA', 'SALTAR', 'BOSQUE', 'PERRO'],
+      definitions: {
+        UVA: 'Baya o grano más o menos redondo y jugoso, fruto de la vid, que forma racimos',
+        HOJA: 'Cada una de las láminas, generalmente verdes, planas y delgadas, de que se visten los vegetales, unidas al tallo o a las ramas por el pecíolo',
+        SALTAR: 'Salvar de un salto un espacio o distancia',
+        BOSQUE: 'Sitio poblado de árboles y matas',
+        PERRO:
+          'Mamífero doméstico de la familia de los cánidos, de tamaño, forma y pelaje muy diversos, según las razas, que tiene olfato muy fino y es inteligente y muy leal a su dueño',
+      },
     },
   },
   patches: {

@@ -7,6 +7,7 @@ from app.core.crud.rankings import (
     RankingPeriod,
     _period_start,
     get_rankings,
+    get_user_ranks,
 )
 
 
@@ -82,3 +83,36 @@ def test_rankings_are_limited(db_session):
 
     assert len(entries) == 3
     assert [entry.completion_time for entry in entries] == [1, 2, 3]
+
+
+def test_get_user_ranks_reports_position_across_periods(db_session):
+    user = _create_user(db_session)
+    other = User(username="o", email="o@example.com", password_hash="x")
+    db_session.add(other)
+    db_session.commit()
+    db_session.refresh(other)
+
+    # A faster score from last month, only counted in the global window.
+    _add_score(
+        db_session,
+        other.id,
+        completion_time=5,
+        created_at=datetime.utcnow() - timedelta(days=40),
+    )
+    _add_score(db_session, user.id, completion_time=10)
+    _add_score(db_session, other.id, completion_time=20)
+
+    ranks = get_user_ranks(db_session, user_id=user.id)
+
+    assert len(ranks) == 1
+    entry = ranks[0]
+    assert entry.game_type == "zip"
+    assert entry.daily_rank == 1
+    assert entry.monthly_rank == 1
+    assert entry.global_rank == 2
+
+
+def test_get_user_ranks_empty_without_history(db_session):
+    user = _create_user(db_session)
+
+    assert get_user_ranks(db_session, user_id=user.id) == []

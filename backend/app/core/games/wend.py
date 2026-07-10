@@ -1,9 +1,13 @@
 """Wend: find hidden Spanish words in a letter grid (word search meets crossword).
 
-A handful of common Spanish words are laid on an 8x8 grid along orthogonally
-adjacent paths (no diagonals, no overlaps) and every remaining cell is filled
-with a random letter, so the words hide among noise like a word search while
-their RAE definitions act as crossword-style clues. Deterministic from a seed.
+A handful of common Spanish words are laid on an 8x8 grid along straight lines
+(horizontal, vertical or diagonal — never bent/snaking) and every remaining
+cell is filled with a random letter, so the words hide among noise like a word
+search while their RAE definitions act as crossword-style clues. Two words may
+legitimately cross at a shared cell the way real crossword entries do, but only
+when both agree on the letter there — that intersection cell then belongs to
+both words at once and stays usable for either of them, so finding one word
+first can never lock the other out. Deterministic from a seed.
 """
 
 from __future__ import annotations
@@ -18,12 +22,18 @@ SIZE = 8
 WORD_COUNT = 5  # words to hide; every other cell becomes a random filler letter
 MAX_ATTEMPTS = 200  # placement retries before re-picking the word selection
 DEMO_SEED = 1
-# Orthogonal moves only (no diagonals): letters connect up, down, left, right.
-ORTHO = (
-    (-1, 0),
-    (1, 0),
-    (0, -1),
+# The eight straight-line directions a word can run along: horizontal,
+# vertical and diagonal, in both senses of each axis. Words are always drawn
+# in one fixed direction end to end — they never bend or double back.
+DIRECTIONS = (
     (0, 1),
+    (0, -1),
+    (1, 0),
+    (-1, 0),
+    (1, 1),
+    (1, -1),
+    (-1, 1),
+    (-1, -1),
 )
 # Filler letters, weighted loosely toward Spanish frequency so the noise reads
 # naturally. Accent-free and without "ñ" to match the curated word pool.
@@ -33,64 +43,49 @@ Coord = dict[str, int]
 
 
 def _choose_words(rng) -> list[str]:
-    """Pick ``WORD_COUNT`` distinct common words to hide in the grid."""
-    pool = common_words()
+    """Pick ``WORD_COUNT`` distinct common words that fit the grid in a straight line."""
+    pool = [word for word in common_words() if len(word) <= SIZE]
     shuffle_in_place(pool, rng)
     return pool[:WORD_COUNT]
 
 
-def _grow_path(
-    grid: list[list[str]],
-    length: int,
-    row: int,
-    col: int,
-    index: int,
-    visited: set[tuple[int, int]],
-    path: list[tuple[int, int]],
-    rng,
+def _fits_straight_line(
+    grid: list[list[str]], word: str, row: int, col: int, dr: int, dc: int
 ) -> bool:
-    """Randomised DFS for a self-avoiding orthogonal path over empty cells."""
-    if not (0 <= row < SIZE and 0 <= col < SIZE):
+    """Whether ``word`` can run straight from ``(row, col)`` along ``(dr, dc)``.
+
+    A cell already holding a different word's letter blocks the placement; a
+    cell holding the *same* letter is a valid crossword-style intersection.
+    """
+    end_row = row + dr * (len(word) - 1)
+    end_col = col + dc * (len(word) - 1)
+    if not (0 <= end_row < SIZE and 0 <= end_col < SIZE):
         return False
-    if grid[row][col] != "" or (row, col) in visited:
-        return False
-    visited.add((row, col))
-    path.append((row, col))
-    if index == length - 1:
-        return True
-    for dr, dc in shuffle_in_place(list(ORTHO), rng):
-        if _grow_path(grid, length, row + dr, col + dc, index + 1, visited, path, rng):
-            return True
-    visited.discard((row, col))
-    path.pop()
-    return False
+    for index, letter in enumerate(word):
+        existing = grid[row + dr * index][col + dc * index]
+        if existing != "" and existing != letter:
+            return False
+    return True
 
 
 def _place_word(grid: list[list[str]], word: str, rng) -> bool:
-    """Write ``word`` along a random empty orthogonal path; ``False`` if none fits."""
-    starts = [
-        (row, col)
-        for row in range(SIZE)
-        for col in range(SIZE)
-        if grid[row][col] == ""
-    ]
+    """Write ``word`` along a random straight line; ``False`` if none fits.
+
+    Existing letters from other words may be reused as intersections (when the
+    letter matches), but a placement is never allowed to overwrite a
+    conflicting letter — that would corrupt the other word.
+    """
+    starts = [(row, col) for row in range(SIZE) for col in range(SIZE)]
     shuffle_in_place(starts, rng)
-    for start_row, start_col in starts:
-        path: list[tuple[int, int]] = []
-        if _grow_path(grid, len(word), start_row, start_col, 0, set(), path, rng):
-            for (row, col), letter in zip(path, word):
-                grid[row][col] = letter
-            return True
+    directions = list(DIRECTIONS)
+    for row, col in starts:
+        shuffle_in_place(directions, rng)
+        for dr, dc in directions:
+            if _fits_straight_line(grid, word, row, col, dr, dc):
+                for index, letter in enumerate(word):
+                    grid[row + dr * index][col + dc * index] = letter
+                return True
     return False
-
-
-def _orthogonal_neighbours(cell: Coord) -> list[Coord]:
-    result = []
-    for dr, dc in ORTHO:
-        row, col = cell["row"] + dr, cell["col"] + dc
-        if 0 <= row < SIZE and 0 <= col < SIZE:
-            result.append({"row": row, "col": col})
-    return result
 
 
 def _fill_grid(grid: list[list[str]], rng) -> None:
@@ -146,10 +141,13 @@ def _generate_puzzle(seed: int) -> Payload:
 # --- Validation -------------------------------------------------------------
 
 
-def _are_orthogonally_adjacent(a: Coord, b: Coord) -> bool:
-    dr = abs(a["row"] - b["row"])
-    dc = abs(a["col"] - b["col"])
-    return dr + dc == 1
+def _straight_direction(a: Coord, b: Coord) -> tuple[int, int] | None:
+    """The unit step from ``a`` to ``b`` if they're adjacent (incl. diagonally)."""
+    dr = b["row"] - a["row"]
+    dc = b["col"] - a["col"]
+    if abs(dr) > 1 or abs(dc) > 1 or (dr == 0 and dc == 0):
+        return None
+    return dr, dc
 
 
 def _word_from_path(grid: list[list[str]], path: list[Coord]) -> str:
@@ -157,6 +155,10 @@ def _word_from_path(grid: list[list[str]], path: list[Coord]) -> str:
 
 
 def _parse_path(cells: object, size: int) -> list[Coord] | None:
+    """Parse and validate a submitted path: in-bounds, non-repeating, and a
+    single unbroken straight line — horizontal, vertical or diagonal, never
+    bent or snaking.
+    """
     if not isinstance(cells, list) or len(cells) < 2:
         return None
     seen: set[tuple[int, int]] = set()
@@ -170,8 +172,11 @@ def _parse_path(cells: object, size: int) -> list[Coord] | None:
             return None
         seen.add((row, col))
         parsed.append({"row": row, "col": col})
-    for i in range(len(parsed) - 1):
-        if not _are_orthogonally_adjacent(parsed[i], parsed[i + 1]):
+    direction = _straight_direction(parsed[0], parsed[1])
+    if direction is None:
+        return None
+    for i in range(1, len(parsed) - 1):
+        if _straight_direction(parsed[i], parsed[i + 1]) != direction:
             return None
     return parsed
 
@@ -197,33 +202,28 @@ def validate(payload: Payload, solution: object) -> bool:
 
 
 def solve(payload: Payload) -> list[dict] | None:
-    """Return one valid path per target word (used for reference and tests)."""
+    """Return one valid straight-line path per target word (reference/tests)."""
     grid, size = payload["grid"], payload["size"]
 
     def find_path(word: str) -> list[Coord] | None:
-        def dfs(cell: Coord, index: int, visited: set, path: list[Coord]):
-            if index == len(word):
-                return list(path)
-            for neighbour in _orthogonal_neighbours(cell):
-                pos = (neighbour["row"], neighbour["col"])
-                if pos in visited or grid[pos[0]][pos[1]] != word[index]:
-                    continue
-                visited.add(pos)
-                path.append(neighbour)
-                result = dfs(neighbour, index + 1, visited, path)
-                if result:
-                    return result
-                path.pop()
-                visited.discard(pos)
-            return None
-
+        length = len(word)
         for row in range(size):
             for col in range(size):
-                if grid[row][col] == word[0]:
-                    start = {"row": row, "col": col}
-                    result = dfs(start, 1, {(row, col)}, [start])
-                    if result:
-                        return result
+                if grid[row][col] != word[0]:
+                    continue
+                for dr, dc in DIRECTIONS:
+                    end_row = row + dr * (length - 1)
+                    end_col = col + dc * (length - 1)
+                    if not (0 <= end_row < size and 0 <= end_col < size):
+                        continue
+                    if all(
+                        grid[row + dr * i][col + dc * i] == letter
+                        for i, letter in enumerate(word)
+                    ):
+                        return [
+                            {"row": row + dr * i, "col": col + dc * i}
+                            for i in range(length)
+                        ]
         return None
 
     found = []
@@ -239,3 +239,4 @@ def generate(seed: int) -> GeneratedPuzzle:
     """Deterministically generate a Wend puzzle for ``seed``."""
     payload = _generate_puzzle(seed)
     return GeneratedPuzzle(payload=payload, solution=solve(payload))
+
