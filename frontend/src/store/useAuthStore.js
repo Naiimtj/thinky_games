@@ -9,6 +9,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import { fetchCurrentUser, loginUser, registerUser } from '../api/authApi';
+import { useDailyGamesStore } from './useDailyGamesStore';
 
 export const useAuthStore = create(
   persist(
@@ -18,6 +19,7 @@ export const useAuthStore = create(
 
       /** Log in and load the user profile. */
       login: async ({ username, password }) => {
+        useDailyGamesStore.getState().resetDaily();
         const { access_token: token } = await loginUser({ username, password });
         const user = await fetchCurrentUser(token);
         set({ token, user });
@@ -31,7 +33,10 @@ export const useAuthStore = create(
       },
 
       /** Clear the session. */
-      logout: () => set({ token: null, user: null }),
+      logout: () => {
+        useDailyGamesStore.getState().resetDaily();
+        set({ token: null, user: null });
+      },
     }),
     {
       name: 'thinky-auth',

@@ -12,9 +12,10 @@ from enum import Enum
 from sqlalchemy.orm import Session
 
 from app.core.database.models import Score, User
-from app.core.schemas.score import RankingEntry, UserGameRank
+from app.core.schemas.score import GameTopEntries, RankingEntry, UserGameRank
 
 DEFAULT_RANKING_LIMIT = 50
+DEFAULT_TOP_N = 3
 
 
 class RankingPeriod(str, Enum):
@@ -79,6 +80,30 @@ def _to_ranking_entries(rows) -> list[RankingEntry]:
             created_at=row.created_at,
         )
         for position, row in enumerate(rows, start=1)
+    ]
+
+
+def get_daily_top_n(
+    db: Session, limit: int = DEFAULT_TOP_N
+) -> list[GameTopEntries]:
+    """Top N entries of today's leaderboard for every game with scores today."""
+    starts_at = _period_start(RankingPeriod.DAILY)
+    game_types = (
+        db.query(Score.game_type)
+        .filter(Score.created_at >= starts_at)
+        .distinct()
+        .all()
+    )
+    return [
+        GameTopEntries(
+            game_type=game_type,
+            entries=_to_ranking_entries(
+                _query_fastest_times(
+                    db, game_type=game_type, starts_at=starts_at, limit=limit
+                )
+            ),
+        )
+        for (game_type,) in game_types
     ]
 
 

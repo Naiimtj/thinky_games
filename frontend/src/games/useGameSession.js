@@ -18,6 +18,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { submitScore } from '../api/scoreApi';
 import { useAuthStore } from '../store/useAuthStore';
+import { useDailyGamesStore } from '../store/useDailyGamesStore';
 import {
   buildStorageKey,
   clearGameStorage,
@@ -83,6 +84,7 @@ export const useGameSession = ({
         .then(() => {
           // Now backed up server-side — no need to keep it locally too.
           clearGameStorage(gameId, mode, puzzleId);
+          useDailyGamesStore.getState().markGamePlayed(gameId);
         })
         .catch(() => {
           hasSubmitted.current = false;

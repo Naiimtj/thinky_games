@@ -113,3 +113,18 @@ export const fetchMyScores = async (gameType = 'zip') => {
   }
   return response.json();
 };
+
+/** Top N entries of today's leaderboard for every game with scores today. */
+export const fetchDailyTop = async (limit = 3) => {
+  const response = await fetch(
+    `${API_BASE_URL}/rankings/daily-top?limit=${limit}`,
+    { headers: { ...authHeaders() } },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch daily top rankings (HTTP ${response.status})`,
+    );
+  }
+  return response.json();
+};

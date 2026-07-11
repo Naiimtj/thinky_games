@@ -6,7 +6,12 @@ from sqlalchemy.orm import Session
 from app.core.auth import get_current_user
 from app.core.crud import puzzles as puzzle_crud
 from app.core.crud import scores as score_crud
-from app.core.crud.rankings import RankingPeriod, get_rankings, get_user_ranks
+from app.core.crud.rankings import (
+    RankingPeriod,
+    get_daily_top_n,
+    get_rankings,
+    get_user_ranks,
+)
 from app.core.database.models import User
 from app.core.games.daily import utc_today
 from app.core.games.registry import get_game
@@ -14,6 +19,7 @@ from app.core.schemas.score import (
     DailyPlayedGames,
     DailyStatus,
     GameStatEntry,
+    GameTopEntries,
     MyScoreEntry,
     RankingEntry,
     ScoreCreate,
@@ -149,3 +155,16 @@ def read_my_ranks(
 ) -> list[UserGameRank]:
     """Daily/monthly/global rank of the authenticated user for every game they've played."""
     return get_user_ranks(db, user_id=current_user.id)
+
+
+@router.get(
+    "/rankings/daily-top",
+    response_model=list[GameTopEntries],
+    dependencies=[Depends(get_current_user)],
+)
+def read_daily_top(
+    limit: int = Query(default=3, ge=1, le=50),
+    db: Session = Depends(get_db),
+) -> list[GameTopEntries]:
+    """Top N entries of today's leaderboard for every game with scores today."""
+    return get_daily_top_n(db, limit=limit)

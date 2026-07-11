@@ -98,3 +98,10 @@ class MyScoreEntry(BaseModel):
     completion_time: int
     created_at: datetime
 
+
+class GameTopEntries(BaseModel):
+    """The top N leaderboard entries of the daily period for a single game."""
+
+    game_type: str
+    entries: list[RankingEntry]
+

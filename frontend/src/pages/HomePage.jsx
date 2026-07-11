@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-import { fetchGames } from '../api/gamesApi';
-import { fetchDailyPlayedGames } from '../api/scoreApi';
 import { GAMES, getGameIcon } from '../games/registry';
 import { useDailyCountdown } from '../games/useDailyCountdown';
 import { useAuthStore } from '../store/useAuthStore';
+import { useDailyGamesStore } from '../store/useDailyGamesStore';
 
 /** Metadata-only fallback from the local registry if the API is unreachable. */
 const FALLBACK_GAMES = GAMES.map(({ id, name, tagline, playable }) => ({
@@ -100,43 +99,27 @@ const PlayableCard = ({ game, isAuthenticated, completedToday }) => {
 const HomePage = () => {
   const isAuthenticated = Boolean(useAuthStore((state) => state.token));
   const countdown = useDailyCountdown();
-  const [completedGameIds, setCompletedGameIds] = useState(new Set());
+  const playedGameIds = useDailyGamesStore((state) => state.playedGameIds);
+  const loadGamesCatalog = useDailyGamesStore(
+    (state) => state.loadGamesCatalog,
+  );
+  const loadDailyData = useDailyGamesStore((state) => state.loadDailyData);
   const [games, setGames] = useState(FALLBACK_GAMES);
 
   useEffect(() => {
     let cancelled = false;
-    fetchGames()
-      .then((list) => {
-        if (!cancelled && Array.isArray(list) && list.length > 0)
-          setGames(list);
-      })
-      .catch(() => {
-        // Keep the local fallback list on a transient failure.
-      });
+    loadGamesCatalog().then((list) => {
+      if (!cancelled && Array.isArray(list) && list.length > 0) setGames(list);
+    });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loadGamesCatalog]);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      setCompletedGameIds(new Set());
-      return undefined;
-    }
-
-    let cancelled = false;
-    fetchDailyPlayedGames()
-      .then(({ game_types: gameTypes }) => {
-        if (!cancelled) setCompletedGameIds(new Set(gameTypes));
-      })
-      .catch(() => {
-        // Best-effort only: leave the checkmarks off on a transient failure.
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isAuthenticated]);
+    if (!isAuthenticated) return;
+    loadDailyData();
+  }, [isAuthenticated, loadDailyData]);
 
   return (
     <div>
@@ -160,7 +143,7 @@ const HomePage = () => {
               key={game.id}
               game={game}
               isAuthenticated={isAuthenticated}
-              completedToday={completedGameIds.has(game.id)}
+              completedToday={isAuthenticated && playedGameIds.has(game.id)}
             />
           ) : (
             <ComingSoonCard key={game.id} game={game} />

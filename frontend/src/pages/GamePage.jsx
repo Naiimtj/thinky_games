@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 
-import { fetchDailyStatus } from '../api/scoreApi';
 import Leaderboard from '../components/Leaderboard';
 import { getGame } from '../games/registry';
 import { useDailyCountdown } from '../games/useDailyCountdown';
 import { useAuthStore } from '../store/useAuthStore';
+import { useDailyGamesStore } from '../store/useDailyGamesStore';
 
 const VALID_MODES = new Set(['demo', 'daily']);
 
@@ -45,27 +45,25 @@ const GamePage = () => {
   const token = useAuthStore((state) => state.token);
   const game = getGame(gameId);
 
-  // 'checking' | 'locked' | 'unlocked'; only relevant for the daily mode.
-  const [dailyStatus, setDailyStatus] = useState('checking');
+  const playedGameIds = useDailyGamesStore((state) => state.playedGameIds);
+  const dailyLoadedAt = useDailyGamesStore((state) => state.dailyLoadedAt);
+  const dailyError = useDailyGamesStore((state) => state.dailyError);
+  const loadDailyData = useDailyGamesStore((state) => state.loadDailyData);
 
   useEffect(() => {
-    if (mode !== 'daily' || !token || !game) return undefined;
+    if (mode !== 'daily' || !token || !game) return;
+    loadDailyData();
+  }, [mode, token, game, loadDailyData]);
 
-    let cancelled = false;
-    setDailyStatus('checking');
-    fetchDailyStatus(gameId)
-      .then(({ played_today: playedToday }) => {
-        if (!cancelled) setDailyStatus(playedToday ? 'locked' : 'unlocked');
-      })
-      .catch(() => {
-        // Fail open: a transient network error should not block play.
-        if (!cancelled) setDailyStatus('unlocked');
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [mode, token, gameId, game]);
+  // 'checking' | 'locked' | 'unlocked'; only relevant for the daily mode.
+  // Fails open (unlocked) on a transient network error, same as before.
+  const getDailyStatus = () => {
+    if (mode !== 'daily' || !token) return 'unlocked';
+    if (dailyError) return 'unlocked';
+    if (dailyLoadedAt === null) return 'checking';
+    return playedGameIds.has(gameId) ? 'locked' : 'unlocked';
+  };
+  const dailyStatus = getDailyStatus();
 
   if (!game) return <Navigate to="/" replace />;
 
