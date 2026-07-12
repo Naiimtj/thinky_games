@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 
+import DailyGamesSummary from '../components/DailyGamesSummary';
 import Leaderboard from '../components/Leaderboard';
 import { getGame } from '../games/registry';
 import { useDailyCountdown } from '../games/useDailyCountdown';
@@ -8,6 +9,12 @@ import { useAuthStore } from '../store/useAuthStore';
 import { useDailyGamesStore } from '../store/useDailyGamesStore';
 
 const VALID_MODES = new Set(['demo', 'daily']);
+// How long the win celebration (confetti + banner, rendered by GameShell)
+// stays on screen before swapping to the daily summary. Without this,
+// `playedGameIds` flips to "locked" as soon as the score submit resolves —
+// often near-instantly — which used to swap the board out from under the
+// celebration before the player could see it.
+const CELEBRATION_MS = 5_000;
 
 /** Shown instead of the board once today's daily challenge is already solved. */
 const DailyLockedNotice = ({ game }) => {
@@ -65,6 +72,28 @@ const GamePage = () => {
   };
   const dailyStatus = getDailyStatus();
 
+  // Detect the unlocked -> locked transition that happens right after a win
+  // (as opposed to loading an already-played game), and keep the game
+  // mounted — with its win celebration — for a bit before showing the
+  // summary instead of the locked notice.
+  const [celebrating, setCelebrating] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
+  const previousStatusRef = useRef(dailyStatus);
+
+  useEffect(() => {
+    const justWon =
+      previousStatusRef.current === 'unlocked' && dailyStatus === 'locked';
+    previousStatusRef.current = dailyStatus;
+    if (!justWon) return undefined;
+
+    setCelebrating(true);
+    const timer = setTimeout(() => {
+      setCelebrating(false);
+      setShowSummary(true);
+    }, CELEBRATION_MS);
+    return () => clearTimeout(timer);
+  }, [dailyStatus]);
+
   if (!game) return <Navigate to="/" replace />;
 
   if (!game.playable) {
@@ -101,7 +130,10 @@ const GamePage = () => {
   }
 
   const renderContent = () => {
-    if (mode === 'daily' && dailyStatus === 'locked') {
+    if (mode === 'daily' && showSummary) {
+      return <DailyGamesSummary />;
+    }
+    if (mode === 'daily' && dailyStatus === 'locked' && !celebrating) {
       return <DailyLockedNotice game={game} />;
     }
     if (mode === 'daily' && dailyStatus === 'checking') {
