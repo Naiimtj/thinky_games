@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import BaseButton from '../../components/base/BaseButton';
 import { GameShell, RulesSection } from '../GameShell';
@@ -9,6 +9,7 @@ import { useGameSession } from '../useGameSession';
 import {
   answersFromCells,
   buildGrid,
+  entryCells,
   firstEmptyLetter,
   isCrosswordSolved,
   normalizeLetter,
@@ -24,9 +25,21 @@ const CrosswordBoard = ({ puzzle, puzzleId, mode, meta }) => {
   const boardKey = buildStorageKey('crossword', mode, puzzleId, 'board');
   const [board, setBoard] = usePersistedState(boardKey, () => ({ cells: {} }));
   const [activeEntryId, setActiveEntryId] = useState(entries[0]?.id ?? null);
+  const inputRefs = useRef({});
   const cells = board.cells ?? {};
   const grid = useMemo(() => buildGrid(entries, size), [entries, size]);
   const activeEntry = entries.find((entry) => entry.id === activeEntryId);
+  const answers = answersFromCells(entries, cells);
+  const isComplete = entries.every(
+    (entry) => answers[entry.id].length === entry.answer.length,
+  );
+  const incorrectEntryIds = new Set(
+    isComplete
+      ? entries
+          .filter((entry) => answers[entry.id] !== entry.answer)
+          .map((entry) => entry.id)
+      : [],
+  );
   const isSolved = isCrosswordSolved(entries, cells);
 
   const session = useGameSession({
@@ -42,6 +55,21 @@ const CrosswordBoard = ({ puzzle, puzzleId, mode, meta }) => {
       ...previous,
       cells: { ...previous.cells, [key]: normalizeLetter(value) },
     }));
+
+  const moveToNextCell = (key) => {
+    if (!activeEntry) return;
+    const entryCellKeys = entryCells(activeEntry).map((cell) =>
+      cellKey(cell.row, cell.col),
+    );
+    const nextKey = entryCellKeys[entryCellKeys.indexOf(key) + 1];
+    inputRefs.current[nextKey]?.focus();
+  };
+
+  const handleCellChange = (key, value) => {
+    const letter = normalizeLetter(value);
+    setCell(key, value);
+    if (letter) moveToNextCell(key);
+  };
 
   const handleReset = () => {
     setBoard({ cells: {} });
@@ -91,6 +119,9 @@ const CrosswordBoard = ({ puzzle, puzzleId, mode, meta }) => {
             );
           }
           const isActive = cell.entryIds.includes(activeEntryId);
+          const isIncorrect = cell.entryIds.some((id) =>
+            incorrectEntryIds.has(id),
+          );
           const label = cell.entryIds
             .map((id) => entries.find((entry) => entry.id === id)?.number)
             .join(' y ');
@@ -107,6 +138,9 @@ const CrosswordBoard = ({ puzzle, puzzleId, mode, meta }) => {
               )}
               <input
                 id={`crossword-${key}`}
+                ref={(element) => {
+                  inputRefs.current[key] = element;
+                }}
                 value={cells[key] ?? ''}
                 onFocus={() =>
                   setActiveEntryId((current) =>
@@ -116,12 +150,12 @@ const CrosswordBoard = ({ puzzle, puzzleId, mode, meta }) => {
                   )
                 }
                 onClick={() => selectCell(cell)}
-                onChange={(event) => setCell(key, event.target.value)}
+                onChange={(event) => handleCellChange(key, event.target.value)}
                 maxLength={1}
                 inputMode="text"
                 autoComplete="off"
                 aria-label={`Casilla de las pistas ${label}`}
-                className={`h-full w-full border border-slate-300 bg-transparent pt-1 text-center font-mono text-lg font-bold uppercase text-slate-800 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 ${isActive ? 'bg-amber-100' : ''}`}
+                className={`h-full w-full border bg-transparent pt-1 text-center font-mono text-lg font-bold uppercase text-slate-800 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 ${isIncorrect ? 'border-red-500' : 'border-slate-300'} ${isActive ? 'bg-amber-100' : ''}`}
               />
             </div>
           );
