@@ -39,7 +39,7 @@ def test_register_rejects_short_password(client):
     assert response.status_code == 422
 
 
-def test_login_returns_bearer_token(client):
+def test_login_sets_httponly_cookie_without_returning_token(client):
     client.post("/auth/register", json=_register_payload())
 
     response = client.post(
@@ -48,9 +48,11 @@ def test_login_returns_bearer_token(client):
     )
 
     assert response.status_code == 200
-    body = response.json()
-    assert body["token_type"] == "bearer"
-    assert body["access_token"]
+    assert "access_token" not in response.json()
+    cookie = response.cookies.get("thinky_access_token")
+    assert cookie
+    assert "HttpOnly" in response.headers["set-cookie"]
+    assert "thinky_session_hint=1" in response.headers["set-cookie"]
 
 
 def test_login_with_wrong_password_is_unauthorized(client):
@@ -69,6 +71,15 @@ def test_me_returns_the_authenticated_user(client, auth_headers):
 
     assert response.status_code == 200
     assert response.json()["username"] == "player"
+
+
+def test_logout_clears_the_session_cookie(client, auth_headers):
+    response = client.post("/auth/logout")
+
+    assert response.status_code == 200
+    assert "thinky_access_token" in response.headers["set-cookie"]
+    assert "thinky_session_hint" in response.headers["set-cookie"]
+    assert client.get("/auth/me").status_code == 401
 
 
 def test_me_requires_authentication(client):

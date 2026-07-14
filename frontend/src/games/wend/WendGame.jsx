@@ -276,7 +276,7 @@ const WendBoard = ({ puzzle, puzzleId, mode, meta }) => {
           disabled={solved}
           className="flex-1 rounded-full disabled:cursor-not-allowed"
         >
-          Pista: letra (+10s)
+          Pista letra (+10s)
         </BaseButton>
         <BaseButton
           variant="warning"
@@ -285,7 +285,7 @@ const WendBoard = ({ puzzle, puzzleId, mode, meta }) => {
           disabled={solved || !nextDefinitionWord}
           className="flex-1 rounded-full disabled:cursor-not-allowed"
         >
-          Pista: definición (+5s)
+          Pista definición (+5s)
         </BaseButton>
       </div>
 

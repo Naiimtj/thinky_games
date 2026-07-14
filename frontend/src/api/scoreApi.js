@@ -1,16 +1,24 @@
 /**
- * Thin HTTP client for the Thinky Games API. The bearer token is read from the
- * auth store (which persists it to localStorage), so it survives reloads.
+ * Thin HTTP client for the Thinky Games API. Authentication uses the HttpOnly
+ * session cookie managed by the browser.
  */
 
-import { getAuthToken } from '../store/useAuthStore';
+import { useAuthStore } from '../store/useAuthStore';
+import { API_BASE_URL } from './apiConfig';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
+const authOptions = { credentials: 'include' };
 
-const authHeaders = () => {
-  const token = getAuthToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
+/**
+ * An expired/invalid token (e.g. the JWT lived past its 1-day expiry) makes
+ * the backend reject the request with 401 even though the frontend still
+ * "thinks" the user is logged in. Force a logout + redirect so the user is
+ * never left in a stale session that silently fails every request.
+ */
+const handleExpiredSession = (response) => {
+  if (response.status === 401) {
+    useAuthStore.getState().logout();
+    window.location.assign('/login');
+  }
 };
 
 /** Persist the final completion time for the authenticated user. */
@@ -21,11 +29,13 @@ export const submitScore = async ({
 }) => {
   const response = await fetch(`${API_BASE_URL}/scores`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    ...authOptions,
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ completion_time, game_type, solution }),
   });
 
   if (!response.ok) {
+    handleExpiredSession(response);
     throw new Error(`Failed to submit score (HTTP ${response.status})`);
   }
   return response.json();
@@ -35,10 +45,11 @@ export const submitScore = async ({
 export const fetchRankings = async (period, gameType = 'zip') => {
   const response = await fetch(
     `${API_BASE_URL}/rankings?period=${period}&game_type=${gameType}`,
-    { headers: { ...authHeaders() } },
+    authOptions,
   );
 
   if (!response.ok) {
+    handleExpiredSession(response);
     throw new Error(`Failed to fetch rankings (HTTP ${response.status})`);
   }
   return response.json();
@@ -48,10 +59,11 @@ export const fetchRankings = async (period, gameType = 'zip') => {
 export const fetchDailyStatus = async (gameType = 'zip') => {
   const response = await fetch(
     `${API_BASE_URL}/scores/daily-status?game_type=${gameType}`,
-    { headers: { ...authHeaders() } },
+    authOptions,
   );
 
   if (!response.ok) {
+    handleExpiredSession(response);
     throw new Error(`Failed to fetch daily status (HTTP ${response.status})`);
   }
   return response.json();
@@ -60,10 +72,11 @@ export const fetchDailyStatus = async (gameType = 'zip') => {
 /** Game types the authenticated user already solved today, in one request. */
 export const fetchDailyPlayedGames = async () => {
   const response = await fetch(`${API_BASE_URL}/scores/daily-played`, {
-    headers: { ...authHeaders() },
+    ...authOptions,
   });
 
   if (!response.ok) {
+    handleExpiredSession(response);
     throw new Error(
       `Failed to fetch daily played games (HTTP ${response.status})`,
     );
@@ -77,10 +90,11 @@ export const fetchDailyPlayedGames = async () => {
  */
 export const fetchDailySummary = async () => {
   const response = await fetch(`${API_BASE_URL}/scores/daily-summary`, {
-    headers: { ...authHeaders() },
+    ...authOptions,
   });
 
   if (!response.ok) {
+    handleExpiredSession(response);
     throw new Error(`Failed to fetch daily summary (HTTP ${response.status})`);
   }
   return response.json();
@@ -92,10 +106,11 @@ export const fetchDailySummary = async () => {
  */
 export const fetchMyRanks = async () => {
   const response = await fetch(`${API_BASE_URL}/rankings/me`, {
-    headers: { ...authHeaders() },
+    ...authOptions,
   });
 
   if (!response.ok) {
+    handleExpiredSession(response);
     throw new Error(`Failed to fetch my ranks (HTTP ${response.status})`);
   }
   return response.json();
@@ -105,10 +120,11 @@ export const fetchMyRanks = async () => {
 export const fetchMyScores = async (gameType = 'zip') => {
   const response = await fetch(
     `${API_BASE_URL}/scores/me?game_type=${gameType}`,
-    { headers: { ...authHeaders() } },
+    { ...authOptions },
   );
 
   if (!response.ok) {
+    handleExpiredSession(response);
     throw new Error(`Failed to fetch my scores (HTTP ${response.status})`);
   }
   return response.json();
@@ -118,10 +134,11 @@ export const fetchMyScores = async (gameType = 'zip') => {
 export const fetchDailyTop = async (limit = 3) => {
   const response = await fetch(
     `${API_BASE_URL}/rankings/daily-top?limit=${limit}`,
-    { headers: { ...authHeaders() } },
+    authOptions,
   );
 
   if (!response.ok) {
+    handleExpiredSession(response);
     throw new Error(
       `Failed to fetch daily top rankings (HTTP ${response.status})`,
     );

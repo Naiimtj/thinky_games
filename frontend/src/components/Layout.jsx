@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 
 import { useAuthStore } from '../store/useAuthStore';
@@ -16,13 +16,18 @@ const mobileNavClass = ({ isActive }) =>
   `block rounded-lg px-3 py-2 transition-colors ${isActive ? 'bg-indigo-50 text-indigo-600 dark:bg-slate-700 dark:text-indigo-400' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'}`;
 
 const Layout = () => {
-  const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
+  const initialized = useAuthStore((state) => state.initialized);
+  const checkSession = useAuthStore((state) => state.checkSession);
   const logout = useAuthStore((state) => state.logout);
   const theme = useThemeStore((state) => state.theme);
   const toggleTheme = useThemeStore((state) => state.toggleTheme);
   const isDark = theme === 'dark';
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  useEffect(() => {
+    void checkSession();
+  }, [checkSession]);
 
   const closeMenu = () => setIsMenuOpen(false);
 
@@ -61,12 +66,12 @@ const Layout = () => {
             <NavLink to="/" className={navClass} end>
               Inicio
             </NavLink>
-            {token && (
+            {initialized && user && (
               <NavLink to="/rankings" className={navClass}>
                 Rankings
               </NavLink>
             )}
-            {token ? (
+            {initialized && user ? (
               <div className="flex items-center gap-3">
                 <span className="text-slate-400 dark:text-primary-active">
                   {user?.username}
@@ -139,7 +144,7 @@ const Layout = () => {
               >
                 Inicio
               </NavLink>
-              {token && (
+              {user && (
                 <NavLink
                   to="/rankings"
                   className={mobileNavClass}
@@ -148,7 +153,7 @@ const Layout = () => {
                   Rankings
                 </NavLink>
               )}
-              {token ? (
+              {user ? (
                 <>
                   <span className="px-3 py-2 text-slate-400 dark:text-primary-active">
                     {user?.username}

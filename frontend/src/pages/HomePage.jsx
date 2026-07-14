@@ -97,13 +97,13 @@ const PlayableCard = ({ game, isAuthenticated, completedToday }) => {
 };
 
 const HomePage = () => {
-  const isAuthenticated = Boolean(useAuthStore((state) => state.token));
+  const isAuthenticated = Boolean(useAuthStore((state) => state.user));
   const countdown = useDailyCountdown();
   const playedGameIds = useDailyGamesStore((state) => state.playedGameIds);
   const loadGamesCatalog = useDailyGamesStore(
     (state) => state.loadGamesCatalog,
   );
-  const loadDailyData = useDailyGamesStore((state) => state.loadDailyData);
+  const loadPlayedGames = useDailyGamesStore((state) => state.loadPlayedGames);
   const [games, setGames] = useState(FALLBACK_GAMES);
 
   useEffect(() => {
@@ -118,8 +118,8 @@ const HomePage = () => {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    loadDailyData();
-  }, [isAuthenticated, loadDailyData]);
+    loadPlayedGames();
+  }, [isAuthenticated, loadPlayedGames]);
 
   return (
     <div>

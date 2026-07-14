@@ -57,7 +57,7 @@ def client(db_session: Session) -> TestClient:
 
 @pytest.fixture()
 def auth_headers(client: TestClient) -> dict[str, str]:
-    """Register and log in a user, returning ready-to-use bearer headers."""
+    """Register and log in a user, returning the legacy empty headers shape."""
     client.post(
         "/auth/register",
         json={
@@ -66,8 +66,8 @@ def auth_headers(client: TestClient) -> dict[str, str]:
             "password": "supersecret1",
         },
     )
-    token = client.post(
+    client.post(
         "/auth/login",
         data={"username": "player", "password": "supersecret1"},
-    ).json()["access_token"]
-    return {"Authorization": f"Bearer {token}"}
+    )
+    return {}

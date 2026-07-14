@@ -11,11 +11,11 @@ if (import.meta.env.MODE === 'development') {
 }
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
+  // <StrictMode>
     <BrowserRouter
       future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
     >
       <App />
     </BrowserRouter>
-  </StrictMode>,
+  // </StrictMode>,
 );

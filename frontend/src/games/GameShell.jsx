@@ -109,7 +109,12 @@ export const GameShell = ({
         </div>
       </div>
 
-      {children}
+      {/* Frozen once solved: still shows the board exactly as the player
+          left it, but blocks further interaction while the win celebration
+          (confetti + banner) plays and the parent page holds this view. */}
+      <div className={state === GAME_STATE.WON ? 'pointer-events-none' : ''}>
+        {children}
+      </div>
 
       {state === GAME_STATE.WON && <Confetti />}
 

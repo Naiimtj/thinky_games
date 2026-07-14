@@ -70,14 +70,13 @@ def test_rankings_are_ordered_fastest_first(client, auth_headers):
                 "password": "supersecret1",
             },
         )
-        token = client.post(
+        client.post(
             "/auth/login",
             data={"username": username, "password": "supersecret1"},
-        ).json()["access_token"]
+        )
         client.post(
             "/scores",
             json={"completion_time": completion_time, "game_type": "mock-a"},
-            headers={"Authorization": f"Bearer {token}"},
         )
 
     board = client.get(

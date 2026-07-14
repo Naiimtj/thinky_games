@@ -19,7 +19,12 @@ class Settings(BaseSettings):
 
     jwt_secret_key: str = "change-me-in-production"
     jwt_algorithm: str = "HS256"
-    access_token_expire_minutes: int = 60 * 24
+    # 1 year: effectively no forced re-login. JWTs still need some expiry
+    # (there's no server-side revocation), but this is long enough that it
+    # never happens in practice for a regular player.
+    access_token_expire_minutes: int = 60 * 24 * 365
+    auth_cookie_name: str = "thinky_access_token"
+    auth_cookie_secure: bool = False
     cors_origins: list[str] = ["http://localhost:5173"]
 
     # Required (non-empty) to use the /db/backup* admin endpoints.

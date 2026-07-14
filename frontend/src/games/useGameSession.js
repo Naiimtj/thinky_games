@@ -10,8 +10,8 @@
  * game/mode/puzzle, so refreshing the page resumes mid-game instead of
  * resetting. Once a game is won, its storage is dropped rather than kept
  * around: a demo win clears it immediately (replaying should start fresh),
- * and a daily win clears it as soon as the score is confirmed saved on the
- * backend, which is the source of truth from then on.
+ * and a daily win clears it after the celebration once the score is confirmed
+ * saved on the backend, which is the source of truth from then on.
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -27,6 +27,7 @@ import {
 } from './gamePersistence';
 
 export const GAME_STATE = { PLAYING: 'PLAYING', WON: 'WON' };
+const DAILY_CELEBRATION_MS = 5_000;
 
 export const useGameSession = ({
   gameId,
@@ -74,17 +75,32 @@ export const useGameSession = ({
 
   useEffect(() => {
     if (state !== GAME_STATE.WON || hasSubmitted.current) return;
+    // Belt-and-suspenders: if the store already knows this game was played
+    // today (e.g. after a StrictMode remount clears local state but the
+    // Zustand store survives), treat it as already submitted instead of
+    // sending a duplicate request that would fail validation.
+    if (
+      mode === 'daily' &&
+      useDailyGamesStore.getState().playedGameIds.has(gameId)
+    ) {
+      hasSubmitted.current = true;
+      return;
+    }
     hasSubmitted.current = true;
-    if (mode === 'daily' && useAuthStore.getState().token) {
+    if (mode === 'daily' && useAuthStore.getState().user) {
       submitScore({
         completion_time: elapsed,
         game_type: gameId,
         solution: getSolutionRef.current?.() ?? null,
       })
         .then(() => {
-          // Now backed up server-side — no need to keep it locally too.
-          clearGameStorage(gameId, mode, puzzleId);
+          // Keep the solved board available during the celebration. Cleanup
+          // after it finishes, once GamePage is ready to show the leaderboard.
           useDailyGamesStore.getState().markGamePlayed(gameId);
+          setTimeout(
+            () => clearGameStorage(gameId, mode, puzzleId),
+            DAILY_CELEBRATION_MS,
+          );
         })
         .catch(() => {
           hasSubmitted.current = false;

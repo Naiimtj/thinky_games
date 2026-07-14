@@ -1,7 +1,6 @@
 /** HTTP calls for the backend-generated games catalogue and daily puzzles. */
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
+import { API_BASE_URL } from './apiConfig';
 
 /** List the games the backend can serve (id, name, tagline, emoji, playable). */
 export const fetchGames = async () => {

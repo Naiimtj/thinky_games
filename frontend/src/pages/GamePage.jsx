@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 
-import DailyGamesSummary from '../components/DailyGamesSummary';
 import Leaderboard from '../components/Leaderboard';
 import { getGame } from '../games/registry';
 import { useDailyCountdown } from '../games/useDailyCountdown';
@@ -9,11 +8,12 @@ import { useAuthStore } from '../store/useAuthStore';
 import { useDailyGamesStore } from '../store/useDailyGamesStore';
 
 const VALID_MODES = new Set(['demo', 'daily']);
-// How long the win celebration (confetti + banner, rendered by GameShell)
-// stays on screen before swapping to the daily summary. Without this,
-// `playedGameIds` flips to "locked" as soon as the score submit resolves —
-// often near-instantly — which used to swap the board out from under the
-// celebration before the player could see it.
+// How long the win celebration (confetti + banner, rendered by GameShell,
+// which also freezes the board) stays on screen before swapping to the
+// locked notice/leaderboard. Without this, `playedGameIds` flips to
+// "locked" as soon as the score submit resolves — often near-instantly —
+// which used to swap the board out from under the celebration before the
+// player could even see it.
 const CELEBRATION_MS = 5_000;
 
 /** Shown instead of the board once today's daily challenge is already solved. */
@@ -49,36 +49,46 @@ const DailyLockedNotice = ({ game }) => {
 
 const GamePage = () => {
   const { gameId, mode } = useParams();
-  const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
   const game = getGame(gameId);
 
   const playedGameIds = useDailyGamesStore((state) => state.playedGameIds);
-  const dailyLoadedAt = useDailyGamesStore((state) => state.dailyLoadedAt);
+  const dailyPlayedLoadedAt = useDailyGamesStore(
+    (state) => state.dailyPlayedLoadedAt,
+  );
   const dailyError = useDailyGamesStore((state) => state.dailyError);
-  const loadDailyData = useDailyGamesStore((state) => state.loadDailyData);
+  const loadPlayedGames = useDailyGamesStore((state) => state.loadPlayedGames);
 
   useEffect(() => {
-    if (mode !== 'daily' || !token || !game) return;
-    loadDailyData();
-  }, [mode, token, game, loadDailyData]);
+    if (mode !== 'daily' || !user || !game) return;
+    loadPlayedGames();
+  }, [mode, user, game, loadPlayedGames]);
 
   // 'checking' | 'locked' | 'unlocked'; only relevant for the daily mode.
   // Fails open (unlocked) on a transient network error, same as before.
   const getDailyStatus = () => {
-    if (mode !== 'daily' || !token) return 'unlocked';
+    if (mode !== 'daily' || !user) return 'unlocked';
     if (dailyError) return 'unlocked';
-    if (dailyLoadedAt === null) return 'checking';
+    if (dailyPlayedLoadedAt === null) return 'checking';
     return playedGameIds.has(gameId) ? 'locked' : 'unlocked';
   };
   const dailyStatus = getDailyStatus();
 
   // Detect the unlocked -> locked transition that happens right after a win
-  // (as opposed to loading an already-played game), and keep the game
-  // mounted — with its win celebration — for a bit before showing the
-  // summary instead of the locked notice.
+  // (as opposed to loading a game that was already played before this
+  // visit), and keep the board mounted — frozen, still showing the solved
+  // state, with its win celebration — for a bit before swapping to the
+  // locked notice.
   const [celebrating, setCelebrating] = useState(false);
-  const [showSummary, setShowSummary] = useState(false);
   const previousStatusRef = useRef(dailyStatus);
+  const wasPlayingRef = useRef(false);
+
+  // Record that this page actually rendered the active board. This lets the
+  // first locked render after a win keep the board mounted synchronously;
+  // waiting for the effect below would unmount it before `celebrating` flips.
+  if (dailyStatus === 'unlocked') wasPlayingRef.current = true;
+  const justCompleted =
+    dailyStatus === 'locked' && wasPlayingRef.current && !celebrating;
 
   useEffect(() => {
     const justWon =
@@ -88,8 +98,8 @@ const GamePage = () => {
 
     setCelebrating(true);
     const timer = setTimeout(() => {
+      wasPlayingRef.current = false;
       setCelebrating(false);
-      setShowSummary(true);
     }, CELEBRATION_MS);
     return () => clearTimeout(timer);
   }, [dailyStatus]);
@@ -119,7 +129,7 @@ const GamePage = () => {
   }
 
   // The daily challenge is only for authenticated players.
-  if (mode === 'daily' && !token) {
+  if (mode === 'daily' && !user) {
     return (
       <Navigate
         to="/login"
@@ -130,10 +140,12 @@ const GamePage = () => {
   }
 
   const renderContent = () => {
-    if (mode === 'daily' && showSummary) {
-      return <DailyGamesSummary />;
-    }
-    if (mode === 'daily' && dailyStatus === 'locked' && !celebrating) {
+    if (
+      mode === 'daily' &&
+      dailyStatus === 'locked' &&
+      !celebrating &&
+      !justCompleted
+    ) {
       return <DailyLockedNotice game={game} />;
     }
     if (mode === 'daily' && dailyStatus === 'checking') {

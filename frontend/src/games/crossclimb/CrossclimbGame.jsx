@@ -249,7 +249,7 @@ const CrossclimbBoard = ({ puzzle, puzzleId, mode, meta }) => {
         disabled={solved}
         className="mt-3 w-full"
       >
-        💡 Pista (+10 s)
+        Pista (+10 s)
       </BaseButton>
 
       <RulesSection>

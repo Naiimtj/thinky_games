@@ -1,49 +1,63 @@
 /**
- * Global authentication store (Zustand + persist).
+ * Global authentication store.
  *
- * Holds the bearer token and the current user, persisted to localStorage so the
- * session survives reloads. Non-authenticated visitors have `token === null`.
+ * Holds the current user. The session token stays in an HttpOnly cookie and is
+ * never exposed to JavaScript.
  */
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-
-import { fetchCurrentUser, loginUser, registerUser } from '../api/authApi';
+import {
+  fetchCurrentUser,
+  hasSessionHint,
+  loginUser,
+  logoutUser,
+  registerUser,
+} from '../api/authApi';
 import { useDailyGamesStore } from './useDailyGamesStore';
 
-export const useAuthStore = create(
-  persist(
-    (set, get) => ({
-      token: null,
-      user: null,
+localStorage.removeItem('thinky-auth');
+let sessionCheckPromise = null;
 
-      /** Log in and load the user profile. */
-      login: async ({ username, password }) => {
-        useDailyGamesStore.getState().resetDaily();
-        const { access_token: token } = await loginUser({ username, password });
-        const user = await fetchCurrentUser(token);
-        set({ token, user });
-        return user;
-      },
+export const useAuthStore = create((set, get) => ({
+  user: null,
+  initialized: false,
 
-      /** Register, then immediately log in. */
-      register: async ({ username, email, password }) => {
-        await registerUser({ username, email, password });
-        return get().login({ username, password });
-      },
+  /** Log in and load the user profile. */
+  login: async ({ username, password }) => {
+    useDailyGamesStore.getState().resetDaily();
+    await loginUser({ username, password });
+    const user = await fetchCurrentUser();
+    set({ user, initialized: true });
+    return user;
+  },
 
-      /** Clear the session. */
-      logout: () => {
-        useDailyGamesStore.getState().resetDaily();
-        set({ token: null, user: null });
-      },
-    }),
-    {
-      name: 'thinky-auth',
-      partialize: (state) => ({ token: state.token, user: state.user }),
-    },
-  ),
-);
+  /** Register, then immediately log in. */
+  register: async ({ username, email, password }) => {
+    await registerUser({ username, email, password });
+    return get().login({ username, password });
+  },
 
-/** Read the current token outside React (e.g. from the API client). */
-export const getAuthToken = () => useAuthStore.getState().token;
+  checkSession: async () => {
+    if (get().initialized) return;
+    if (!hasSessionHint()) {
+      set({ initialized: true });
+      return;
+    }
+    if (sessionCheckPromise) return sessionCheckPromise;
+
+    sessionCheckPromise = fetchCurrentUser()
+      .then((user) => set({ user, initialized: true }))
+      .catch(() => set({ user: null, initialized: true }))
+      .finally(() => {
+        sessionCheckPromise = null;
+      });
+    return sessionCheckPromise;
+  },
+
+  /** Clear the session. */
+  logout: () => {
+    useDailyGamesStore.getState().resetDaily();
+    void logoutUser();
+    set({ user: null, initialized: true });
+  },
+}));

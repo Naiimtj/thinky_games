@@ -7,7 +7,7 @@ and reused across routers.
 import hmac
 from datetime import datetime, timedelta
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import APIKeyHeader, OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -20,7 +20,7 @@ from app.dependencies import get_db
 settings = get_settings()
 _password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
 _admin_password_header = APIKeyHeader(name="X-Admin-Password", auto_error=False)
 
 
@@ -57,16 +57,18 @@ def decode_access_token(token: str) -> str | None:
 
 
 def get_current_user(
-    token: str = Depends(oauth2_scheme),
+    request: Request,
+    bearer_token: str | None = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> User:
-    """Resolve the authenticated user from the bearer token or raise 401."""
+    """Resolve the authenticated user from the HttpOnly cookie or bearer token."""
     invalid_credentials = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    username = decode_access_token(token)
+    token = request.cookies.get(settings.auth_cookie_name) or bearer_token
+    username = decode_access_token(token) if token else None
     if username is None:
         raise invalid_credentials
 

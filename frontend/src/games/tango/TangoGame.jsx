@@ -170,7 +170,7 @@ const TangoBoard = ({ puzzle, puzzleId, mode, meta }) => {
         disabled={solved || !solution}
         className="mt-3 w-full"
       >
-        💡 Pista (+10 s)
+        Pista (+10 s)
       </BaseButton>
 
       <RulesSection>

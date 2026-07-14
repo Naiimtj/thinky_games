@@ -108,7 +108,7 @@ const PinpointBoard = ({ puzzle, puzzleId, mode, meta }) => {
         disabled={solved || revealed >= puzzle.clues.length}
         className="mt-3 w-full"
       >
-        💡 Pista (+10 s)
+        Pista (+10 s)
       </BaseButton>
 
       <RulesSection>

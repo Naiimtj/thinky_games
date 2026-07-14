@@ -22,6 +22,8 @@ import {
 } from '../api/scoreApi';
 
 const DAILY_STALE_MS = 60_000;
+let gamesCatalogRequest = null;
+let playedGamesRequest = null;
 
 const isFresh = (loadedAt) =>
   loadedAt !== null && Date.now() - loadedAt < DAILY_STALE_MS;
@@ -32,6 +34,7 @@ export const useDailyGamesStore = create((set, get) => ({
 
   // "Today" facts shared across Home/Game/Rankings pages.
   playedGameIds: new Set(),
+  dailyPlayedLoadedAt: null,
   summary: [],
   ranks: [],
   dailyTop: [],
@@ -42,17 +45,48 @@ export const useDailyGamesStore = create((set, get) => ({
   /** Fetch the games catalogue once per session; reused by every caller. */
   loadGamesCatalog: async () => {
     if (get().gamesCatalog !== null) return get().gamesCatalog;
-    try {
-      const games = await fetchGames();
-      set({ gamesCatalog: games });
-      return games;
-    } catch {
-      return null; // callers fall back to the local registry
-    }
+    if (gamesCatalogRequest) return gamesCatalogRequest;
+
+    gamesCatalogRequest = fetchGames()
+      .then((games) => {
+        set({ gamesCatalog: games });
+        return games;
+      })
+      .catch(() => null)
+      .finally(() => {
+        gamesCatalogRequest = null;
+      });
+    return gamesCatalogRequest;
   },
 
   /**
-   * Fetch played-today games + personal summary/ranks/top-3 together.
+   * Fetch only the played-game flags needed by Home and GamePage.
+   * Skipped when a fresh copy is already cached, unless `force` is set.
+   */
+  loadPlayedGames: async ({ force = false } = {}) => {
+    const { dailyPlayedLoadedAt } = get();
+    if (!force && isFresh(dailyPlayedLoadedAt)) return;
+    if (playedGamesRequest) return playedGamesRequest;
+
+    playedGamesRequest = fetchDailyPlayedGames()
+      .then((played) => {
+        set({
+          playedGameIds: new Set(played.game_types),
+          dailyPlayedLoadedAt: Date.now(),
+          dailyError: null,
+        });
+      })
+      .catch((error) => {
+        set({ dailyError: error });
+      })
+      .finally(() => {
+        playedGamesRequest = null;
+      });
+    return playedGamesRequest;
+  },
+
+  /**
+   * Fetch personal summary/ranks/top-3 for RankingsPage.
    * Skipped when a fresh copy is already cached, unless `force` is set.
    */
   loadDailyData: async ({ force = false } = {}) => {
@@ -70,6 +104,7 @@ export const useDailyGamesStore = create((set, get) => ({
       ]);
       set({
         playedGameIds: new Set(played.game_types),
+        dailyPlayedLoadedAt: Date.now(),
         summary,
         ranks,
         dailyTop,
@@ -100,6 +135,7 @@ export const useDailyGamesStore = create((set, get) => ({
   resetDaily: () =>
     set({
       playedGameIds: new Set(),
+      dailyPlayedLoadedAt: null,
       summary: [],
       ranks: [],
       dailyTop: [],

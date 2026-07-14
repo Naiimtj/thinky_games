@@ -87,7 +87,7 @@ const ZipBoard = ({ puzzle: targetPuzzle, mode, meta }) => {
         disabled={session.state === GAME_STATE.WON || !solution}
         className="mt-3 w-full rounded-full disabled:cursor-not-allowed"
       >
-        Pista: letra (+10s)
+        Pista (+10 s)
       </BaseButton>
 
       <RulesSection>

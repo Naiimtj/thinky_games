@@ -449,7 +449,7 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
           disabled={solved}
           className="flex-1 rounded-full"
         >
-          Pista: letra (+10s)
+          Pista (+10 s)
         </BaseButton>
       </div>
 

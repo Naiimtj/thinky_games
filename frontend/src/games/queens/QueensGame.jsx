@@ -183,7 +183,7 @@ const QueensBoard = ({ puzzle, puzzleId, mode, meta }) => {
         disabled={solved}
         className="mt-3 w-full rounded-full"
       >
-        Pista: letra (+10s)
+        Pista (+10 s)
       </BaseButton>
 
       <RulesSection>

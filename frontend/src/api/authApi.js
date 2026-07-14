@@ -1,7 +1,6 @@
 /** HTTP calls for authentication. */
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
+import { API_BASE_URL } from './apiConfig';
 
 const readDetail = async (response) => {
   try {
@@ -12,11 +11,17 @@ const readDetail = async (response) => {
   }
 };
 
+/** The hint contains no credential; it only avoids a blind session request. */
+export const hasSessionHint = () =>
+  typeof document !== 'undefined' &&
+  document.cookie.split('; ').includes('thinky_session_hint=1');
+
 /** Create a new account. Returns the public user. */
 export const registerUser = async ({ username, email, password }) => {
   const response = await fetch(`${API_BASE_URL}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({ username, email, password }),
   });
   if (!response.ok) {
@@ -32,6 +37,7 @@ export const loginUser = async ({ username, password }) => {
   const response = await fetch(`${API_BASE_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    credentials: 'include',
     body: new URLSearchParams({ username, password }),
   });
   if (!response.ok) {
@@ -40,13 +46,20 @@ export const loginUser = async ({ username, password }) => {
   return response.json();
 };
 
-/** Fetch the profile of the user owning the given token. */
-export const fetchCurrentUser = async (token) => {
+/** Fetch the profile associated with the HttpOnly session cookie. */
+export const fetchCurrentUser = async () => {
   const response = await fetch(`${API_BASE_URL}/auth/me`, {
-    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include',
   });
   if (!response.ok) {
     throw new Error('La sesión no es válida');
   }
   return response.json();
+};
+
+export const logoutUser = async () => {
+  await fetch(`${API_BASE_URL}/auth/logout`, {
+    method: 'POST',
+    credentials: 'include',
+  });
 };
