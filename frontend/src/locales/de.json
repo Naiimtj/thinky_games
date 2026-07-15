@@ -1,0 +1,245 @@
+{
+  "games": {
+    "zip": {
+      "name": "Zip",
+      "tagline": "Verbinde die Zahlen in einem einzigen Strich"
+    },
+    "queens": { "name": "Queens", "tagline": "Kröne jede Region" },
+    "tango": { "name": "Tango", "tagline": "Harmonisiere das Gitter" },
+    "sudoku": { "name": "Mini Sudoku", "tagline": "Fülle von 1 bis 6" },
+    "pinpoint": { "name": "Pinpoint", "tagline": "Errate die Kategorie" },
+    "crossword": {
+      "name": "Kreuzworträtsel",
+      "tagline": "Vervollständige das Gitter"
+    },
+    "wend": { "name": "Wend", "tagline": "Bahne dir einen Weg durch Wörter" },
+    "patches": { "name": "Patches", "tagline": "Gib ihm Form!" }
+  },
+  "layout": {
+    "nav": {
+      "home": "Startseite",
+      "rankings": "Ranglisten",
+      "login": "Anmelden",
+      "register": "Registrieren",
+      "logout": "Abmelden"
+    },
+    "theme": {
+      "light": "Zum hellen Modus wechseln",
+      "dark": "Zum dunklen Modus wechseln"
+    },
+    "menu": {
+      "open": "Menü öffnen",
+      "close": "Menü schließen"
+    }
+  },
+  "shared": {
+    "language": "Sprache",
+    "close": "Schließen",
+    "required": "Erforderlich",
+    "gridCell": "Zeile {{row}}, Spalte {{column}}",
+    "moreInformation": "Weitere Informationen: {{tooltip}}",
+    "clearSearch": "Suche löschen",
+    "closeNotification": "Benachrichtigung schließen"
+  },
+  "home": {
+    "title": "Wähle dein Spiel",
+    "subtitle": {
+      "authenticated": "Tritt bei der täglichen Herausforderung an.",
+      "guest": "Melde dich für die tägliche Herausforderung und Ranglisten an."
+    },
+    "nextDaily": "Nächste tägliche Herausforderung in {{countdown}}",
+    "comingSoon": "Demnächst",
+    "playDemo": "Demo spielen",
+    "dailyChallenge": "Tägliche Herausforderung",
+    "dailyCompleted": "Tägliche Herausforderung heute abgeschlossen"
+  },
+  "auth": {
+    "busy": "Einen Moment…",
+    "login": {
+      "title": "Anmelden",
+      "submitLabel": "Anmelden",
+      "username": "Benutzername",
+      "password": "Passwort",
+      "footer": "Noch kein Konto?",
+      "footerLink": "Registrieren"
+    },
+    "register": {
+      "title": "Konto erstellen",
+      "submitLabel": "Registrieren",
+      "username": "Benutzername",
+      "email": "E-Mail",
+      "passwordHint": "Passwort (mind. 8 Zeichen)",
+      "footer": "Bereits ein Konto?",
+      "footerLink": "Anmelden"
+    },
+    "errors": {
+      "register": "Das Konto konnte nicht erstellt werden.",
+      "login": "Benutzername oder Passwort sind falsch.",
+      "session": "Die Sitzung ist ungültig."
+    }
+  },
+  "rankingsPage": {
+    "title": "Ranglisten"
+  },
+  "gamePage": {
+    "loading": "Laden…",
+    "backToGames": "← Alle Spiele",
+    "locked": {
+      "description": "Du hast die tägliche Herausforderung heute bereits gespielt. Komm in {{countdown}} für eine neue Herausforderung zurück."
+    },
+    "unplayable": {
+      "description": "Dieses Spiel ist bald verfügbar."
+    }
+  },
+  "puzzleGate": {
+    "loading": "Puzzle wird erstellt…",
+    "error": "Das Puzzle konnte nicht geladen werden. Versuche es in einigen Sekunden erneut."
+  },
+  "pinpointGame": {
+    "tagline": "Errate die Kategorie, die die Hinweise verbindet.",
+    "hint": "Jede falsche Antwort deckt einen weiteren Hinweis auf.",
+    "hintButton": "Hinweis (+10 s)",
+    "rules": {
+      "sharedCategory": "Die Hinweise gehören zu einer gemeinsamen Kategorie.",
+      "chooseOption": "Errate die Kategorie, indem du eine Option aus der Liste auswählst.",
+      "wrongReveals": "Jede falsche Antwort deckt einen weiteren Hinweis auf.",
+      "hintReveals": "Nutze Hinweis, um einen weiteren Hinweis aufzudecken (+10 s)."
+    }
+  },
+  "crosswordGame": {
+    "tagline": "Vervollständige die Wörter, die sich im Gitter kreuzen.",
+    "hint": "Wähle einen Hinweis oder ein Feld und gib einen Buchstaben ein.",
+    "gridLabel": "Kreuzworträtselgitter",
+    "cellLabel": "Feld für die Hinweise {{numbers}}",
+    "hintButton": "Hinweis (+10 s)",
+    "directions": {
+      "across": "Waagerecht",
+      "down": "Senkrecht"
+    },
+    "rules": {
+      "select": "Wähle einen waagerechten oder senkrechten Hinweis, um ihn im Gitter hervorzuheben.",
+      "write": "Gib einen Buchstaben pro Feld ein; gemeinsame Buchstaben gelten für beide Wörter.",
+      "complete": "Vervollständige alle Hinweise, um das Kreuzworträtsel zu lösen.",
+      "hint": "Nutze Hinweis, um einen Buchstaben aufzudecken (+10 s)."
+    }
+  },
+  "wendGame": {
+    "tagline": "Finde 5 versteckte Wörter zwischen den Buchstaben in einer geraden Linie.",
+    "hint": "Ziehe eine gerade Linie: waagerecht, senkrecht oder diagonal (ohne Zickzack).",
+    "undo": "Rückgängig",
+    "letterHint": "Buchstabenhinweis (+10 s)",
+    "definitionHint": "Definitionshinweis (+5 s)",
+    "wordLength": "{{count}} Buchstaben",
+    "rules": {
+      "find": "Es gibt 5 Wörter zwischen Füllbuchstaben: Finde sie, indem du eine gerade Linie ziehst (waagerecht, senkrecht oder diagonal), ohne Zickzack.",
+      "form": "Jeder Pfad muss eines der Wörter aus der Liste bilden.",
+      "cross": "Einige Wörter können sich einen Buchstaben teilen und kreuzen, wie in einem Kreuzworträtsel; der Rest sind Füllbuchstaben.",
+      "hints": "Der Buchstabenhinweis zeigt den nächsten richtigen Buchstaben (+10 s). Der Definitionshinweis zeigt die Definition eines Wortes (+5 s).",
+      "definitions": "Wenn du das Puzzle löst, siehst du die Definition jedes Wortes unter seinem Namen."
+    }
+  },
+  "queensGame": {
+    "tagline": "Eine Krone pro Zeile, Spalte und Farbe; sie dürfen sich nicht berühren.",
+    "hint": "Einmal tippen für ✕, erneut für eine Krone.",
+    "autoFill": "✕ automatisch füllen",
+    "hintButton": "Hinweis (+10 s)",
+    "rules": {
+      "objective": "Dein Ziel ist genau eine 👑 in jeder Zeile, Spalte und farbigen Region.",
+      "marks": "Tippe einmal für ✕ und zweimal für 👑. Mit ✕ markierst du Felder, auf die keine 👑 darf.",
+      "touching": "Die 👑 dürfen sich nicht berühren, auch nicht diagonal."
+    }
+  },
+  "zipGame": {
+    "tagline": "Verbinde die Zahlen in einem einzigen Strich.",
+    "hint": "Beginne bei 1 und ziehe, um die Zahlen der Reihe nach zu verbinden und alle Felder zu füllen.",
+    "gridLabel": "Zip-Gitter",
+    "hintButton": "Hinweis (+10 s)",
+    "rules": {
+      "start": "Beginne bei Zahl 1 und zeichne der Reihe nach einen Pfad bis zur höchsten Zahl.",
+      "fill": "Du musst jedes Feld auf dem Brett besuchen.",
+      "cross": "Der Pfad darf sich nicht selbst kreuzen."
+    }
+  },
+  "tangoGame": {
+    "tagline": "Drei ☀️ und drei 🌙 pro Zeile und Spalte; niemals drei hintereinander.",
+    "hint": "= gleich · × entgegengesetzt. Tippe zum Wechseln von ☀️/🌙.",
+    "ruleError": "Eine Regel auf dem Brett ist verletzt.",
+    "hintButton": "Hinweis (+10 s)",
+    "rules": {
+      "balance": "Jede Zeile und Spalte muss drei ☀️ und drei 🌙 enthalten.",
+      "runs": "Es darf nicht drei gleiche Symbole hintereinander geben.",
+      "relations": "= bedeutet, dass die Felder gleich sein müssen; × bedeutet, dass sie entgegengesetzt sein müssen.",
+      "hint": "Nutze Hinweis, um ein korrektes Feld aufzudecken (+10 s)."
+    }
+  },
+  "sudokuGame": {
+    "tagline": "Verwende 1 bis 6 ohne Wiederholung in Zeile, Spalte oder Block.",
+    "hint": "Tippe ein Feld und dann eine Zahl auf dem Tastenfeld unten an.",
+    "cellLabel": "Zeile {{row}}, Spalte {{column}}",
+    "digitLabel": "Zahl {{digit}} eintragen",
+    "eraseLabel": "Zahl löschen",
+    "hintButton": "Hinweis (+10 s)",
+    "rules": {
+      "fill": "Fülle das Gitter mit Zahlen von 1 bis 6.",
+      "unique": "Keine Zahl darf sich in einer Zeile, Spalte oder einem Block wiederholen.",
+      "fixed": "Schattierte Felder sind fest und können nicht bearbeitet werden.",
+      "input": "Tippe ein Feld und danach eine Zahl auf dem Tastenfeld unten an, um es zu füllen."
+    }
+  },
+  "patchesGame": {
+    "tagline": "Vervollständige jede Form, um das Gitter zu füllen.",
+    "hint": "Tippe eine farbige Zelle an und ziehe, um ihre Form zu malen; ziehe darüber, um zu löschen.",
+    "cellLabel": "Zeile {{row}}, Spalte {{column}}",
+    "undo": "Rückgängig",
+    "hintButton": "Hinweis (+10 s)",
+    "legend": {
+      "title": "Vervollständige jede Form, um das Gitter zu füllen",
+      "square": "Quadrat",
+      "vertical": "Hohes Rechteck",
+      "horizontal": "Breites Rechteck",
+      "any": "Eine dieser Formen",
+      "size": "Enthält eine Form eine Zahl, muss sie diese Größe haben."
+    },
+    "rules": {
+      "paint": "Tippe eine farbige Zelle an und ziehe, um ihre Form zu malen.",
+      "shape": "Jede Form muss die angegebene Gestalt haben und, falls sie eine Zahl enthält, genau diese Größe.",
+      "erase": "Ziehe über bereits gemalte Zellen, um sie zu löschen."
+    }
+  },
+  "leaderboard": {
+    "period": {
+      "daily": "Täglich",
+      "monthly": "Monatlich",
+      "global": "Global"
+    },
+    "title": "Rangliste",
+    "loading": "Laden…",
+    "error": "Die Rangliste konnte nicht geladen werden.",
+    "empty": "Es wurden noch keine Zeiten erfasst.",
+    "personalTitle": "Deine Ergebnisse",
+    "personalError": "Deine Ergebnisse konnten nicht geladen werden.",
+    "personalEmpty": "Du hast dieses Spiel noch nicht gespielt."
+  },
+  "dailySummary": {
+    "title": "Deine Zusammenfassung heute",
+    "rank": "Platz",
+    "best": "Deine beste Zeit",
+    "worst": "Deine schlechteste Zeit",
+    "loading": "Laden…",
+    "error": "Deine Zusammenfassung konnte nicht geladen werden."
+  },
+  "gameShell": {
+    "howToPlay": "Spielanleitung",
+    "restart": "Neustart",
+    "mode": {
+      "daily": "Tägliche Herausforderung",
+      "demo": "Demo"
+    },
+    "nextChallenge": "Nächste Herausforderung in {{countdown}}",
+    "solvedIn": "Gelöst in {{time}}!",
+    "rankingMessage": {
+      "daily": "Deine Zeit wurde an die Rangliste gesendet.",
+      "demo": "Melde dich an und spiele die tägliche Herausforderung, um zu wetteifern."
+    }
+  }
+}

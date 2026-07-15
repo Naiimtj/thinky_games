@@ -65,6 +65,7 @@ class DailyPuzzle(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     game_type = Column(String(30), nullable=False, index=True)
+    locale = Column(String(2), default="es", nullable=False, index=True)
     puzzle_date = Column(Date, nullable=False, index=True)
     seed = Column(Integer, nullable=False)
     payload = Column(JSON, nullable=False)  # board sent to the client
@@ -73,6 +74,9 @@ class DailyPuzzle(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "game_type", "puzzle_date", name="uq_daily_puzzle_game_date"
+            "game_type",
+            "locale",
+            "puzzle_date",
+            name="uq_daily_puzzle_game_locale_date",
         ),
     )

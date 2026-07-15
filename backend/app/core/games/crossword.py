@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 import unicodedata
-from datetime import timedelta
+from datetime import date, timedelta
 
 from app.config.env import get_settings
 from app.core.games.base import GeneratedPuzzle, Payload
 from app.core.games.daily import utc_today
+from app.core.games.localized_words import common_words
 from app.core.games.prng import mulberry32, shuffle_in_place
 from app.core.games.rae import fetch_clue
-from app.core.games.wend_words import common_words
 
 DEMO_SEED = 1
 GRID_SIZE = 11
@@ -207,19 +207,21 @@ def _extend_layout(
     return None
 
 
-def _recent_used_words() -> set[str]:
-    """Answers used by Crossword daily puzzles in the exclusion window."""
+def _recent_used_words(target_date: date, lang: str = "es") -> set[str]:
+    """Answers used by localized Crossword puzzles in the exclusion window."""
     from app.core.database.database import SessionLocal
     from app.core.database.models import DailyPuzzle
 
-    cutoff = utc_today() - timedelta(days=RECENT_WINDOW_DAYS)
+    cutoff = target_date - timedelta(days=RECENT_WINDOW_DAYS)
     db = SessionLocal()
     try:
         rows = (
             db.query(DailyPuzzle.payload)
             .filter(
                 DailyPuzzle.game_type == "crossword",
+                DailyPuzzle.locale == lang,
                 DailyPuzzle.puzzle_date >= cutoff,
+                DailyPuzzle.puzzle_date < target_date,
             )
             .all()
         )
@@ -236,21 +238,31 @@ def _recent_used_words() -> set[str]:
     }
 
 
-def _generate_from_rae(
-    seed: int, api_key: str, excluded: set[str]
+def _generate_from_dict(
+    seed: int, lang: str, excluded: set[str]
 ) -> list[dict[str, object]] | None:
+    """Build a crossword from the localized word pool, optionally via Wiktionary."""
     candidates: list[dict[str, str]] = []
     seen = set(excluded)
     pool = [
-        word
-        for word in common_words()
-        if MIN_WORD_LENGTH <= len(word) <= MAX_WORD_LENGTH and word not in seen
+        entry
+        for entry in common_words(lang)
+        if MIN_WORD_LENGTH <= len(entry.answer) <= MAX_WORD_LENGTH
+        and entry.answer not in seen
     ]
     shuffle_in_place(pool, mulberry32(seed))
-    for word in pool[:MAX_RAE_CANDIDATES]:
-        answer = _normalise_answer(word)
-        clue = fetch_clue(word, api_key)
+
+    api_key = get_settings().rae_key
+    for entry in pool[:MAX_RAE_CANDIDATES]:
+        answer = _normalise_answer(entry.answer)
+        # Spanish can use RAE when configured. Curated clues keep all locales
+        # deterministic and usable when a dictionary service is unavailable.
+        clue = entry.clue
+        if lang == "es" and api_key:
+            clue = fetch_clue(entry.answer.lower(), api_key)
         if clue is None:
+            clue = entry.clue
+        if not clue:
             continue
         seen.add(answer)
         candidates.append({"answer": answer, "clue": clue})
@@ -261,14 +273,19 @@ def _generate_from_rae(
     return None
 
 
-def _generate_puzzle(seed: int) -> Payload:
-    api_key = get_settings().rae_key
-    if api_key:
-        entries = _generate_from_rae(seed, api_key, _recent_used_words())
-        if entries is not None:
-            return {"size": GRID_SIZE, "entries": entries}
-    entries = _number_entries(CROSSWORD_PUZZLES[seed % len(CROSSWORD_PUZZLES)])
-    return {"size": FALLBACK_GRID_SIZE, "entries": entries}
+def _generate_puzzle(
+    seed: int, lang: str = "es", target_date: date | None = None
+) -> Payload:
+    excluded = _recent_used_words(target_date, lang) if target_date else set()
+    entries = _generate_from_dict(seed, lang, excluded)
+    if entries is None and excluded:
+        # A compact curated pool may be exhausted after many daily puzzles.
+        # Prefer a localized repeat over a fallback in another language.
+        entries = _generate_from_dict(seed, lang, set())
+    if entries is not None:
+        return {"size": GRID_SIZE, "entries": entries}
+    fallback_entries = _number_entries(CROSSWORD_PUZZLES[seed % len(CROSSWORD_PUZZLES)])
+    return {"size": FALLBACK_GRID_SIZE, "entries": fallback_entries}
 
 
 def validate(payload: Payload, solution: object) -> bool:
@@ -284,7 +301,13 @@ def solve(payload: Payload) -> dict[str, str]:
     return {entry["id"]: entry["answer"] for entry in payload["entries"]}
 
 
-def generate(seed: int) -> GeneratedPuzzle:
-    """Generate an automatic RAE crossword with an offline fallback."""
-    payload = _generate_puzzle(seed)
+def generate(seed: int, lang: str = "es") -> GeneratedPuzzle:
+    """Generate a stable demo crossword without daily-word exclusions."""
+    payload = _generate_puzzle(seed, lang)
+    return GeneratedPuzzle(payload=payload, solution=solve(payload))
+
+
+def generate_for_date(seed: int, lang: str, target_date: date) -> GeneratedPuzzle:
+    """Generate a daily crossword excluding only earlier same-locale puzzles."""
+    payload = _generate_puzzle(seed, lang, target_date)
     return GeneratedPuzzle(payload=payload, solution=solve(payload))

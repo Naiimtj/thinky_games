@@ -12,11 +12,9 @@ first can never lock the other out. Deterministic from a seed.
 
 from __future__ import annotations
 
-from app.config.env import get_settings
 from app.core.games.base import GeneratedPuzzle, Payload
+from app.core.games.localized_words import common_words
 from app.core.games.prng import mulberry32, rand_int, shuffle_in_place
-from app.core.games.rae import fetch_clue
-from app.core.games.wend_words import common_words
 
 SIZE = 8
 WORD_COUNT = 5  # words to hide; every other cell becomes a random filler letter
@@ -42,9 +40,9 @@ FILLER_LETTERS = "EEEEAAAAOOOOSSSRRRNNNIIILLDDTTCCUUMMPPBBGVFHYQJZ"
 Coord = dict[str, int]
 
 
-def _choose_words(rng) -> list[str]:
+def _choose_words(rng, lang: str = "es") -> list[str]:
     """Pick ``WORD_COUNT`` distinct common words that fit the grid in a straight line."""
-    pool = [word for word in common_words() if len(word) <= SIZE]
+    pool = [entry.answer for entry in common_words(lang) if len(entry.answer) <= SIZE]
     shuffle_in_place(pool, rng)
     return pool[:WORD_COUNT]
 
@@ -96,32 +94,20 @@ def _fill_grid(grid: list[list[str]], rng) -> None:
                 grid[row][col] = FILLER_LETTERS[rand_int(rng, len(FILLER_LETTERS))]
 
 
-def _lookup_definitions(words: list[str]) -> dict[str, str]:
-    """Best-effort RAE definitions per word (only when a key is configured).
-
-    Words the dictionary can't define are simply omitted, so a puzzle is always
-    generated regardless of dictionary coverage or network state. Without a key
-    no lookups happen, which keeps generation offline and deterministic.
-    """
-    api_key = get_settings().rae_key
-    if not api_key:
-        return {}
-    definitions: dict[str, str] = {}
-    for word in words:
-        clue = fetch_clue(word, api_key)
-        if clue:
-            definitions[word] = clue
-    return definitions
+def _lookup_definitions(words: list[str], lang: str = "es") -> dict[str, str]:
+    """Return localized curated clues without network-dependent generation."""
+    curated = {entry.answer: entry.clue for entry in common_words(lang)}
+    return {word: curated[word] for word in words if word in curated}
 
 
-def _generate_puzzle(seed: int) -> Payload:
+def _generate_puzzle(seed: int, lang: str = "es") -> Payload:
     rng = mulberry32(seed)
 
     grid: list[list[str]] = [[""] * SIZE for _ in range(SIZE)]
     words: list[str] = []
     for _ in range(MAX_ATTEMPTS):
         grid = [[""] * SIZE for _ in range(SIZE)]
-        words = _choose_words(rng)
+        words = _choose_words(rng, lang)
         # Place the longest words first, while the grid is still emptiest.
         if all(
             _place_word(grid, word, rng)
@@ -134,7 +120,7 @@ def _generate_puzzle(seed: int) -> Payload:
         "size": SIZE,
         "grid": grid,
         "words": words,
-        "definitions": _lookup_definitions(words),
+        "definitions": _lookup_definitions(words, lang),
     }
 
 
@@ -235,8 +221,8 @@ def solve(payload: Payload) -> list[dict] | None:
     return found
 
 
-def generate(seed: int) -> GeneratedPuzzle:
+def generate(seed: int, lang: str = "es") -> GeneratedPuzzle:
     """Deterministically generate a Wend puzzle for ``seed``."""
-    payload = _generate_puzzle(seed)
+    payload = _generate_puzzle(seed, lang)
     return GeneratedPuzzle(payload=payload, solution=solve(payload))
 

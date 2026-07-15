@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import BaseButton from '../../components/base/BaseButton';
 import { GameShell, RulesSection } from '../GameShell';
@@ -29,7 +30,8 @@ const cellTone = (isFound, isActive, isWrong, isHintFound, isHintActive) => {
   return 'bg-white text-slate-700 hover:bg-slate-50';
 };
 
-const WendBoard = ({ puzzle, puzzleId, mode, meta }) => {
+const WendBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
+  const { t } = useTranslation();
   const { size, grid, words, definitions } = puzzle;
   const answers = useMemo(() => new Set(words), [words]);
 
@@ -55,6 +57,7 @@ const WendBoard = ({ puzzle, puzzleId, mode, meta }) => {
     gameId: 'wend',
     mode,
     puzzleId,
+    locale: puzzleLocale,
     isSolved: solved,
     getSolution: () => found,
   });
@@ -203,13 +206,13 @@ const WendBoard = ({ puzzle, puzzleId, mode, meta }) => {
 
   return (
     <GameShell
-      title={meta?.name ?? 'Wend'}
-      tagline="Encuentra 5 palabras ocultas entre las letras, en línea recta."
+      title={meta?.name ?? t('games.wend.name')}
+      tagline={t('wendGame.tagline')}
       mode={mode}
       elapsed={session.elapsed}
       state={session.state}
       onReset={handleReset}
-      hint="Arrastra en línea recta: horizontal, vertical o diagonal (sin zigzag)."
+      hint={t('wendGame.hint')}
     >
       <div className="mb-2 h-6 text-center font-mono text-lg font-bold tracking-widest text-indigo-600">
         {forming}
@@ -267,7 +270,7 @@ const WendBoard = ({ puzzle, puzzleId, mode, meta }) => {
           disabled={path.length === 0}
           className="disabled:cursor-not-allowed"
         >
-          Deshacer
+          {t('wendGame.undo')}
         </BaseButton>
         <BaseButton
           variant="warning"
@@ -276,7 +279,7 @@ const WendBoard = ({ puzzle, puzzleId, mode, meta }) => {
           disabled={solved}
           className="flex-1 rounded-full disabled:cursor-not-allowed"
         >
-          Pista letra (+10s)
+          {t('wendGame.letterHint')}
         </BaseButton>
         <BaseButton
           variant="warning"
@@ -285,7 +288,7 @@ const WendBoard = ({ puzzle, puzzleId, mode, meta }) => {
           disabled={solved || !nextDefinitionWord}
           className="flex-1 rounded-full disabled:cursor-not-allowed"
         >
-          Pista definición (+5s)
+          {t('wendGame.definitionHint')}
         </BaseButton>
       </div>
 
@@ -298,7 +301,9 @@ const WendBoard = ({ puzzle, puzzleId, mode, meta }) => {
               <span
                 className={`self-start rounded-full px-3 py-1 text-sm font-semibold ${isFound ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}
               >
-                {isFound ? word : `${word.length} letras`}
+                {isFound
+                  ? word
+                  : t('wendGame.wordLength', { count: word.length })}
               </span>
               {(solved || revealedDefs.includes(word)) && definition && (
                 <p className="px-3 text-sm leading-snug text-slate-600 dark:text-primary">
@@ -311,24 +316,11 @@ const WendBoard = ({ puzzle, puzzleId, mode, meta }) => {
       </div>
 
       <RulesSection>
-        <li>
-          Hay 5 palabras ocultas entre letras de relleno: encuéntralas
-          arrastrando en línea recta (horizontal, vertical o diagonal), sin
-          zigzag.
-        </li>
-        <li>Cada trazo debe formar una de las palabras de la lista.</li>
-        <li>
-          Algunas palabras pueden cruzarse compartiendo una letra, como en un
-          crucigrama; el resto son letras sueltas de relleno.
-        </li>
-        <li>
-          «Pista: letra» revela la siguiente letra correcta (+10 s). «Pista:
-          definición» muestra la definición de una palabra (+5 s).
-        </li>
-        <li>
-          Al completar el puzzle verás la definición de cada palabra debajo de
-          su nombre.
-        </li>
+        <li>{t('wendGame.rules.find')}</li>
+        <li>{t('wendGame.rules.form')}</li>
+        <li>{t('wendGame.rules.cross')}</li>
+        <li>{t('wendGame.rules.hints')}</li>
+        <li>{t('wendGame.rules.definitions')}</li>
       </RulesSection>
     </GameShell>
   );
@@ -343,6 +335,7 @@ const WendGame = ({ mode, meta }) => {
         <WendBoard
           puzzle={puzzle.payload}
           puzzleId={puzzle.id}
+          puzzleLocale={puzzle.locale}
           mode={mode}
           meta={meta}
         />

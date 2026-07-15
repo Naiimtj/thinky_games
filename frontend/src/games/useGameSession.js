@@ -33,6 +33,7 @@ export const useGameSession = ({
   gameId,
   mode,
   puzzleId,
+  locale = 'es',
   isSolved,
   getSolution,
 }) => {
@@ -91,6 +92,7 @@ export const useGameSession = ({
       submitScore({
         completion_time: elapsed,
         game_type: gameId,
+        locale,
         solution: getSolutionRef.current?.() ?? null,
       })
         .then(() => {
@@ -106,7 +108,7 @@ export const useGameSession = ({
           hasSubmitted.current = false;
         });
     }
-  }, [state, elapsed, gameId, mode, puzzleId]);
+  }, [state, elapsed, gameId, locale, mode, puzzleId]);
 
   // Persist progress so a reload resumes mid-game. A finished demo puzzle
   // clears its storage on win (see above for daily): since demos never

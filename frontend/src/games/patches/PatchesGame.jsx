@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import BaseButton from '../../components/base/BaseButton';
 import { GameShell, RulesSection } from '../GameShell';
@@ -95,37 +96,43 @@ const ClueGlyph = ({ shape, size, color }) => {
 const LEGEND_COLOR = '#64748b';
 
 const LEGEND = [
-  { shape: 'SQUARE', label: 'Cuadrado' },
-  { shape: 'VRECT', label: 'Rectángulo alto' },
-  { shape: 'HRECT', label: 'Rectángulo ancho' },
-  { shape: 'ANY', label: 'Cualquiera de estos' },
+  { shape: 'SQUARE', labelKey: 'square' },
+  { shape: 'VRECT', labelKey: 'vertical' },
+  { shape: 'HRECT', labelKey: 'horizontal' },
+  { shape: 'ANY', labelKey: 'any' },
 ];
 
-const Legend = () => (
-  <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
-    <p className="mb-3 text-center text-sm font-bold text-slate-700">
-      Completa cada figura para rellenar la cuadrícula
-    </p>
-    <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-      {LEGEND.map(({ shape, label }) => (
-        <span
-          key={shape}
-          className="flex items-center gap-2 text-sm text-slate-700"
-        >
-          <span className="h-6 w-6 shrink-0">
-            <ClueGlyph shape={shape} size={null} color={LEGEND_COLOR} />
+const Legend = () => {
+  const { t } = useTranslation();
+  return (
+    <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+      <p className="mb-3 text-center text-sm font-bold text-slate-700">
+        {t('patchesGame.legend.title')}
+      </p>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+        {LEGEND.map(({ shape, labelKey }) => (
+          <span
+            key={shape}
+            className="flex items-center gap-2 text-sm text-slate-700"
+          >
+            <span className="h-6 w-6 shrink-0">
+              <ClueGlyph shape={shape} size={null} color={LEGEND_COLOR} />
+            </span>
+            <span className="font-semibold">
+              {t(`patchesGame.legend.${labelKey}`)}
+            </span>
           </span>
-          <span className="font-semibold">{label}</span>
-        </span>
-      ))}
+        ))}
+      </div>
+      <p className="mt-3 text-center text-xs text-slate-500">
+        {t('patchesGame.legend.size')}
+      </p>
     </div>
-    <p className="mt-3 text-center text-xs text-slate-500">
-      Si la figura contiene un número, ese debe ser su tamaño.
-    </p>
-  </div>
-);
+  );
+};
 
 const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
+  const { t } = useTranslation();
   const { rows, cols, seeds, solution } = puzzle;
   const seedMap = useMemo(() => seedCellMap(seeds), [seeds]);
   const colorOf = (index) => seeds[index]?.color;
@@ -323,13 +330,13 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
 
   return (
     <GameShell
-      title={meta?.name ?? 'Patches'}
-      tagline="Completa cada figura para rellenar la cuadrícula"
+      title={meta?.name ?? t('games.patches.name')}
+      tagline={t('patchesGame.tagline')}
       mode={mode}
       elapsed={session.elapsed}
       state={session.state}
       onReset={handleReset}
-      hint="Toca una celda de color y arrastra para pintar su figura; arrastra sobre ella para borrar."
+      hint={t('patchesGame.hint')}
     >
       <div className="relative mx-auto rounded-2xl border border-slate-200 bg-slate-50 p-2">
         <div
@@ -374,7 +381,10 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
                 data-cell
                 data-row={row}
                 data-col={col}
-                aria-label={`Fila ${row + 1}, columna ${col + 1}`}
+                aria-label={t('patchesGame.cellLabel', {
+                  row: row + 1,
+                  column: col + 1,
+                })}
                 onPointerDown={(event) => handleCellDown(row, col, event)}
                 className="relative flex aspect-square items-center justify-center bg-white"
               >
@@ -440,7 +450,7 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
           disabled={history.length === 0}
           className="flex-1 rounded-full"
         >
-          Deshacer
+          {t('patchesGame.undo')}
         </BaseButton>
         <BaseButton
           variant="warning"
@@ -449,19 +459,16 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
           disabled={solved}
           className="flex-1 rounded-full"
         >
-          Pista (+10 s)
+          {t('patchesGame.hintButton')}
         </BaseButton>
       </div>
 
       <Legend />
 
       <RulesSection>
-        <li>Toca una celda de color y arrastra para pintar su figura.</li>
-        <li>
-          Cada figura debe tener la <span className="font-bold">forma</span>{' '}
-          indicada y, si tiene un número, ese debe ser su tamaño exacto.
-        </li>
-        <li>Arrastra sobre celdas ya pintadas para borrarlas.</li>
+        <li>{t('patchesGame.rules.paint')}</li>
+        <li>{t('patchesGame.rules.shape')}</li>
+        <li>{t('patchesGame.rules.erase')}</li>
       </RulesSection>
     </GameShell>
   );

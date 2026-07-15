@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 
 import { useAuthStore } from '../store/useAuthStore';
@@ -15,7 +16,24 @@ const navClass = ({ isActive }) =>
 const mobileNavClass = ({ isActive }) =>
   `block rounded-lg px-3 py-2 transition-colors ${isActive ? 'bg-indigo-50 text-indigo-600 dark:bg-slate-700 dark:text-indigo-400' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'}`;
 
+const LanguageSwitch = () => {
+  const { i18n, t } = useTranslation();
+  return (
+    <select
+      value={i18n.language}
+      onChange={(event) => i18n.changeLanguage(event.target.value)}
+      aria-label={t('shared.language')}
+      className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm font-semibold text-slate-700 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+    >
+      <option value="es">ES</option>
+      <option value="en">EN</option>
+      <option value="de">DE</option>
+    </select>
+  );
+};
+
 const Layout = () => {
+  const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
   const initialized = useAuthStore((state) => state.initialized);
   const checkSession = useAuthStore((state) => state.checkSession);
@@ -54,7 +72,9 @@ const Layout = () => {
               variant="secondary"
               text
               onClick={toggleTheme}
-              aria-label={isDark ? 'Activar modo claro' : 'Activar modo oscuro'}
+              aria-label={
+                isDark ? t('layout.theme.light') : t('layout.theme.dark')
+              }
               className="rounded-lg p-1.5"
             >
               {isDark ? (
@@ -63,12 +83,13 @@ const Layout = () => {
                 <Moon className="h-5 w-5" />
               )}
             </BaseButton>
+            <LanguageSwitch />
             <NavLink to="/" className={navClass} end>
-              Inicio
+              {t('layout.nav.home')}
             </NavLink>
             {initialized && user && (
               <NavLink to="/rankings" className={navClass}>
-                Rankings
+                {t('layout.nav.rankings')}
               </NavLink>
             )}
             {initialized && user ? (
@@ -82,19 +103,19 @@ const Layout = () => {
                   onClick={logout}
                   className="rounded-lg px-3 py-1.5 text-sm font-semibold"
                 >
-                  Salir
+                  {t('layout.nav.logout')}
                 </BaseButton>
               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <NavLink to="/login" className={navClass}>
-                  Entrar
+                  {t('layout.nav.login')}
                 </NavLink>
                 <NavLink
                   to="/register"
                   className="rounded-lg bg-slate-800 px-3 py-1.5 text-white transition-colors hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
                 >
-                  Registrarse
+                  {t('layout.nav.register')}
                 </NavLink>
               </div>
             )}
@@ -106,7 +127,9 @@ const Layout = () => {
               variant="secondary"
               text
               onClick={toggleTheme}
-              aria-label={isDark ? 'Activar modo claro' : 'Activar modo oscuro'}
+              aria-label={
+                isDark ? t('layout.theme.light') : t('layout.theme.dark')
+              }
               className="rounded-lg p-1.5"
             >
               {isDark ? (
@@ -115,11 +138,14 @@ const Layout = () => {
                 <Moon className="h-5 w-5" />
               )}
             </BaseButton>
+            <LanguageSwitch />
             <BaseButton
               variant="secondary"
               text
               onClick={() => setIsMenuOpen((open) => !open)}
-              aria-label={isMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+              aria-label={
+                isMenuOpen ? t('layout.menu.close') : t('layout.menu.open')
+              }
               aria-expanded={isMenuOpen}
               className="rounded-lg p-1.5"
             >
@@ -142,7 +168,7 @@ const Layout = () => {
                 end
                 onClick={closeMenu}
               >
-                Inicio
+                {t('layout.nav.home')}
               </NavLink>
               {user && (
                 <NavLink
@@ -150,7 +176,7 @@ const Layout = () => {
                   className={mobileNavClass}
                   onClick={closeMenu}
                 >
-                  Rankings
+                  {t('layout.nav.rankings')}
                 </NavLink>
               )}
               {user ? (
@@ -167,7 +193,7 @@ const Layout = () => {
                     }}
                     className="rounded-lg px-3 py-2 text-left text-sm font-semibold"
                   >
-                    Salir
+                    {t('layout.nav.logout')}
                   </BaseButton>
                 </>
               ) : (
@@ -177,14 +203,14 @@ const Layout = () => {
                     className={mobileNavClass}
                     onClick={closeMenu}
                   >
-                    Entrar
+                    {t('layout.nav.login')}
                   </NavLink>
                   <NavLink
                     to="/register"
                     className="block rounded-lg bg-slate-800 px-3 py-2 text-white transition-colors hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
                     onClick={closeMenu}
                   >
-                    Registrarse
+                    {t('layout.nav.register')}
                   </NavLink>
                 </>
               )}

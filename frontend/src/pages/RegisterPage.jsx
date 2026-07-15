@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { AuthForm, Field } from '../components/AuthForm';
 import { useAuthStore } from '../store/useAuthStore';
 
 const RegisterPage = () => {
+  const { t } = useTranslation();
   const register = useAuthStore((state) => state.register);
   const navigate = useNavigate();
 
@@ -28,36 +30,36 @@ const RegisterPage = () => {
 
   return (
     <AuthForm
-      title="Crear cuenta"
-      submitLabel="Registrarse"
+      title={t('auth.register.title')}
+      submitLabel={t('auth.register.submitLabel')}
       onSubmit={handleSubmit}
       busy={busy}
       error={error}
       footer={
         <>
-          ¿Ya tienes cuenta?{' '}
+          {t('auth.register.footer')}{' '}
           <Link
             to="/login"
             className="font-semibold text-indigo-600 dark:text-indigo-400"
           >
-            Entra
+            {t('auth.register.footerLink')}
           </Link>
         </>
       }
     >
       <Field
-        label="Usuario"
+        label={t('auth.register.username')}
         value={form.username}
         onChange={(value) => setForm((prev) => ({ ...prev, username: value }))}
       />
       <Field
-        label="Email"
+        label={t('auth.register.email')}
         type="email"
         value={form.email}
         onChange={(value) => setForm((prev) => ({ ...prev, email: value }))}
       />
       <Field
-        label="Contraseña (mín. 8 caracteres)"
+        label={t('auth.register.passwordHint')}
         type="password"
         value={form.password}
         onChange={(value) => setForm((prev) => ({ ...prev, password: value }))}

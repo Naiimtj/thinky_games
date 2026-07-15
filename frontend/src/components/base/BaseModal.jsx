@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { useTranslation } from 'react-i18next';
 import BaseIcon from './BaseIcon';
 
 const BaseModal = ({
@@ -7,11 +8,13 @@ const BaseModal = ({
   onClose,
   fullscreen = false,
   closeButtonHidden = false,
-  closeLabel = 'Close',
+  closeLabel,
   children,
   ...props
 }) => {
+  const { t } = useTranslation();
   const titleId = useId();
+  const resolvedCloseLabel = closeLabel ?? t('shared.close');
 
   if (!visible) return null;
 
@@ -36,7 +39,7 @@ const BaseModal = ({
         {!closeButtonHidden && (
           <button
             type="button"
-            aria-label={closeLabel}
+            aria-label={resolvedCloseLabel}
             onClick={onClose}
             className="absolute z-10 right-0 top-0 m-1 p-0 bg-transparent border-none cursor-pointer leading-none"
           >

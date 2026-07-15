@@ -7,6 +7,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { PLAYABLE_GAMES } from '../games/registry';
 import { useDailyGamesStore } from '../store/useDailyGamesStore';
@@ -84,7 +85,7 @@ const DailyTopMini = ({ entries }) => {
   );
 };
 
-const GameSummaryRow = ({ game, stat, onClick }) => {
+const GameSummaryRow = ({ game, stat, onClick, t }) => {
   const hasHistory = stat.best_time !== null;
   const isNewBest = stat.played_today && stat.today_time <= stat.best_time;
 
@@ -96,7 +97,7 @@ const GameSummaryRow = ({ game, stat, onClick }) => {
         className="flex w-full flex-col gap-2 border-b border-slate-100 p-3 text-left last:border-0 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700/40"
       >
         <div className="flex w-full items-center justify-between">
-          <RankBadge label="Puesto" rank={stat.daily_rank} />
+          <RankBadge label={t('dailySummary.rank')} rank={stat.daily_rank} />
         </div>
         <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex md:flex-row flex-col md:justify-start justify-center items-center gap-3">
@@ -104,7 +105,7 @@ const GameSummaryRow = ({ game, stat, onClick }) => {
               <img src={game.icon} alt="" className="h-8 w-8 flex-shrink-0" />
             )}
             <span className="font-semibold text-slate-700 dark:text-slate-200">
-              {game?.name ?? stat.game_type}
+              {game ? t(`games.${game.id}.name`, game.name) : stat.game_type}
             </span>
           </div>
           <div className="flex md:flex-row flex-col items-center gap-x-4 gap-y-1 text-sm">
@@ -120,13 +121,13 @@ const GameSummaryRow = ({ game, stat, onClick }) => {
             <div className="flex flex-row items-start justify-between gap-4 w-full">
               <div className="flex flex-col gap-1">
                 <span className="text-slate-400 dark:text-slate-500 font-bold">
-                  Tú Mejor:{' '}
+                  {t('dailySummary.best')}:{' '}
                   <span className="font-normal">
                     {hasHistory ? formatTime(stat.best_time) : '-'}
                   </span>
                 </span>
                 <span className="text-slate-400 dark:text-slate-500 font-bold">
-                  Tú Peor:{' '}
+                  {t('dailySummary.worst')}:{' '}
                   <span className="font-normal">
                     {hasHistory ? formatTime(stat.worst_time) : '-'}
                   </span>
@@ -143,6 +144,7 @@ const GameSummaryRow = ({ game, stat, onClick }) => {
 };
 
 const DailyGamesSummary = () => {
+  const { t } = useTranslation();
   const stats = useDailyGamesStore((state) => state.summary);
   const ranks = useDailyGamesStore((state) => state.ranks);
   const dailyTop = useDailyGamesStore((state) => state.dailyTop);
@@ -166,18 +168,18 @@ const DailyGamesSummary = () => {
   return (
     <section className="rounded-2xl bg-white p-4 shadow-md dark:bg-slate-800 w-full">
       <h2 className="mb-3 text-lg font-black text-slate-800 dark:text-slate-100">
-        Tu resumen de hoy
+        {t('dailySummary.title')}
       </h2>
 
       {isLoading && (
         <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
-          Cargando…
+          {t('dailySummary.loading')}
         </p>
       )}
 
       {error && !isLoading && (
         <p className="py-6 text-center text-sm text-red-500 dark:text-red-400">
-          No se pudo cargar tu resumen.
+          {t('dailySummary.error')}
         </p>
       )}
 
@@ -188,6 +190,7 @@ const DailyGamesSummary = () => {
               key={stat.game_type}
               game={PLAYABLE_GAMES.find((game) => game.id === stat.game_type)}
               stat={stat}
+              t={t}
               onClick={() => setSelectedGameId(stat.game_type)}
             />
           ))}
@@ -196,7 +199,11 @@ const DailyGamesSummary = () => {
 
       <BaseModal
         visible={Boolean(selectedGame)}
-        title={selectedGame?.name}
+        title={
+          selectedGame
+            ? t(`games.${selectedGame.id}.name`, selectedGame.name)
+            : undefined
+        }
         onClose={() => setSelectedGameId(null)}
       >
         {selectedGame && <Leaderboard gameType={selectedGame.id} />}

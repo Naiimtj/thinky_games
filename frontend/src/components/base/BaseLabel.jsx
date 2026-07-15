@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const BaseLabel = ({
   label,
@@ -8,6 +9,7 @@ const BaseLabel = ({
   className = '',
   ...props
 }) => {
+  const { t } = useTranslation();
   const [showTooltip, setShowTooltip] = useState(false);
 
   if (!label) return null;
@@ -21,7 +23,7 @@ const BaseLabel = ({
       <div className="flex items-center gap-1">
         <span>{label}</span>
         {mandatory && (
-          <span className="text-alert" aria-label="required">
+          <span className="text-alert" aria-label={t('shared.required')}>
             {' '}
             *
           </span>
@@ -30,7 +32,7 @@ const BaseLabel = ({
           <div className="relative inline-block group">
             <button
               type="button"
-              aria-label={`More information: ${tooltip}`}
+              aria-label={t('shared.moreInformation', { tooltip })}
               className="pi pi-question-circle text-gray-400 cursor-help text-xs bg-none border-none p-0 inline-flex items-center justify-center"
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}

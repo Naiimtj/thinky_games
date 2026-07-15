@@ -61,7 +61,7 @@ def submit_score(
     spec = get_game(payload.game_type)
     if spec is not None:
         puzzle = puzzle_crud.ensure_daily_puzzle(
-            db, payload.game_type, utc_today()
+            db, payload.game_type, utc_today(), payload.locale
         )
         if (
             payload.solution is None

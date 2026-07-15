@@ -1,48 +1,53 @@
 /**
  * Fetch the puzzle for a game/mode.
  *
- * 'daily' puzzles are generated on the backend, so this hook fetches today's
- * board through the API. 'demo' puzzles are hardcoded on the frontend (see
- * `demoPuzzles.js`) and are never fetched from the backend, so demo boards
- * are always the same and never depend on network/backend availability.
+ * Both daily and demo puzzles are fetched from the backend so word games use
+ * content appropriate to the selected locale. Spanish demo data remains a
+ * fallback when the API is unavailable.
  * Returns `{ id, payload, seed, date, fallback, ... }` plus loading and error
  * flags so games can show a placeholder until the board is ready.
  */
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { fetchDailyPuzzle } from '../api/gamesApi';
 import { DEMO_PUZZLES } from './demoPuzzles';
 
-const initialState = (gameType, mode) =>
-  mode === 'demo'
-    ? { puzzle: DEMO_PUZZLES[gameType] ?? null, loading: false, error: null }
-    : { puzzle: null, loading: true, error: null };
+const initialState = () => ({ puzzle: null, loading: true, error: null });
+
+const supportedLocales = new Set(['es', 'en', 'de']);
 
 export const useDailyPuzzle = (gameType, mode) => {
-  const [state, setState] = useState(() => initialState(gameType, mode));
+  const { i18n } = useTranslation();
+  const locale = supportedLocales.has(i18n.resolvedLanguage)
+    ? i18n.resolvedLanguage
+    : 'es';
+  const [state, setState] = useState(initialState);
 
   useEffect(() => {
-    if (mode === 'demo') {
-      setState(initialState(gameType, mode));
-      return undefined;
-    }
-
     let cancelled = false;
-    setState({ puzzle: null, loading: true, error: null });
+    setState(initialState());
 
-    fetchDailyPuzzle(gameType, mode)
+    fetchDailyPuzzle(gameType, mode, locale)
       .then((puzzle) => {
         if (!cancelled) setState({ puzzle, loading: false, error: null });
       })
       .catch((error) => {
-        if (!cancelled) setState({ puzzle: null, loading: false, error });
+        if (cancelled) return;
+        const fallback =
+          mode === 'demo' && locale === 'es' ? DEMO_PUZZLES[gameType] : null;
+        setState({
+          puzzle: fallback,
+          loading: false,
+          error: fallback ? null : error,
+        });
       });
 
     return () => {
       cancelled = true;
     };
-  }, [gameType, mode]);
+  }, [gameType, mode, locale]);
 
   return state;
 };

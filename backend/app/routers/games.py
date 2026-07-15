@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.crud import puzzles as puzzle_crud
 from app.core.games.daily import utc_today
+from app.core.games.localized_words import puzzle_locale
 from app.core.games.registry import PLAYABLE_GAMES, get_game
 from app.core.schemas.game import DailyPuzzleResponse, GameMeta
 from app.dependencies import get_db
@@ -31,6 +32,7 @@ def list_games() -> list[GameMeta]:
 def read_daily_puzzle(
     game_type: str,
     mode: str = Query(default="daily", pattern="^(daily|demo)$"),
+    lang: str = Query(default="es", pattern="^(es|en|de)$"),
     db: Session = Depends(get_db),
 ) -> DailyPuzzleResponse:
     """Return today's puzzle for a game, or a stable demo puzzle.
@@ -45,10 +47,11 @@ def read_daily_puzzle(
         )
 
     if mode == "demo":
-        generated = puzzle_crud.get_demo_puzzle(game_type)
+        generated = puzzle_crud.get_demo_puzzle(game_type, lang)
         return DailyPuzzleResponse(
-            id=f"{game_type}-demo",
+            id=f"{game_type}-demo-{puzzle_locale(game_type, lang)}",
             game_type=game_type,
+            locale=puzzle_locale(game_type, lang),
             mode="demo",
             date=None,
             seed=spec.demo_seed,
@@ -56,15 +59,18 @@ def read_daily_puzzle(
             fallback=False,
         )
 
-    puzzle, fallback = puzzle_crud.serve_daily_puzzle(db, game_type, utc_today())
+    puzzle, fallback = puzzle_crud.serve_daily_puzzle(
+        db, game_type, utc_today(), lang
+    )
     if puzzle is None:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="No puzzle available",
         )
     return DailyPuzzleResponse(
-        id=f"{game_type}-daily-{puzzle.seed}",
+        id=f"{game_type}-daily-{puzzle.locale}-{puzzle.seed}",
         game_type=game_type,
+        locale=puzzle.locale,
         mode="daily",
         date=puzzle.puzzle_date,
         seed=puzzle.seed,

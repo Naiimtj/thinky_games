@@ -1,4 +1,5 @@
 import BaseButton from '../../components/base/BaseButton';
+import { useTranslation } from 'react-i18next';
 import { GameShell, RulesSection } from '../GameShell';
 import { buildStorageKey, usePersistedState } from '../gamePersistence';
 import { PuzzleGate } from '../PuzzleGate';
@@ -11,7 +12,8 @@ const optionTone = (isAnswer, isWrong) => {
   return 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50';
 };
 
-const PinpointBoard = ({ puzzle, puzzleId, mode, meta }) => {
+const PinpointBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
+  const { t } = useTranslation();
   const boardKey = buildStorageKey('pinpoint', mode, puzzleId, 'board');
   const [guessState, setGuessState] = usePersistedState(boardKey, () => ({
     revealed: 1,
@@ -24,6 +26,7 @@ const PinpointBoard = ({ puzzle, puzzleId, mode, meta }) => {
     gameId: 'pinpoint',
     mode,
     puzzleId,
+    locale: puzzleLocale,
     isSolved: solved,
     getSolution: () => puzzle.answer,
   });
@@ -57,13 +60,13 @@ const PinpointBoard = ({ puzzle, puzzleId, mode, meta }) => {
 
   return (
     <GameShell
-      title={meta?.name ?? 'Pinpoint'}
-      tagline="Adivina la categoría que conecta las pistas."
+      title={meta?.name ?? t('games.pinpoint.name')}
+      tagline={t('pinpointGame.tagline')}
       mode={mode}
       elapsed={session.elapsed}
       state={session.state}
       onReset={handleReset}
-      hint="Cada fallo revela una pista más."
+      hint={t('pinpointGame.hint')}
     >
       <ol className="mb-4 space-y-2">
         {puzzle.clues.map((clue, index) => {
@@ -108,14 +111,14 @@ const PinpointBoard = ({ puzzle, puzzleId, mode, meta }) => {
         disabled={solved || revealed >= puzzle.clues.length}
         className="mt-3 w-full"
       >
-        Pista (+10 s)
+        {t('pinpointGame.hintButton')}
       </BaseButton>
 
       <RulesSection>
-        <li>Las pistas comparten una categoría en común.</li>
-        <li>Adivina la categoría eligiendo una opción de la lista.</li>
-        <li>Cada respuesta incorrecta revela una pista adicional.</li>
-        <li>Usa Pista para revelar una pista adicional (+10 s).</li>
+        <li>{t('pinpointGame.rules.sharedCategory')}</li>
+        <li>{t('pinpointGame.rules.chooseOption')}</li>
+        <li>{t('pinpointGame.rules.wrongReveals')}</li>
+        <li>{t('pinpointGame.rules.hintReveals')}</li>
       </RulesSection>
     </GameShell>
   );
@@ -130,6 +133,7 @@ const PinpointGame = ({ mode, meta }) => {
         <PinpointBoard
           puzzle={puzzle.payload}
           puzzleId={puzzle.id}
+          puzzleLocale={puzzle.locale}
           mode={mode}
           meta={meta}
         />

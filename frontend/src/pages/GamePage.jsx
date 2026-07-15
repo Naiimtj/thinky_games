@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, Navigate, useParams } from 'react-router-dom';
 
 import Leaderboard from '../components/Leaderboard';
@@ -18,26 +19,23 @@ const CELEBRATION_MS = 5_000;
 
 /** Shown instead of the board once today's daily challenge is already solved. */
 const DailyLockedNotice = ({ game }) => {
+  const { t } = useTranslation();
   const countdown = useDailyCountdown();
   return (
     <div className="mx-auto max-w-md">
       <div className="text-center">
         <img src={game.icon} alt="" className="mx-auto mb-3 h-16 w-16" />
         <h1 className="text-2xl font-black text-slate-800 dark:text-slate-200">
-          {game.name}
+          {t(`games.${game.id}.name`, game.name)}
         </h1>
         <p className="mt-2 text-slate-500 dark:text-slate-300">
-          Ya jugaste el reto diario de hoy. Vuelve en{' '}
-          <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">
-            {countdown}
-          </span>{' '}
-          por un nuevo reto.
+          {t('gamePage.locked.description', { countdown })}
         </p>
         <Link
           to="/"
           className="mt-4 inline-block font-semibold text-indigo-600"
         >
-          ← Volver a los juegos
+          {t('gamePage.backToGames')}
         </Link>
       </div>
       <div className="mt-6">
@@ -106,19 +104,23 @@ const GamePage = () => {
 
   if (!game) return <Navigate to="/" replace />;
 
+  const { t } = useTranslation();
+
   if (!game.playable) {
     return (
       <div className="mx-auto max-w-md text-center">
         <img src={game.icon} alt="" className="mx-auto mb-3 h-16 w-16" />
-        <h1 className="text-2xl font-black text-slate-800">{game.name}</h1>
+        <h1 className="text-2xl font-black text-slate-800">
+          {t(`games.${game.id}.name`, game.name)}
+        </h1>
         <p className="mt-2 text-slate-500">
-          Este juego estará disponible próximamente.
+          {t('gamePage.unplayable.description')}
         </p>
         <Link
           to="/"
           className="mt-4 inline-block font-semibold text-indigo-600"
         >
-          ← Volver a los juegos
+          {t('gamePage.backToGames')}
         </Link>
       </div>
     );
@@ -149,10 +151,17 @@ const GamePage = () => {
       return <DailyLockedNotice game={game} />;
     }
     if (mode === 'daily' && dailyStatus === 'checking') {
-      return <p className="text-center text-slate-400">Cargando…</p>;
+      return (
+        <p className="text-center text-slate-400">{t('gamePage.loading')}</p>
+      );
     }
     const GameComponent = game.Component;
-    return <GameComponent mode={mode} meta={game} />;
+    const localizedMeta = {
+      ...game,
+      name: t(`games.${game.id}.name`, game.name),
+      tagline: t(`games.${game.id}.tagline`, game.tagline),
+    };
+    return <GameComponent mode={mode} meta={localizedMeta} />;
   };
 
   return (
@@ -161,7 +170,7 @@ const GamePage = () => {
         to="/"
         className="mb-4 inline-block text-sm font-semibold text-slate-500 hover:text-slate-700"
       >
-        ← Todos los juegos
+        {t('gamePage.backToGames')}
       </Link>
       {renderContent()}
     </div>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import BaseButton from '../../components/base/BaseButton';
 import ZipGameBoard from '../../components/ZipGameBoard';
@@ -11,6 +12,7 @@ import { useDailyPuzzle } from '../useDailyPuzzle';
 import { GAME_STATE, useGameSession } from '../useGameSession';
 
 const ZipBoard = ({ puzzle: targetPuzzle, mode, meta }) => {
+  const { t } = useTranslation();
   const initGame = useZipStore((state) => state.initGame);
   const activeId = useZipStore((state) => state.puzzle?.id);
   const puzzle = useZipStore((state) => state.puzzle);
@@ -70,13 +72,13 @@ const ZipBoard = ({ puzzle: targetPuzzle, mode, meta }) => {
 
   return (
     <GameShell
-      title={meta?.name ?? 'Zip'}
-      tagline="Une los números en un solo trazo"
+      title={meta?.name ?? t('games.zip.name')}
+      tagline={t('zipGame.tagline')}
       mode={mode}
       elapsed={session.elapsed}
       state={session.state}
       onReset={handleReset}
-      hint="Empieza en el 1 y arrastra para conectar los números en orden, llenando todas las casillas."
+      hint={t('zipGame.hint')}
     >
       <ZipGameBoard />
 
@@ -87,16 +89,13 @@ const ZipBoard = ({ puzzle: targetPuzzle, mode, meta }) => {
         disabled={session.state === GAME_STATE.WON || !solution}
         className="mt-3 w-full rounded-full disabled:cursor-not-allowed"
       >
-        Pista (+10 s)
+        {t('zipGame.hintButton')}
       </BaseButton>
 
       <RulesSection>
-        <li>
-          Empieza en el número <span className="font-bold">1</span> y traza un
-          camino hasta el número más alto, en orden.
-        </li>
-        <li>Debes pasar por todas las casillas del tablero.</li>
-        <li>El camino no puede cruzarse a sí mismo.</li>
+        <li>{t('zipGame.rules.start')}</li>
+        <li>{t('zipGame.rules.fill')}</li>
+        <li>{t('zipGame.rules.cross')}</li>
       </RulesSection>
     </GameShell>
   );

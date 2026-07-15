@@ -4,6 +4,7 @@
  */
 
 import { cellKey, getWallSegments } from '../logic/zipLogic';
+import { useTranslation } from 'react-i18next';
 import { useZipStore } from '../store/useZipStore';
 import ZipCell from './ZipCell';
 
@@ -77,6 +78,7 @@ const ZipCheckpoints = ({ checkpoints }) =>
   ));
 
 const ZipGameBoard = () => {
+  const { t } = useTranslation();
   const grid = useZipStore((state) => state.grid);
   const puzzle = useZipStore((state) => state.puzzle);
   const currentPath = useZipStore((state) => state.currentPath);
@@ -110,7 +112,7 @@ const ZipGameBoard = () => {
     >
       <div
         role="grid"
-        aria-label="Zip puzzle grid"
+        aria-label={t('zipGame.gridLabel')}
         className="grid h-full w-full"
         style={{
           gridTemplateColumns: gridTemplate,

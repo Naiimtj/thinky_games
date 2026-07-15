@@ -32,6 +32,7 @@ class GameSpec:
     emoji: str
     playable: bool
     demo_seed: int
-    generate: Callable[[int], GeneratedPuzzle]
+    generate: Callable[..., GeneratedPuzzle]
     validate: Callable[[Payload, Any], bool]
     solve: Callable[[Payload], Any]
+    generate_daily: Callable[..., GeneratedPuzzle] | None = None

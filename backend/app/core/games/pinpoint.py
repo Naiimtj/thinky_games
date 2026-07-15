@@ -4,54 +4,33 @@ Picks a daily category and five of its members as clues, then builds the options
 from the answer plus four distinct distractor categories. Deterministic from a
 seed. The answer is part of the payload because the board reveals clues on wrong
 guesses client-side; the submitted answer is still validated server-side.
+
+Locale-aware: the generator now reads categories from ``localized_words`` and
+falls back to Spanish when no locale is supplied.
 """
 
 from __future__ import annotations
 
 from app.core.games.base import GeneratedPuzzle, Payload
+from app.core.games.localized_words import pinpoint_categories
 from app.core.games.prng import mulberry32, rand_int, shuffle_in_place
 
 CLUE_COUNT = 5
 OPTION_COUNT = 5
 DEMO_SEED = 1
 
-# Curated Spanish categories. Members are kept unambiguous across categories so
-# clues never fit more than one option.
-PINPOINT_CATEGORIES: list[dict] = [
-    {"name": "Frutas", "members": ["Manzana", "Plátano", "Naranja", "Uva", "Fresa", "Pera", "Sandía", "Melón"]},
-    {"name": "Verduras", "members": ["Zanahoria", "Lechuga", "Tomate", "Cebolla", "Pepino", "Espinaca", "Brócoli"]},
-    {"name": "Colores", "members": ["Rojo", "Azul", "Verde", "Amarillo", "Morado", "Marrón", "Negro", "Blanco"]},
-    {"name": "Animales", "members": ["Perro", "Gato", "Caballo", "León", "Tigre", "Elefante", "Conejo", "Lobo"]},
-    {"name": "Países", "members": ["España", "Francia", "Italia", "Alemania", "Portugal", "México", "Argentina", "Brasil"]},
-    {"name": "Capitales europeas", "members": ["París", "Madrid", "Roma", "Berlín", "Lisboa", "Viena", "Atenas"]},
-    {"name": "Deportes", "members": ["Fútbol", "Baloncesto", "Tenis", "Natación", "Ciclismo", "Boxeo", "Golf"]},
-    {"name": "Instrumentos musicales", "members": ["Guitarra", "Piano", "Violín", "Batería", "Flauta", "Trompeta", "Arpa"]},
-    {"name": "Profesiones", "members": ["Médico", "Abogado", "Ingeniero", "Profesor", "Bombero", "Enfermero", "Cocinero"]},
-    {"name": "Planetas", "members": ["Mercurio", "Venus", "Tierra", "Marte", "Júpiter", "Saturno", "Urano", "Neptuno"]},
-    {"name": "Días de la semana", "members": ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]},
-    {"name": "Meses", "members": ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto"]},
-    {"name": "Metales", "members": ["Oro", "Plata", "Hierro", "Cobre", "Zinc", "Plomo", "Níquel", "Aluminio"]},
-    {"name": "Flores", "members": ["Rosa", "Tulipán", "Girasol", "Margarita", "Clavel", "Orquídea", "Lirio"]},
-    {"name": "Árboles", "members": ["Roble", "Pino", "Olivo", "Abedul", "Sauce", "Ciprés", "Álamo"]},
-    {"name": "Bebidas", "members": ["Café", "Té", "Zumo", "Leche", "Refresco", "Cerveza", "Vino"]},
-    {"name": "Ríos", "members": ["Amazonas", "Nilo", "Ebro", "Danubio", "Tajo", "Duero", "Guadalquivir"]},
-    {"name": "Idiomas", "members": ["Español", "Inglés", "Francés", "Alemán", "Chino", "Japonés", "Ruso"]},
-    {"name": "Emociones", "members": ["Alegría", "Tristeza", "Miedo", "Ira", "Sorpresa", "Asco", "Amor"]},
-    {"name": "Formas geométricas", "members": ["Círculo", "Cuadrado", "Triángulo", "Rectángulo", "Rombo", "Óvalo", "Pentágono"]},
-    {"name": "Transportes", "members": ["Coche", "Tren", "Avión", "Barco", "Bicicleta", "Autobús", "Moto"]},
-    {"name": "Ropa", "members": ["Camisa", "Pantalón", "Falda", "Vestido", "Abrigo", "Jersey", "Sombrero"]},
-    {"name": "Herramientas", "members": ["Martillo", "Destornillador", "Sierra", "Taladro", "Llave", "Alicates"]},
-    {"name": "Cuerpo humano", "members": ["Cabeza", "Brazo", "Pierna", "Mano", "Pie", "Ojo", "Nariz", "Boca"]},
-]
+# Default Spanish categories kept for backward-compatible imports/tests.
+PINPOINT_CATEGORIES: list[dict] = pinpoint_categories("es")
 
 
-def _generate_puzzle(seed: int) -> Payload:
+def _generate_puzzle(seed: int, lang: str = "es") -> Payload:
     rng = mulberry32(seed)
-    category = PINPOINT_CATEGORIES[rand_int(rng, len(PINPOINT_CATEGORIES))]
+    categories = pinpoint_categories(lang)
+    category = categories[rand_int(rng, len(categories))]
 
     clues = shuffle_in_place(list(category["members"]), rng)[:CLUE_COUNT]
     distractors = shuffle_in_place(
-        [c["name"] for c in PINPOINT_CATEGORIES if c is not category], rng
+        [c["name"] for c in categories if c is not category], rng
     )[: OPTION_COUNT - 1]
     options = shuffle_in_place([category["name"], *distractors], rng)
 
@@ -68,7 +47,7 @@ def solve(payload: Payload) -> str:
     return payload["answer"]
 
 
-def generate(seed: int) -> GeneratedPuzzle:
+def generate(seed: int, lang: str = "es") -> GeneratedPuzzle:
     """Deterministically generate a Pinpoint puzzle for ``seed``."""
-    payload = _generate_puzzle(seed)
+    payload = _generate_puzzle(seed, lang)
     return GeneratedPuzzle(payload=payload, solution=payload["answer"])

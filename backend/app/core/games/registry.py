@@ -77,6 +77,7 @@ GAMES: dict[str, GameSpec] = {
         generate=crossword.generate,
         validate=crossword.validate,
         solve=crossword.solve,
+        generate_daily=crossword.generate_for_date,
     ),
     "wend": GameSpec(
         id="wend",

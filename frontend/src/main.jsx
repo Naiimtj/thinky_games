@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import setupLocatorUI from '@locator/runtime';
 
 import App from './App';
+import './i18n';
 import './index.css';
 
 if (import.meta.env.MODE === 'development') {
@@ -12,10 +13,10 @@ if (import.meta.env.MODE === 'development') {
 
 createRoot(document.getElementById('root')).render(
   // <StrictMode>
-    <BrowserRouter
-      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-    >
-      <App />
-    </BrowserRouter>
+  <BrowserRouter
+    future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+  >
+    <App />
+  </BrowserRouter>,
   // </StrictMode>,
 );

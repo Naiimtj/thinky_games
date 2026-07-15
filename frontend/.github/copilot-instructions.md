@@ -8,17 +8,17 @@
 
 ## Project Profile
 
-| Field            | Value                                                                                                                |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Project          | Thinky Games (frontend)                                                                                              |
-| Framework        | Vite + React 18                                                                                                      |
-| Language         | JavaScript (no TypeScript, no build-time type checking)                                                              |
-| UI library       | None — plain HTML elements styled with TailwindCSS                                                                   |
-| Styling          | TailwindCSS v3 (PostCSS + Autoprefixer)                                                                              |
-| State management | Zustand (`create` + `persist` middleware), stores in `src/store/`                                                    |
-| i18n             | None — Optional/standby (`i18n.agent.md` kept for future adoption)                                                   |
-| Testing          | Vitest installed (`npm test`) — no test files currently exist (puzzle generation moved to the backend)               |
-| Git platform     | Unknown — no git remote configured; `merge-request.agent.md` supports either `gh` or `glab`, confirm with user first |
+| Field            | Value                                                                                                                                     |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Project          | Thinky Games (frontend)                                                                                                                   |
+| Framework        | Vite + React 18                                                                                                                           |
+| Language         | JavaScript (no TypeScript, no build-time type checking)                                                                                   |
+| UI library       | None — plain HTML elements styled with TailwindCSS                                                                                        |
+| Styling          | TailwindCSS v3 (PostCSS + Autoprefixer)                                                                                                   |
+| State management | Zustand (`create` + `persist` middleware), stores in `src/store/`                                                                         |
+| i18n             | `react-i18next` + `i18next` + `i18next-browser-languagedetector`; locales in `src/locales/{es,en,de}.json`, config in `src/i18n/index.js` |
+| Testing          | Vitest installed (`npm test`) — no test files currently exist (puzzle generation moved to the backend)                                    |
+| Git platform     | Unknown — no git remote configured; `merge-request.agent.md` supports either `gh` or `glab`, confirm with user first                      |
 
 > Run `/init-github` again if the stack changes significantly. Code examples in this file and in skills use the **actual project stack** (Vite + React 18 + Zustand + TailwindCSS + react-router-dom + fetch-based API layer).
 
@@ -156,12 +156,12 @@ The project does not enforce a base/shared/feature component hierarchy. Structur
 
 - No dedicated images/assets folder exists yet — colocate new image assets under `src/` and import them directly (Vite handles static asset imports)
 
-## Internationalization (i18n) — Not Currently Adopted
+## Internationalization (i18n)
 
-- The project has **no i18n library** and **no locale files** — all user-facing text is hardcoded directly in JSX (currently in Spanish, see `Layout.jsx`)
-- Do **not** invent `$t()` calls or locale files — this pattern does not exist in this codebase
-- `agents/i18n.agent.md` and `skills/i18n/SKILL.md` are kept on standby for when/if an i18n library is adopted — do not apply their Vue-specific patterns to this project
-- Continue hardcoding user-facing text matching the existing language/tone until the user explicitly adopts an i18n solution
+- The project uses **react-i18next** with `i18next-browser-languagedetector`; configuration lives in `src/i18n/index.js`
+- Locale JSON files are in `src/locales/{es,en,de}.json`; Spanish (`es`) is the fallback/source language
+- Use `useTranslation()` from `react-i18next` in components; name keys with the patterns in `skills/i18n/SKILL.md`
+- When adding/changing user-facing text, add the key to **all three locale files** (`es`, `en`, `de`) and keep them in sync
 
 ## State Management
 

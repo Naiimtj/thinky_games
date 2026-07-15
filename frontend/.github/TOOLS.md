@@ -28,7 +28,7 @@ Use ONLY these identifiers in agent frontmatter:
 | `store.agent.md`         |  ✅  |   ✅   |  ✅  |   ❌    |    ❌    |  ❌   |  ✅   | `src/store/`                                                                             |
 | `api.agent.md`           |  ✅  |   ✅   |  ✅  |   ❌    |    ❌    |  ✅   |  ✅   | `src/api/`, `src/store/`                                                                 |
 | `test.agent.md`          |  ✅  |   ✅   |  ✅  |   ✅    |    ❌    |  ❌   |  ❌   | Vitest installed, no test files currently exist (puzzle generation moved to backend)     |
-| `i18n.agent.md`          |  ✅  |   ✅   |  ✅  |   ❌    |    ❌    |  ❌   |  ❌   | Not yet adopted — standby (no `locales/` folder, no i18n lib)                            |
+| `i18n.agent.md`          |  ✅  |   ✅   |  ✅  |   ❌    |    ❌    |  ❌   |  ❌   | `src/locales/`, `src/i18n/`, and components/pages that consume translated strings        |
 | `merge-request.agent.md` |  ✅  |   ❌   |  ❌  |   ❌    |    ✅    |  ❌   |  ❌   | Terminal only (git + `gh`/`glab` — no remote configured yet, confirm platform with user) |
 | `feature.agent.md`       |  ✅  |   ✅   |  ✅  |   ❌    |    ❌    |  ❌   |  ✅   | Via dispatched agents only                                                               |
 | `refactor.agent.md`      |  ✅  |   ✅   |  ✅  |   ❌    |    ❌    |  ❌   |  ✅   | Via dispatched agents only                                                               |

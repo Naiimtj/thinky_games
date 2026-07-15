@@ -1,0 +1,239 @@
+{
+  "games": {
+    "zip": { "name": "Zip", "tagline": "Une los números en un solo trazo" },
+    "queens": { "name": "Queens", "tagline": "Corona cada región" },
+    "tango": { "name": "Tango", "tagline": "Armoniza la rejilla" },
+    "sudoku": { "name": "Mini Sudoku", "tagline": "Rellena del 1 al 6" },
+    "pinpoint": { "name": "Pinpoint", "tagline": "Adivina la categoría" },
+    "crossword": { "name": "Crucigrama", "tagline": "Completa la rejilla" },
+    "wend": { "name": "Wend", "tagline": "Ábrete paso entre palabras" },
+    "patches": { "name": "Patches", "tagline": "¡A darle forma!" }
+  },
+  "layout": {
+    "nav": {
+      "home": "Inicio",
+      "rankings": "Rankings",
+      "login": "Entrar",
+      "register": "Registrarse",
+      "logout": "Salir"
+    },
+    "theme": {
+      "light": "Activar modo claro",
+      "dark": "Activar modo oscuro"
+    },
+    "menu": {
+      "open": "Abrir menú",
+      "close": "Cerrar menú"
+    }
+  },
+  "shared": {
+    "language": "Idioma",
+    "close": "Cerrar",
+    "required": "Obligatorio",
+    "gridCell": "Fila {{row}}, columna {{column}}",
+    "moreInformation": "Más información: {{tooltip}}",
+    "clearSearch": "Borrar búsqueda",
+    "closeNotification": "Cerrar notificación"
+  },
+  "home": {
+    "title": "Elige tu juego",
+    "subtitle": {
+      "authenticated": "Compite en el reto diario.",
+      "guest": "Inicia sesión para el reto diario y los rankings."
+    },
+    "nextDaily": "Próximo reto diario en {{countdown}}",
+    "comingSoon": "Próximamente",
+    "playDemo": "Jugar demo",
+    "dailyChallenge": "Reto diario",
+    "dailyCompleted": "Reto diario completado hoy"
+  },
+  "auth": {
+    "busy": "Un momento…",
+    "login": {
+      "title": "Entrar",
+      "submitLabel": "Entrar",
+      "username": "Usuario",
+      "password": "Contraseña",
+      "footer": "¿No tienes cuenta?",
+      "footerLink": "Regístrate"
+    },
+    "register": {
+      "title": "Crear cuenta",
+      "submitLabel": "Registrarse",
+      "username": "Usuario",
+      "email": "Email",
+      "passwordHint": "Contraseña (mín. 8 caracteres)",
+      "footer": "¿Ya tienes cuenta?",
+      "footerLink": "Entra"
+    },
+    "errors": {
+      "register": "No se pudo crear la cuenta.",
+      "login": "Usuario o contraseña incorrectos.",
+      "session": "La sesión no es válida."
+    }
+  },
+  "rankingsPage": {
+    "title": "Rankings"
+  },
+  "gamePage": {
+    "loading": "Cargando…",
+    "backToGames": "← Todos los juegos",
+    "locked": {
+      "description": "Ya jugaste el reto diario de hoy. Vuelve en {{countdown}} por un nuevo reto."
+    },
+    "unplayable": {
+      "description": "Este juego estará disponible próximamente."
+    }
+  },
+  "puzzleGate": {
+    "loading": "Generando el puzzle…",
+    "error": "No pudimos cargar el puzzle. Inténtalo de nuevo en unos segundos."
+  },
+  "pinpointGame": {
+    "tagline": "Adivina la categoría que conecta las pistas.",
+    "hint": "Cada fallo revela una pista más.",
+    "hintButton": "Pista (+10 s)",
+    "rules": {
+      "sharedCategory": "Las pistas comparten una categoría en común.",
+      "chooseOption": "Adivina la categoría eligiendo una opción de la lista.",
+      "wrongReveals": "Cada respuesta incorrecta revela una pista adicional.",
+      "hintReveals": "Usa Pista para revelar una pista adicional (+10 s)."
+    }
+  },
+  "crosswordGame": {
+    "tagline": "Completa las palabras que se cruzan en la rejilla.",
+    "hint": "Selecciona una pista o casilla y escribe una letra.",
+    "gridLabel": "Rejilla del crucigrama",
+    "cellLabel": "Casilla de las pistas {{numbers}}",
+    "hintButton": "Pista (+10 s)",
+    "directions": {
+      "across": "Horizontal",
+      "down": "Vertical"
+    },
+    "rules": {
+      "select": "Elige una pista horizontal o vertical para resaltarla en la rejilla.",
+      "write": "Escribe una letra por casilla; las letras compartidas sirven para ambas palabras.",
+      "complete": "Completa todas las pistas para resolver el crucigrama.",
+      "hint": "Usa Pista para revelar una letra (+10 s)."
+    }
+  },
+  "wendGame": {
+    "tagline": "Encuentra 5 palabras ocultas entre las letras, en línea recta.",
+    "hint": "Arrastra en línea recta: horizontal, vertical o diagonal (sin zigzag).",
+    "undo": "Deshacer",
+    "letterHint": "Pista letra (+10 s)",
+    "definitionHint": "Pista definición (+5 s)",
+    "wordLength": "{{count}} letras",
+    "rules": {
+      "find": "Hay 5 palabras ocultas entre letras de relleno: encuéntralas arrastrando en línea recta (horizontal, vertical o diagonal), sin zigzag.",
+      "form": "Cada trazo debe formar una de las palabras de la lista.",
+      "cross": "Algunas palabras pueden cruzarse compartiendo una letra, como en un crucigrama; el resto son letras sueltas de relleno.",
+      "hints": "Pista letra revela la siguiente letra correcta (+10 s). Pista definición muestra la definición de una palabra (+5 s).",
+      "definitions": "Al completar el puzzle verás la definición de cada palabra debajo de su nombre."
+    }
+  },
+  "queensGame": {
+    "tagline": "Una corona por fila, columna y color; sin tocarse.",
+    "hint": "Toca una vez para marcar ✕, otra para la corona.",
+    "autoFill": "Rellenar ✕ automáticamente",
+    "hintButton": "Pista (+10 s)",
+    "rules": {
+      "objective": "Tu objetivo es tener exactamente una 👑 en cada fila, columna y región con color.",
+      "marks": "Toca una vez para colocar ✕ y dos veces para colocar 👑. Usa ✕ para marcar dónde no puede ir una 👑.",
+      "touching": "Las 👑 no pueden tocarse, ni siquiera en diagonal."
+    }
+  },
+  "zipGame": {
+    "tagline": "Une los números en un solo trazo.",
+    "hint": "Empieza en el 1 y arrastra para conectar los números en orden, llenando todas las casillas.",
+    "gridLabel": "Rejilla de Zip",
+    "hintButton": "Pista (+10 s)",
+    "rules": {
+      "start": "Empieza en el número 1 y traza un camino hasta el número más alto, en orden.",
+      "fill": "Debes pasar por todas las casillas del tablero.",
+      "cross": "El camino no puede cruzarse a sí mismo."
+    }
+  },
+  "tangoGame": {
+    "tagline": "Tres ☀️ y tres 🌙 por fila y columna; nunca tres seguidos.",
+    "hint": "= iguales · × opuestos. Toca para cambiar ☀️/🌙.",
+    "ruleError": "Hay una regla incumplida en el tablero.",
+    "hintButton": "Pista (+10 s)",
+    "rules": {
+      "balance": "Cada fila y columna debe tener tres ☀️ y tres 🌙.",
+      "runs": "No puede haber tres símbolos iguales seguidos.",
+      "relations": "= obliga a que las celdas sean iguales; × obliga a que sean opuestas.",
+      "hint": "Usa Pista para revelar una casilla correcta (+10 s)."
+    }
+  },
+  "sudokuGame": {
+    "tagline": "Del 1 al 6 sin repetir en fila, columna ni caja.",
+    "hint": "Toca una casilla y luego un número del teclado inferior.",
+    "cellLabel": "Fila {{row}}, columna {{column}}",
+    "digitLabel": "Colocar número {{digit}}",
+    "eraseLabel": "Borrar número",
+    "hintButton": "Pista (+10 s)",
+    "rules": {
+      "fill": "Completa la cuadrícula con números del 1 al 6.",
+      "unique": "Ningún número puede repetirse en una fila, columna o caja.",
+      "fixed": "Las casillas sombreadas ya están fijas y no se pueden editar.",
+      "input": "Toca una casilla y luego un número del teclado inferior para rellenarla."
+    }
+  },
+  "patchesGame": {
+    "tagline": "Completa cada figura para rellenar la cuadrícula.",
+    "hint": "Toca una celda de color y arrastra para pintar su figura; arrastra sobre ella para borrar.",
+    "cellLabel": "Fila {{row}}, columna {{column}}",
+    "undo": "Deshacer",
+    "hintButton": "Pista (+10 s)",
+    "legend": {
+      "title": "Completa cada figura para rellenar la cuadrícula",
+      "square": "Cuadrado",
+      "vertical": "Rectángulo alto",
+      "horizontal": "Rectángulo ancho",
+      "any": "Cualquiera de estos",
+      "size": "Si la figura contiene un número, ese debe ser su tamaño."
+    },
+    "rules": {
+      "paint": "Toca una celda de color y arrastra para pintar su figura.",
+      "shape": "Cada figura debe tener la forma indicada y, si tiene un número, ese debe ser su tamaño exacto.",
+      "erase": "Arrastra sobre celdas ya pintadas para borrarlas."
+    }
+  },
+  "leaderboard": {
+    "period": {
+      "daily": "Diario",
+      "monthly": "Mensual",
+      "global": "Global"
+    },
+    "title": "Clasificación",
+    "loading": "Cargando…",
+    "error": "No se pudo cargar la clasificación.",
+    "empty": "Aún no hay tiempos registrados.",
+    "personalTitle": "Tus resultados",
+    "personalError": "No se pudieron cargar tus resultados.",
+    "personalEmpty": "Aún no has jugado este juego."
+  },
+  "dailySummary": {
+    "title": "Tu resumen de hoy",
+    "rank": "Puesto",
+    "best": "Tu mejor",
+    "worst": "Tu peor",
+    "loading": "Cargando…",
+    "error": "No se pudo cargar tu resumen."
+  },
+  "gameShell": {
+    "howToPlay": "Cómo se juega",
+    "restart": "Reiniciar",
+    "mode": {
+      "daily": "Reto diario",
+      "demo": "Demo"
+    },
+    "nextChallenge": "Próximo reto en {{countdown}}",
+    "solvedIn": "¡Resuelto en {{time}}!",
+    "rankingMessage": {
+      "daily": "Tu tiempo se envió al ranking.",
+      "demo": "Inicia sesión y juega el reto diario para competir."
+    }
+  }
+}

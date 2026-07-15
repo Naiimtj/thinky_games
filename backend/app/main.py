@@ -4,6 +4,7 @@ import logging
 import subprocess
 import sys
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,6 +16,7 @@ from app.core.database.seed import run_seed
 from app.routers import auth, backup, games, health, scores
 
 settings = get_settings()
+BACKEND_ROOT = Path(__file__).resolve().parent.parent
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("thinky-games")
@@ -29,6 +31,7 @@ async def lifespan(app: FastAPI):
             [sys.executable, "-m", "alembic", "upgrade", "head"],
             capture_output=True,
             text=True,
+            cwd=BACKEND_ROOT,
         )
         if result.returncode == 0:
             logger.info("Migrations completed successfully.")

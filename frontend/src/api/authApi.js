@@ -1,15 +1,7 @@
 /** HTTP calls for authentication. */
 
 import { API_BASE_URL } from './apiConfig';
-
-const readDetail = async (response) => {
-  try {
-    const data = await response.json();
-    return typeof data.detail === 'string' ? data.detail : null;
-  } catch {
-    return null;
-  }
-};
+import i18n from '../i18n';
 
 /** The hint contains no credential; it only avoids a blind session request. */
 export const hasSessionHint = () =>
@@ -25,9 +17,7 @@ export const registerUser = async ({ username, email, password }) => {
     body: JSON.stringify({ username, email, password }),
   });
   if (!response.ok) {
-    throw new Error(
-      (await readDetail(response)) ?? 'No se pudo crear la cuenta',
-    );
+    throw new Error(i18n.t('auth.errors.register'));
   }
   return response.json();
 };
@@ -41,7 +31,7 @@ export const loginUser = async ({ username, password }) => {
     body: new URLSearchParams({ username, password }),
   });
   if (!response.ok) {
-    throw new Error('Usuario o contraseña incorrectos');
+    throw new Error(i18n.t('auth.errors.login'));
   }
   return response.json();
 };
@@ -52,7 +42,7 @@ export const fetchCurrentUser = async () => {
     credentials: 'include',
   });
   if (!response.ok) {
-    throw new Error('La sesión no es válida');
+    throw new Error(i18n.t('auth.errors.session'));
   }
   return response.json();
 };

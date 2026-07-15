@@ -1,0 +1,242 @@
+{
+  "games": {
+    "zip": {
+      "name": "Zip",
+      "tagline": "Connect the numbers in a single stroke"
+    },
+    "queens": { "name": "Queens", "tagline": "Crown each region" },
+    "tango": { "name": "Tango", "tagline": "Harmonize the grid" },
+    "sudoku": { "name": "Mini Sudoku", "tagline": "Fill from 1 to 6" },
+    "pinpoint": { "name": "Pinpoint", "tagline": "Guess the category" },
+    "crossword": { "name": "Crossword", "tagline": "Complete the grid" },
+    "wend": { "name": "Wend", "tagline": "Make your way through words" },
+    "patches": { "name": "Patches", "tagline": "Shape it up!" }
+  },
+  "layout": {
+    "nav": {
+      "home": "Home",
+      "rankings": "Rankings",
+      "login": "Log in",
+      "register": "Sign up",
+      "logout": "Log out"
+    },
+    "theme": {
+      "light": "Switch to light mode",
+      "dark": "Switch to dark mode"
+    },
+    "menu": {
+      "open": "Open menu",
+      "close": "Close menu"
+    }
+  },
+  "shared": {
+    "language": "Language",
+    "close": "Close",
+    "required": "Required",
+    "gridCell": "Row {{row}}, column {{column}}",
+    "moreInformation": "More information: {{tooltip}}",
+    "clearSearch": "Clear search",
+    "closeNotification": "Close notification"
+  },
+  "home": {
+    "title": "Choose your game",
+    "subtitle": {
+      "authenticated": "Compete in the daily challenge.",
+      "guest": "Log in for the daily challenge and rankings."
+    },
+    "nextDaily": "Next daily challenge in {{countdown}}",
+    "comingSoon": "Coming soon",
+    "playDemo": "Play demo",
+    "dailyChallenge": "Daily challenge",
+    "dailyCompleted": "Daily challenge completed today"
+  },
+  "auth": {
+    "busy": "One moment…",
+    "login": {
+      "title": "Log in",
+      "submitLabel": "Log in",
+      "username": "Username",
+      "password": "Password",
+      "footer": "Don't have an account?",
+      "footerLink": "Sign up"
+    },
+    "register": {
+      "title": "Create account",
+      "submitLabel": "Sign up",
+      "username": "Username",
+      "email": "Email",
+      "passwordHint": "Password (min. 8 characters)",
+      "footer": "Already have an account?",
+      "footerLink": "Log in"
+    },
+    "errors": {
+      "register": "The account could not be created.",
+      "login": "Incorrect username or password.",
+      "session": "The session is not valid."
+    }
+  },
+  "rankingsPage": {
+    "title": "Rankings"
+  },
+  "gamePage": {
+    "loading": "Loading…",
+    "backToGames": "← All games",
+    "locked": {
+      "description": "You already played today's daily challenge. Come back in {{countdown}} for a new challenge."
+    },
+    "unplayable": {
+      "description": "This game will be available soon."
+    }
+  },
+  "puzzleGate": {
+    "loading": "Generating the puzzle…",
+    "error": "We could not load the puzzle. Try again in a few seconds."
+  },
+  "pinpointGame": {
+    "tagline": "Guess the category that connects the clues.",
+    "hint": "Each wrong answer reveals another clue.",
+    "hintButton": "Hint (+10 s)",
+    "rules": {
+      "sharedCategory": "The clues share one category.",
+      "chooseOption": "Guess the category by choosing an option from the list.",
+      "wrongReveals": "Each incorrect answer reveals one additional clue.",
+      "hintReveals": "Use Hint to reveal one additional clue (+10 s)."
+    }
+  },
+  "crosswordGame": {
+    "tagline": "Complete the words that cross in the grid.",
+    "hint": "Select a clue or cell and type a letter.",
+    "gridLabel": "Crossword grid",
+    "cellLabel": "Cell for clues {{numbers}}",
+    "hintButton": "Hint (+10 s)",
+    "directions": {
+      "across": "Across",
+      "down": "Down"
+    },
+    "rules": {
+      "select": "Choose an across or down clue to highlight it in the grid.",
+      "write": "Type one letter per cell; shared letters work for both words.",
+      "complete": "Complete every clue to solve the crossword.",
+      "hint": "Use Hint to reveal one letter (+10 s)."
+    }
+  },
+  "wendGame": {
+    "tagline": "Find 5 hidden words among the letters in a straight line.",
+    "hint": "Drag in a straight line: horizontal, vertical, or diagonal (no zigzag).",
+    "undo": "Undo",
+    "letterHint": "Letter hint (+10 s)",
+    "definitionHint": "Definition hint (+5 s)",
+    "wordLength": "{{count}} letters",
+    "rules": {
+      "find": "There are 5 words hidden among filler letters: find them by dragging in a straight line (horizontal, vertical, or diagonal), without zigzagging.",
+      "form": "Each path must form one of the words in the list.",
+      "cross": "Some words may cross by sharing a letter, like a crossword; the rest are filler letters.",
+      "hints": "Letter hint reveals the next correct letter (+10 s). Definition hint shows a word's definition (+5 s).",
+      "definitions": "When you complete the puzzle, you will see each word's definition below its name."
+    }
+  },
+  "queensGame": {
+    "tagline": "One crown per row, column, and color; none may touch.",
+    "hint": "Tap once to mark ✕, then again for a crown.",
+    "autoFill": "Fill ✕ automatically",
+    "hintButton": "Hint (+10 s)",
+    "rules": {
+      "objective": "Your goal is to have exactly one 👑 in every row, column, and colored region.",
+      "marks": "Tap once to place ✕ and twice to place 👑. Use ✕ to mark where a 👑 cannot go.",
+      "touching": "The 👑 cannot touch, not even diagonally."
+    }
+  },
+  "zipGame": {
+    "tagline": "Connect the numbers in a single stroke.",
+    "hint": "Start at 1 and drag to connect the numbers in order, filling every cell.",
+    "gridLabel": "Zip grid",
+    "hintButton": "Hint (+10 s)",
+    "rules": {
+      "start": "Start at number 1 and draw a path to the highest number, in order.",
+      "fill": "You must visit every cell on the board.",
+      "cross": "The path cannot cross itself."
+    }
+  },
+  "tangoGame": {
+    "tagline": "Three ☀️ and three 🌙 per row and column; never three in a row.",
+    "hint": "= same · × opposite. Tap to change ☀️/🌙.",
+    "ruleError": "A board rule is currently broken.",
+    "hintButton": "Hint (+10 s)",
+    "rules": {
+      "balance": "Every row and column must contain three ☀️ and three 🌙.",
+      "runs": "There cannot be three identical symbols in a row.",
+      "relations": "= means the cells must match; × means they must be opposite.",
+      "hint": "Use Hint to reveal one correct cell (+10 s)."
+    }
+  },
+  "sudokuGame": {
+    "tagline": "Use 1 through 6 without repeats in a row, column, or box.",
+    "hint": "Tap a cell, then a number on the keypad below.",
+    "cellLabel": "Row {{row}}, column {{column}}",
+    "digitLabel": "Place number {{digit}}",
+    "eraseLabel": "Erase number",
+    "hintButton": "Hint (+10 s)",
+    "rules": {
+      "fill": "Complete the grid using numbers from 1 to 6.",
+      "unique": "No number may repeat in a row, column, or box.",
+      "fixed": "Shaded cells are fixed and cannot be edited.",
+      "input": "Tap a cell, then a number on the keypad below to fill it."
+    }
+  },
+  "patchesGame": {
+    "tagline": "Complete every shape to fill the grid.",
+    "hint": "Tap a colored cell and drag to paint its shape; drag over it to erase.",
+    "cellLabel": "Row {{row}}, column {{column}}",
+    "undo": "Undo",
+    "hintButton": "Hint (+10 s)",
+    "legend": {
+      "title": "Complete every shape to fill the grid",
+      "square": "Square",
+      "vertical": "Tall rectangle",
+      "horizontal": "Wide rectangle",
+      "any": "Any of these",
+      "size": "If a shape contains a number, it must have that size."
+    },
+    "rules": {
+      "paint": "Tap a colored cell and drag to paint its shape.",
+      "shape": "Every shape must have the indicated form and, if it has a number, that exact size.",
+      "erase": "Drag over painted cells to erase them."
+    }
+  },
+  "leaderboard": {
+    "period": {
+      "daily": "Daily",
+      "monthly": "Monthly",
+      "global": "Global"
+    },
+    "title": "Leaderboard",
+    "loading": "Loading…",
+    "error": "The leaderboard could not be loaded.",
+    "empty": "No times have been recorded yet.",
+    "personalTitle": "Your results",
+    "personalError": "Your results could not be loaded.",
+    "personalEmpty": "You have not played this game yet."
+  },
+  "dailySummary": {
+    "title": "Your summary today",
+    "rank": "Rank",
+    "best": "Your best",
+    "worst": "Your worst",
+    "loading": "Loading…",
+    "error": "Your summary could not be loaded."
+  },
+  "gameShell": {
+    "howToPlay": "How to play",
+    "restart": "Restart",
+    "mode": {
+      "daily": "Daily challenge",
+      "demo": "Demo"
+    },
+    "nextChallenge": "Next challenge in {{countdown}}",
+    "solvedIn": "Solved in {{time}}!",
+    "rankingMessage": {
+      "daily": "Your time was submitted to the ranking.",
+      "demo": "Log in and play the daily challenge to compete."
+    }
+  }
+}

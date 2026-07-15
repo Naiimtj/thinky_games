@@ -7,23 +7,24 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { fetchMyScores, fetchRankings } from '../api/scoreApi';
 import { formatTime } from '../utils/formatTime';
 import BaseSegmentedControl from './base/BaseSegmentedControl';
 
-const RANKING_TABS = [
-  { value: 'daily', label: 'Diario' },
-  { value: 'monthly', label: 'Mensual' },
-  { value: 'global', label: 'Global' },
+const rankingTabs = (t) => [
+  { value: 'daily', label: t('leaderboard.period.daily') },
+  { value: 'monthly', label: t('leaderboard.period.monthly') },
+  { value: 'global', label: t('leaderboard.period.global') },
 ];
 
 /** Return a new array sorted from the fastest to the slowest time. */
 const sortByFastest = (entries) =>
   [...entries].sort((a, b) => a.completion_time - b.completion_time);
 
-const formatDate = (isoString) =>
-  new Date(isoString).toLocaleDateString('es', {
+const formatDate = (isoString, locale) =>
+  new Date(isoString).toLocaleDateString(locale, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -52,14 +53,14 @@ const RankingRow = ({ entry }) => (
   </li>
 );
 
-const MyScoreRow = ({ entry }) => (
+const MyScoreRow = ({ entry, locale }) => (
   <li className="flex items-center justify-between border-b border-slate-100 py-1 last:border-0 dark:border-slate-700">
     <span className="flex items-center gap-3">
       <span className={`w-6 text-right font-mono ${colorForRank(entry.rank)}`}>
         {entry.rank}
       </span>
       <span className="text-slate-500 dark:text-slate-400">
-        {formatDate(entry.created_at)}
+        {formatDate(entry.created_at, locale)}
       </span>
     </span>
     <span className="font-mono font-semibold tabular-nums text-slate-800 dark:text-slate-100">
@@ -69,7 +70,8 @@ const MyScoreRow = ({ entry }) => (
 );
 
 const Leaderboard = ({ gameType = 'zip' }) => {
-  const [activePeriod, setActivePeriod] = useState(RANKING_TABS[0].value);
+  const { t, i18n } = useTranslation();
+  const [activePeriod, setActivePeriod] = useState('daily');
   const [entries, setEntries] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -126,13 +128,13 @@ const Leaderboard = ({ gameType = 'zip' }) => {
     <div className="flex flex-col gap-6">
       <section className="rounded-2xl bg-white p-4 shadow-md dark:bg-slate-800">
         <h2 className="mb-3 text-lg font-black text-slate-800 dark:text-slate-100">
-          Clasificación
+          {t('leaderboard.title')}
         </h2>
 
         <div className="mb-4">
           <BaseSegmentedControl
             variant="rounded"
-            options={RANKING_TABS}
+            options={rankingTabs(t)}
             value={activePeriod}
             onChange={setActivePeriod}
           />
@@ -140,19 +142,19 @@ const Leaderboard = ({ gameType = 'zip' }) => {
 
         {isLoading && (
           <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
-            Cargando…
+            {t('leaderboard.loading')}
           </p>
         )}
 
         {error && !isLoading && (
           <p className="py-6 text-center text-sm text-red-500 dark:text-red-400">
-            No se pudo cargar la clasificación.
+            {t('leaderboard.error')}
           </p>
         )}
 
         {!isLoading && !error && entries.length === 0 && (
           <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
-            Aún no hay tiempos registrados.
+            {t('leaderboard.empty')}
           </p>
         )}
 
@@ -170,24 +172,24 @@ const Leaderboard = ({ gameType = 'zip' }) => {
 
       <section className="rounded-2xl bg-white p-4 shadow-md dark:bg-slate-800">
         <h2 className="mb-3 text-lg font-black text-slate-800 dark:text-slate-100">
-          Tus resultados
+          {t('leaderboard.personalTitle')}
         </h2>
 
         {isMyScoresLoading && (
           <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
-            Cargando…
+            {t('leaderboard.loading')}
           </p>
         )}
 
         {myScoresError && !isMyScoresLoading && (
           <p className="py-6 text-center text-sm text-red-500 dark:text-red-400">
-            No se pudieron cargar tus resultados.
+            {t('leaderboard.personalError')}
           </p>
         )}
 
         {!isMyScoresLoading && !myScoresError && myScores.length === 0 && (
           <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
-            Aún no has jugado este juego.
+            {t('leaderboard.personalEmpty')}
           </p>
         )}
 
@@ -197,6 +199,7 @@ const Leaderboard = ({ gameType = 'zip' }) => {
               <MyScoreRow
                 key={`${entry.rank}-${entry.created_at}`}
                 entry={entry}
+                locale={i18n.resolvedLanguage ?? 'es'}
               />
             ))}
           </ol>

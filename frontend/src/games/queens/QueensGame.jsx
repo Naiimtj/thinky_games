@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import BaseButton from '../../components/base/BaseButton';
 import BaseToggleSwitch from '../../components/base/BaseToggleSwitch';
@@ -62,6 +63,7 @@ const Toggle = ({ checked, onChange, label }) => (
 );
 
 const QueensBoard = ({ puzzle, puzzleId, mode, meta }) => {
+  const { t } = useTranslation();
   const { size, regions } = puzzle;
 
   const boardKey = buildStorageKey('queens', mode, puzzleId, 'board');
@@ -129,13 +131,13 @@ const QueensBoard = ({ puzzle, puzzleId, mode, meta }) => {
 
   return (
     <GameShell
-      title={meta?.name ?? 'Queens'}
-      tagline="Una corona por fila, columna y color; sin tocarse."
+      title={meta?.name ?? t('games.queens.name')}
+      tagline={t('queensGame.tagline')}
       mode={mode}
       elapsed={session.elapsed}
       state={session.state}
       onReset={handleReset}
-      hint="Toca una vez para marcar ✕, otra para la corona."
+      hint={t('queensGame.hint')}
     >
       <div className="relative mb-3">
         <div
@@ -174,7 +176,7 @@ const QueensBoard = ({ puzzle, puzzleId, mode, meta }) => {
       <Toggle
         checked={autoFill}
         onChange={() => setAutoFill((value) => !value)}
-        label="Rellenar ✕ automáticamente"
+        label={t('queensGame.autoFill')}
       />
       <BaseButton
         variant="warning"
@@ -183,20 +185,13 @@ const QueensBoard = ({ puzzle, puzzleId, mode, meta }) => {
         disabled={solved}
         className="mt-3 w-full rounded-full"
       >
-        Pista (+10 s)
+        {t('queensGame.hintButton')}
       </BaseButton>
 
       <RulesSection>
-        <li>
-          Tu objetivo es tener{' '}
-          <span className="font-bold">exactamente una</span> 👑 en cada{' '}
-          <span className="font-bold">fila, columna y región con color</span>.
-        </li>
-        <li>
-          Toca una vez para colocar ✕ y dos veces para colocar 👑. Usa ✕ para
-          marcar dónde no puede ir una 👑.
-        </li>
-        <li>Las 👑 no pueden tocarse, ni siquiera en diagonal.</li>
+        <li>{t('queensGame.rules.objective')}</li>
+        <li>{t('queensGame.rules.marks')}</li>
+        <li>{t('queensGame.rules.touching')}</li>
       </RulesSection>
     </GameShell>
   );

@@ -21,6 +21,7 @@ class DailyPuzzleResponse(BaseModel):
 
     id: str
     game_type: str
+    locale: str
     mode: str
     date: date | None
     seed: int

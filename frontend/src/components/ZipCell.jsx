@@ -4,6 +4,8 @@
  * which cell a touch is currently over via `document.elementFromPoint`.
  */
 
+import { useTranslation } from 'react-i18next';
+
 const cellClasses = (isActive) => {
   const base = 'h-full w-full border border-slate-200 transition-colors';
   return isActive
@@ -12,6 +14,7 @@ const cellClasses = (isActive) => {
 };
 
 const ZipCell = ({ cell, isActive, onPointerDown, onPointerEnter }) => {
+  const { t } = useTranslation();
   const handleMouseDown = (event) => {
     event.preventDefault();
     onPointerDown();
@@ -28,7 +31,10 @@ const ZipCell = ({ cell, isActive, onPointerDown, onPointerEnter }) => {
       data-row={cell.row}
       data-col={cell.col}
       role="gridcell"
-      aria-label={`Fila ${cell.row + 1}, columna ${cell.col + 1}`}
+      aria-label={t('shared.gridCell', {
+        row: cell.row + 1,
+        column: cell.col + 1,
+      })}
       className={cellClasses(isActive)}
       onMouseDown={handleMouseDown}
       onMouseEnter={onPointerEnter}

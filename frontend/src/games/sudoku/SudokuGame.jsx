@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import BaseButton from '../../components/base/BaseButton';
 import { GameShell, RulesSection } from '../GameShell';
@@ -66,6 +67,7 @@ const cellTone = (isFixed, conflict, selected) => {
 };
 
 const SudokuBoard = ({ puzzle, puzzleId, mode, meta }) => {
+  const { t } = useTranslation();
   const { size, boxHeight, boxWidth } = puzzle;
   const fixed = useMemo(() => givenMask(puzzle), [puzzle]);
 
@@ -236,13 +238,13 @@ const SudokuBoard = ({ puzzle, puzzleId, mode, meta }) => {
 
   return (
     <GameShell
-      title={meta?.name ?? 'Mini Sudoku'}
-      tagline="Del 1 al 6 sin repetir en fila, columna ni caja."
+      title={meta?.name ?? t('games.sudoku.name')}
+      tagline={t('sudokuGame.tagline')}
       mode={mode}
       elapsed={session.elapsed}
       state={session.state}
       onReset={handleReset}
-      hint="Toca una casilla y luego un número del teclado inferior."
+      hint={t('sudokuGame.hint')}
     >
       <div className="relative overflow-hidden rounded-xl border-2 border-slate-500">
         <div
@@ -274,7 +276,10 @@ const SudokuBoard = ({ puzzle, puzzleId, mode, meta }) => {
                   type="button"
                   onClick={() => handleCellSelect(row, col)}
                   disabled={isFixed}
-                  aria-label={`Fila ${row + 1}, columna ${col + 1}`}
+                  aria-label={t('sudokuGame.cellLabel', {
+                    row: row + 1,
+                    column: col + 1,
+                  })}
                   aria-pressed={selected}
                   className={`aspect-square w-full text-center text-xl font-bold outline-none transition-colors duration-300 bg-white ${boxBorders(row, col)} ${cellTone(isFixed, conflict, selected)} ${conflict && !isFixed ? 'line-through' : ''} ${ringClass}`}
                 >
@@ -310,7 +315,7 @@ const SudokuBoard = ({ puzzle, puzzleId, mode, meta }) => {
               type="button"
               onClick={() => handleDigitPress(digit)}
               disabled={isFull}
-              aria-label={`Colocar número ${digit}`}
+              aria-label={t('sudokuGame.digitLabel', { digit })}
               className="aspect-square rounded-lg border border-indigo-200 bg-indigo-50 text-lg font-bold text-indigo-600 transition-colors disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-300"
             >
               {digit}
@@ -323,7 +328,7 @@ const SudokuBoard = ({ puzzle, puzzleId, mode, meta }) => {
           disabled={
             !selectedCell || grid[selectedCell.row][selectedCell.col] === 0
           }
-          aria-label="Borrar número"
+          aria-label={t('sudokuGame.eraseLabel')}
           className="aspect-square rounded-lg border border-slate-300 bg-slate-100 text-lg font-bold text-slate-500 transition-colors disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-300"
         >
           ⌫
@@ -337,17 +342,14 @@ const SudokuBoard = ({ puzzle, puzzleId, mode, meta }) => {
         disabled={session.state === GAME_STATE.WON || !solution}
         className="mt-3 w-full"
       >
-        Pista (+10 s)
+        {t('sudokuGame.hintButton')}
       </BaseButton>
 
       <RulesSection>
-        <li>Completa la cuadrícula con números del 1 al 6.</li>
-        <li>Ningún número puede repetirse en una fila, columna o caja.</li>
-        <li>Las casillas sombreadas ya están fijas y no se pueden editar.</li>
-        <li>
-          Toca una casilla y luego un número del teclado inferior para
-          rellenarla.
-        </li>
+        <li>{t('sudokuGame.rules.fill')}</li>
+        <li>{t('sudokuGame.rules.unique')}</li>
+        <li>{t('sudokuGame.rules.fixed')}</li>
+        <li>{t('sudokuGame.rules.input')}</li>
       </RulesSection>
     </GameShell>
   );

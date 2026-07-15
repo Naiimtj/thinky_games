@@ -25,13 +25,14 @@ const handleExpiredSession = (response) => {
 export const submitScore = async ({
   completion_time,
   game_type = 'zip',
+  locale = 'es',
   solution = null,
 }) => {
   const response = await fetch(`${API_BASE_URL}/scores`, {
     method: 'POST',
     ...authOptions,
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ completion_time, game_type, solution }),
+    body: JSON.stringify({ completion_time, game_type, locale, solution }),
   });
 
   if (!response.ok) {

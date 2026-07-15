@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import BaseIcon from './BaseIcon';
 
 const BaseToastNotification = ({
@@ -9,6 +10,7 @@ const BaseToastNotification = ({
   onClose,
   ...props
 }) => {
+  const { t } = useTranslation();
   useEffect(() => {
     if (display && duration) {
       const timer = setTimeout(() => {
@@ -100,7 +102,7 @@ const BaseToastNotification = ({
 
           <button
             onClick={handleClose}
-            aria-label="Close notification"
+            aria-label={t('shared.closeNotification')}
             className="absolute right-1 top-1 text-current hover:opacity-70 transition-opacity"
           >
             <BaseIcon

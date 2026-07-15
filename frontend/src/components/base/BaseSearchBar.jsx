@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SearchIcon } from './icons';
 import BaseIcon from './BaseIcon';
 
@@ -11,6 +12,7 @@ const BaseSearchBar = ({
   onSearch,
   value: controlledValue,
 }) => {
+  const { t } = useTranslation();
   const isControlled = controlledValue !== undefined;
   const [internalInput, setInternalInput] = useState('');
   const searchInput = isControlled ? controlledValue : internalInput;
@@ -44,7 +46,7 @@ const BaseSearchBar = ({
           icon="close"
           size="small"
           className="ml-1 text-gray-400 hover:text-gray-600 transition-colors"
-          aria-label="Clear search"
+          aria-label={t('shared.clearSearch')}
           onClick={handleClear}
         />
       )}

@@ -1,6 +1,7 @@
 /** Shared chrome for every game: header (title, mode badge, timer) + win banner. */
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import BaseButton from '../components/base/BaseButton';
 import { formatTime } from '../utils/formatTime';
@@ -33,19 +34,22 @@ const Confetti = () => (
   </div>
 );
 
-const ModeBadge = ({ mode }) =>
-  mode === 'daily' ? (
+const ModeBadge = ({ mode }) => {
+  const { t } = useTranslation();
+  return mode === 'daily' ? (
     <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700">
-      Reto diario
+      {t('gameShell.mode.daily')}
     </span>
   ) : (
     <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">
-      Demo
+      {t('gameShell.mode.demo')}
     </span>
   );
+};
 
-/** Collapsible "Cómo se juega" block; each game supplies its own rule items. */
+/** Collapsible "How to play" block; each game supplies its own rule items. */
 export const RulesSection = ({ children }) => {
+  const { t } = useTranslation();
   const [show, setShow] = useState(false);
 
   return (
@@ -56,7 +60,7 @@ export const RulesSection = ({ children }) => {
         onClick={() => setShow((value) => !value)}
         className="flex w-full items-center justify-between px-3 py-2 font-semibold text-slate-700 hover:no-underline"
       >
-        <span>Cómo se juega</span>
+        <span>{t('gameShell.howToPlay')}</span>
         <span className="text-slate-400">{show ? '▲' : '▼'}</span>
       </BaseButton>
       {show && (
@@ -76,6 +80,7 @@ export const GameShell = ({
   hint,
   children,
 }) => {
+  const { t } = useTranslation();
   const countdown = useDailyCountdown();
 
   return (
@@ -96,14 +101,14 @@ export const GameShell = ({
             disabled={state === GAME_STATE.WON}
             className="shrink-0 rounded-lg disabled:cursor-not-allowed"
           >
-            Reiniciar
+            {t('gameShell.restart')}
           </BaseButton>
           <div className="font-mono text-2xl font-bold tabular-nums dark:text-slate-200 text-slate-800">
             {formatTime(elapsed)}
           </div>
           {mode === 'daily' && (
             <p className="text-xs text-slate-400 dark:text-slate-500">
-              Próximo reto en {countdown}
+              {t('gameShell.nextChallenge', { countdown })}
             </p>
           )}
         </div>
@@ -120,11 +125,13 @@ export const GameShell = ({
 
       {state === GAME_STATE.WON && (
         <div className="mt-4 rounded-xl bg-emerald-50 p-3 text-center text-emerald-700">
-          <p className="font-bold">¡Resuelto en {formatTime(elapsed)}!</p>
+          <p className="font-bold">
+            {t('gameShell.solvedIn', { time: formatTime(elapsed) })}
+          </p>
           <p className="text-sm">
             {mode === 'daily'
-              ? 'Tu tiempo se envió al ranking.'
-              : 'Inicia sesión y juega el reto diario para competir.'}
+              ? t('gameShell.rankingMessage.daily')
+              : t('gameShell.rankingMessage.demo')}
           </p>
         </div>
       )}

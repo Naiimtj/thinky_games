@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import BaseButton from '../../components/base/BaseButton';
 import { Moon } from '../../components/icons/Moon';
@@ -38,6 +39,7 @@ const setCellValue = (grid, row, col, value) =>
   );
 
 const TangoBoard = ({ puzzle, puzzleId, mode, meta }) => {
+  const { t } = useTranslation();
   const { size, constraints } = puzzle;
   const fixed = useMemo(() => givenKeys(puzzle), [puzzle]);
   const markers = useMemo(() => constraintMarkers(constraints), [constraints]);
@@ -103,16 +105,16 @@ const TangoBoard = ({ puzzle, puzzleId, mode, meta }) => {
 
   return (
     <GameShell
-      title={meta?.name ?? 'Tango'}
-      tagline="Tres ☀️ y tres 🌙 por fila y columna; nunca tres seguidos."
+      title={meta?.name ?? t('games.tango.name')}
+      tagline={t('tangoGame.tagline')}
       mode={mode}
       elapsed={session.elapsed}
       state={session.state}
       onReset={handleReset}
-      hint="= iguales · × opuestos. Toca para cambiar ☀️/🌙."
+      hint={t('tangoGame.hint')}
     >
       <p role="status" aria-live="polite" className="sr-only">
-        {errorCells.size > 0 ? 'Hay una regla incumplida en el tablero.' : ''}
+        {errorCells.size > 0 ? t('tangoGame.ruleError') : ''}
       </p>
       <div className="relative aspect-square w-full overflow-hidden rounded-xl border-2 border-slate-600 bg-white">
         <div
@@ -170,18 +172,14 @@ const TangoBoard = ({ puzzle, puzzleId, mode, meta }) => {
         disabled={solved || !solution}
         className="mt-3 w-full"
       >
-        Pista (+10 s)
+        {t('tangoGame.hintButton')}
       </BaseButton>
 
       <RulesSection>
-        <li>Cada fila y columna debe tener tres ☀️ y tres 🌙.</li>
-        <li>No puede haber tres símbolos iguales seguidos.</li>
-        <li>
-          <span className="font-bold">=</span> obliga a que las celdas sean
-          iguales; <span className="font-bold">×</span> obliga a que sean
-          opuestas.
-        </li>
-        <li>Usa Pista para revelar una casilla correcta (+10 s).</li>
+        <li>{t('tangoGame.rules.balance')}</li>
+        <li>{t('tangoGame.rules.runs')}</li>
+        <li>{t('tangoGame.rules.relations')}</li>
+        <li>{t('tangoGame.rules.hint')}</li>
       </RulesSection>
     </GameShell>
   );

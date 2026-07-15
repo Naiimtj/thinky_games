@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import BaseButton from '../../components/base/BaseButton';
 import { GameShell, RulesSection } from '../GameShell';
@@ -17,10 +18,11 @@ import {
 
 const cellKey = (row, col) => `${row},${col}`;
 
-const directionLabel = (direction) =>
-  direction === 'across' ? 'Horizontal' : 'Vertical';
+const directionLabel = (direction, t) =>
+  t(`crosswordGame.directions.${direction}`);
 
-const CrosswordBoard = ({ puzzle, puzzleId, mode, meta }) => {
+const CrosswordBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
+  const { t } = useTranslation();
   const { entries, size } = puzzle;
   const boardKey = buildStorageKey('crossword', mode, puzzleId, 'board');
   const [board, setBoard] = usePersistedState(boardKey, () => ({ cells: {} }));
@@ -46,6 +48,7 @@ const CrosswordBoard = ({ puzzle, puzzleId, mode, meta }) => {
     gameId: 'crossword',
     mode,
     puzzleId,
+    locale: puzzleLocale,
     isSolved,
     getSolution: () => answersFromCells(entries, cells),
   });
@@ -93,19 +96,19 @@ const CrosswordBoard = ({ puzzle, puzzleId, mode, meta }) => {
 
   return (
     <GameShell
-      title={meta?.name ?? 'Crucigrama'}
-      tagline="Completa las palabras que se cruzan en la rejilla."
+      title={meta?.name ?? t('games.crossword.name')}
+      tagline={t('crosswordGame.tagline')}
       mode={mode}
       elapsed={session.elapsed}
       state={session.state}
       onReset={handleReset}
-      hint="Selecciona una pista o casilla y escribe una letra."
+      hint={t('crosswordGame.hint')}
     >
       <div
         className="grid overflow-hidden rounded-lg border-2 border-slate-700 bg-slate-700"
         style={{ gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))` }}
         role="grid"
-        aria-label="Rejilla del crucigrama"
+        aria-label={t('crosswordGame.gridLabel')}
       >
         {grid.map((cell) => {
           const key = cellKey(cell.row, cell.col);
@@ -154,7 +157,7 @@ const CrosswordBoard = ({ puzzle, puzzleId, mode, meta }) => {
                 maxLength={1}
                 inputMode="text"
                 autoComplete="off"
-                aria-label={`Casilla de las pistas ${label}`}
+                aria-label={t('crosswordGame.cellLabel', { numbers: label })}
                 className={`h-full w-full border bg-transparent pt-1 text-center font-mono text-lg font-bold uppercase text-slate-800 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 ${isIncorrect ? 'border-red-500' : 'border-slate-300'} ${isActive ? 'bg-amber-100' : ''}`}
               />
             </div>
@@ -169,7 +172,7 @@ const CrosswordBoard = ({ puzzle, puzzleId, mode, meta }) => {
         disabled={isSolved}
         className="mt-3 w-full"
       >
-        Pista (+10 s)
+        {t('crosswordGame.hintButton')}
       </BaseButton>
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -179,7 +182,7 @@ const CrosswordBoard = ({ puzzle, puzzleId, mode, meta }) => {
               id={`crossword-${direction}`}
               className="mb-1 text-sm font-bold text-slate-700"
             >
-              {directionLabel(direction)}
+              {directionLabel(direction, t)}
             </h2>
             <ol className="space-y-1">
               {entries
@@ -202,15 +205,10 @@ const CrosswordBoard = ({ puzzle, puzzleId, mode, meta }) => {
       </div>
 
       <RulesSection>
-        <li>
-          Elige una pista horizontal o vertical para resaltarla en la rejilla.
-        </li>
-        <li>
-          Escribe una letra por casilla; las letras compartidas sirven para
-          ambas palabras.
-        </li>
-        <li>Completa todas las pistas para resolver el crucigrama.</li>
-        <li>Usa Pista para revelar una letra (+10 s).</li>
+        <li>{t('crosswordGame.rules.select')}</li>
+        <li>{t('crosswordGame.rules.write')}</li>
+        <li>{t('crosswordGame.rules.complete')}</li>
+        <li>{t('crosswordGame.rules.hint')}</li>
       </RulesSection>
     </GameShell>
   );
@@ -224,6 +222,7 @@ const CrosswordGame = ({ mode, meta }) => {
         <CrosswordBoard
           puzzle={puzzle.payload}
           puzzleId={puzzle.id}
+          puzzleLocale={puzzle.locale}
           mode={mode}
           meta={meta}
         />

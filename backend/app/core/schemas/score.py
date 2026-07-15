@@ -17,6 +17,7 @@ class ScoreCreate(BaseModel):
         description="Seconds the player took to solve the puzzle.",
     )
     game_type: str = Field(default="zip", max_length=30)
+    locale: str = Field(default="es", pattern="^(es|en|de)$")
     solution: Any | None = Field(
         default=None,
         description="Submitted solution, validated server-side for backend games.",
