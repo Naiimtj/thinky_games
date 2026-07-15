@@ -32,8 +32,7 @@ class Settings(BaseSettings):
     backup_data_dir: str = "/app/backups"
     run_migrations_on_startup: bool = True
 
-    # Optional rae-api.com key: higher daily quota for Crossclimb clues.
-    # Without it, Crossclimb falls back to the curated puzzle pool.
+    # Required for automatic Crossword words; also enables Wend definitions.
     rae_key: str = ""
 
     @property

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Crucigrama">
+  <rect width="128" height="128" rx="16" fill="#f8fafc"/>
+  <g fill="#ffffff" stroke="#334155" stroke-width="4">
+    <rect x="24" y="24" width="20" height="20"/><rect x="44" y="24" width="20" height="20"/><rect x="64" y="24" width="20" height="20"/>
+    <rect x="24" y="44" width="20" height="20"/><rect x="44" y="44" width="20" height="20"/><rect x="64" y="44" width="20" height="20"/><rect x="84" y="44" width="20" height="20"/>
+    <rect x="44" y="64" width="20" height="20"/><rect x="64" y="64" width="20" height="20"/><rect x="84" y="64" width="20" height="20"/>
+    <rect x="64" y="84" width="20" height="20"/>
+  </g>
+  <path d="M92 24l12 12-28 28-14 2 2-14z" fill="#f59e0b" stroke="#92400e" stroke-width="3"/>
+</svg>

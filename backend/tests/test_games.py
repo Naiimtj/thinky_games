@@ -5,7 +5,7 @@ from datetime import timedelta
 import pytest
 
 from app.core.crud import puzzles as puzzle_crud
-from app.core.games import crossclimb, patches, pinpoint, queens, sudoku, tango, wend
+from app.core.games import crossword, patches, pinpoint, queens, sudoku, tango, wend
 from app.core.games import zip as zip_puzzle
 from app.core.games.daily import utc_today
 from app.core.games.registry import PLAYABLE_GAMES, get_game
@@ -16,7 +16,7 @@ BACKEND_GAMES = [
     "tango",
     "sudoku",
     "pinpoint",
-    "crossclimb",
+    "crossword",
     "wend",
     "patches",
 ]
@@ -132,39 +132,43 @@ def test_generated_patches_has_unique_tiling(seed):
     )
 
 
-def test_all_crossclimb_pool_puzzles_are_valid_ladders():
-    for puzzle in crossclimb.CROSSCLIMB_PUZZLES:
-        ladder = [
-            puzzle["top"]["word"],
-            *[rung["word"] for rung in puzzle["rungs"]],
-            puzzle["bottom"]["word"],
-        ]
-        assert crossclimb.is_valid_ladder(ladder) is True
+def test_all_crossword_layouts_are_valid():
+    for puzzle in crossword.CROSSWORD_PUZZLES:
+        assert crossword._is_valid_layout(puzzle) is True
 
 
-@pytest.mark.parametrize("game_type", ["pinpoint", "crossclimb", "wend", "patches"])
+def test_crossword_uses_rae_words_and_excludes_recent_answers(monkeypatch):
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(
+        crossword, "get_settings", lambda: SimpleNamespace(rae_key="test-key")
+    )
+    monkeypatch.setattr(crossword, "_recent_used_words", lambda: {"USADO"})
+    monkeypatch.setattr(
+        crossword,
+        "common_words",
+        lambda: ["USADO", "CAMINO", "MARINO", "RATON", "TORRE", "RITMO"],
+    )
+    monkeypatch.setattr(crossword, "shuffle_in_place", lambda words, rng: words)
+    monkeypatch.setattr(
+        crossword, "fetch_clue", lambda word, api_key="": f"definición de {word}"
+    )
+
+    payload = crossword.generate(2026200).payload
+
+    assert payload["size"] == crossword.GRID_SIZE
+    assert len(payload["entries"]) == crossword.WORD_COUNT
+    assert "USADO" not in {entry["answer"] for entry in payload["entries"]}
+    assert all(entry["clue"].startswith("definición de") for entry in payload["entries"])
+    assert crossword._is_valid_layout(payload["entries"]) is True
+    assert crossword.validate(payload, crossword.solve(payload)) is True
+
+
+@pytest.mark.parametrize("game_type", ["pinpoint", "crossword", "wend", "patches"])
 def test_reference_solution_validates(game_type):
     spec = get_game(game_type)
     puzzle = spec.generate(spec.demo_seed)
     assert spec.validate(puzzle.payload, spec.solve(puzzle.payload)) is True
-
-
-def test_crossclimb_uses_rae_clues_when_key_present(monkeypatch):
-    from types import SimpleNamespace
-
-    monkeypatch.setattr(
-        crossclimb, "get_settings", lambda: SimpleNamespace(rae_key="test-key")
-    )
-    monkeypatch.setattr(
-        crossclimb, "fetch_clue", lambda word, api_key="": f"definición de {word}"
-    )
-
-    payload = crossclimb.generate(2026200).payload
-
-    assert payload["top"]["clue"].startswith("definición de")
-    assert all(rung["clue"].startswith("definición de") for rung in payload["rungs"])
-    # The generated chain is a real one-letter ladder that validates.
-    assert crossclimb.validate(payload, crossclimb.solve(payload)) is True
 
 
 def test_wend_includes_rae_definitions_when_key_present(monkeypatch):
@@ -280,13 +284,13 @@ def test_invalid_pinpoint_solution_is_rejected(client, auth_headers):
     assert response.status_code == 422
 
 
-def test_invalid_crossclimb_solution_is_rejected(client, auth_headers):
+def test_invalid_crossword_solution_is_rejected(client, auth_headers):
     response = client.post(
         "/scores",
         json={
             "completion_time": 42,
-            "game_type": "crossclimb",
-            "solution": ["AAAA", "BBBB"],  # not the puzzle's ladder
+            "game_type": "crossword",
+            "solution": {"1A": "AAAA"},
         },
         headers=auth_headers,
     )

@@ -1,6 +1,6 @@
 """Server-side client for rae-api.com (Spanish dictionary definitions).
 
-Used to enrich the Crossclimb word ladder with real RAE definitions as clues.
+Used to enrich word-based games with real RAE definitions as clues.
 Every call soft-fails to ``None`` so callers can fall back to a curated puzzle.
 Successful lookups are cached in-process to conserve the daily quota.
 
@@ -19,27 +19,40 @@ _TIMEOUT_SECONDS = 5
 _clue_cache: dict[str, str] = {}
 
 
-def fetch_clue(word: str, api_key: str = "") -> str | None:
-    """Return the first RAE definition of ``word``, or ``None`` on any failure."""
-    key = word.lower()
-    if key in _clue_cache:
-        return _clue_cache[key]
-
-    url = f"{_BASE_URL}/words/{urllib.parse.quote(key)}"
-    request = urllib.request.Request(url)
+def _request_json(path: str, api_key: str = "") -> object | None:
+    request = urllib.request.Request(f"{_BASE_URL}{path}")
     if api_key:
         request.add_header("X-API-Key", api_key)
 
     try:
         with urllib.request.urlopen(request, timeout=_TIMEOUT_SECONDS) as response:
             if response.status != 200:
-                return None  # rate limit / server error — transient, don't cache
-            payload = json.loads(response.read().decode("utf-8"))
-    except Exception:  # network/timeout/decode errors — transient, don't cache
+                return None
+            return json.loads(response.read().decode("utf-8"))
+    except Exception:
+        return None
+
+
+def _response_data(payload: object) -> dict | None:
+    if not isinstance(payload, dict):
+        return None
+    data = payload.get("data")
+    return data if isinstance(data, dict) else None
+
+
+def fetch_clue(word: str, api_key: str = "") -> str | None:
+    """Return the first RAE definition of ``word``, or ``None`` on any failure."""
+    key = word.lower()
+    if key in _clue_cache:
+        return _clue_cache[key]
+
+    payload = _request_json(f"/words/{urllib.parse.quote(key)}", api_key)
+    data = _response_data(payload)
+    if data is None:
         return None
 
     try:
-        clue = payload["data"]["meanings"][0]["senses"][0]["description"]
+        clue = data["meanings"][0]["senses"][0]["description"]
     except (KeyError, IndexError, TypeError):
         clue = None
     if not isinstance(clue, str) or not clue:
@@ -49,3 +62,59 @@ def fetch_clue(word: str, api_key: str = "") -> str | None:
     # word is never queried twice — this bounds calls during bulk generation.
     _clue_cache[key] = clue
     return clue
+
+
+def fetch_random_word(
+    min_length: int, max_length: int, api_key: str = ""
+) -> str | None:
+    """Return one random dictionary word from RAE, or ``None`` on failure."""
+    query = urllib.parse.urlencode(
+        {"min_length": min_length, "max_length": max_length}
+    )
+    payload = _request_json(f"/random?{query}", api_key)
+    data = _response_data(payload)
+    if data is None:
+        return None
+    try:
+        word = data["word"]
+    except (KeyError, TypeError):
+        return None
+    return word if isinstance(word, str) else None
+
+
+def _common_sense_clue(sense: object) -> str | None:
+    if not isinstance(sense, dict):
+        return None
+    if sense.get("usage") not in {"common", "colloquial"}:
+        return None
+    clue = sense.get("description")
+    return clue if isinstance(clue, str) and clue else None
+
+
+def _meaning_clue(meaning: object) -> str | None:
+    if not isinstance(meaning, dict):
+        return None
+    senses = meaning.get("senses")
+    if not isinstance(senses, list):
+        return None
+    for sense in senses:
+        clue = _common_sense_clue(sense)
+        if clue:
+            return clue
+    return None
+
+
+def fetch_common_entry(word: str, api_key: str = "") -> dict[str, str] | None:
+    """Return a clue only when RAE marks a sense as common or colloquial."""
+    key = word.lower()
+    payload = _request_json(f"/words/{urllib.parse.quote(key)}", api_key)
+    data = _response_data(payload)
+    meanings = data.get("meanings") if data is not None else None
+    if not isinstance(meanings, list):
+        return None
+
+    for meaning in meanings:
+        clue = _meaning_clue(meaning)
+        if clue:
+            return {"word": word, "clue": clue}
+    return None

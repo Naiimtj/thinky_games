@@ -1,0 +1,201 @@
+import { useMemo, useState } from 'react';
+
+import BaseButton from '../../components/base/BaseButton';
+import { GameShell, RulesSection } from '../GameShell';
+import { buildStorageKey, usePersistedState } from '../gamePersistence';
+import { PuzzleGate } from '../PuzzleGate';
+import { useDailyPuzzle } from '../useDailyPuzzle';
+import { useGameSession } from '../useGameSession';
+import {
+  answersFromCells,
+  buildGrid,
+  firstEmptyLetter,
+  isCrosswordSolved,
+  normalizeLetter,
+} from './crosswordLogic';
+
+const cellKey = (row, col) => `${row},${col}`;
+
+const directionLabel = (direction) =>
+  direction === 'across' ? 'Horizontal' : 'Vertical';
+
+const CrosswordBoard = ({ puzzle, puzzleId, mode, meta }) => {
+  const { entries, size } = puzzle;
+  const boardKey = buildStorageKey('crossword', mode, puzzleId, 'board');
+  const [board, setBoard] = usePersistedState(boardKey, () => ({ cells: {} }));
+  const [activeEntryId, setActiveEntryId] = useState(entries[0]?.id ?? null);
+  const cells = board.cells ?? {};
+  const grid = useMemo(() => buildGrid(entries, size), [entries, size]);
+  const activeEntry = entries.find((entry) => entry.id === activeEntryId);
+  const isSolved = isCrosswordSolved(entries, cells);
+
+  const session = useGameSession({
+    gameId: 'crossword',
+    mode,
+    puzzleId,
+    isSolved,
+    getSolution: () => answersFromCells(entries, cells),
+  });
+
+  const setCell = (key, value) =>
+    setBoard((previous) => ({
+      ...previous,
+      cells: { ...previous.cells, [key]: normalizeLetter(value) },
+    }));
+
+  const handleReset = () => {
+    setBoard({ cells: {} });
+    setActiveEntryId(entries[0]?.id ?? null);
+    session.reset();
+  };
+
+  const handleHint = () => {
+    const hint = firstEmptyLetter(entries, cells);
+    if (!hint) return;
+    setCell(hint.key, hint.letter);
+    session.addSeconds(10);
+  };
+
+  const selectCell = (cell) => {
+    const nextEntryId = cell.entryIds.includes(activeEntryId)
+      ? (cell.entryIds.find((id) => id !== activeEntryId) ?? activeEntryId)
+      : cell.entryIds[0];
+    setActiveEntryId(nextEntryId);
+  };
+
+  return (
+    <GameShell
+      title={meta?.name ?? 'Crucigrama'}
+      tagline="Completa las palabras que se cruzan en la rejilla."
+      mode={mode}
+      elapsed={session.elapsed}
+      state={session.state}
+      onReset={handleReset}
+      hint="Selecciona una pista o casilla y escribe una letra."
+    >
+      <div
+        className="grid overflow-hidden rounded-lg border-2 border-slate-700 bg-slate-700"
+        style={{ gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))` }}
+        role="grid"
+        aria-label="Rejilla del crucigrama"
+      >
+        {grid.map((cell) => {
+          const key = cellKey(cell.row, cell.col);
+          if (cell.entryIds.length === 0) {
+            return (
+              <div
+                key={key}
+                className="aspect-square bg-slate-700"
+                aria-hidden="true"
+              />
+            );
+          }
+          const isActive = cell.entryIds.includes(activeEntryId);
+          const label = cell.entryIds
+            .map((id) => entries.find((entry) => entry.id === id)?.number)
+            .join(' y ');
+          return (
+            <div
+              key={key}
+              role="gridcell"
+              className="relative aspect-square bg-white"
+            >
+              {cell.number && (
+                <span className="pointer-events-none absolute left-0.5 top-0 text-[10px] font-bold leading-none text-slate-500">
+                  {cell.number}
+                </span>
+              )}
+              <input
+                id={`crossword-${key}`}
+                value={cells[key] ?? ''}
+                onFocus={() =>
+                  setActiveEntryId((current) =>
+                    cell.entryIds.includes(current)
+                      ? current
+                      : cell.entryIds[0],
+                  )
+                }
+                onClick={() => selectCell(cell)}
+                onChange={(event) => setCell(key, event.target.value)}
+                maxLength={1}
+                inputMode="text"
+                autoComplete="off"
+                aria-label={`Casilla de las pistas ${label}`}
+                className={`h-full w-full border border-slate-300 bg-transparent pt-1 text-center font-mono text-lg font-bold uppercase text-slate-800 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 ${isActive ? 'bg-amber-100' : ''}`}
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      <BaseButton
+        variant="warning"
+        outlined
+        onClick={handleHint}
+        disabled={isSolved}
+        className="mt-3 w-full"
+      >
+        Pista (+10 s)
+      </BaseButton>
+
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        {['across', 'down'].map((direction) => (
+          <section key={direction} aria-labelledby={`crossword-${direction}`}>
+            <h2
+              id={`crossword-${direction}`}
+              className="mb-1 text-sm font-bold text-slate-700"
+            >
+              {directionLabel(direction)}
+            </h2>
+            <ol className="space-y-1">
+              {entries
+                .filter((entry) => entry.direction === direction)
+                .map((entry) => (
+                  <li key={entry.id}>
+                    <button
+                      type="button"
+                      onClick={() => setActiveEntryId(entry.id)}
+                      className={`w-full rounded-lg px-2 py-1.5 text-left text-sm text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${activeEntry?.id === entry.id ? 'bg-amber-100 font-semibold' : 'bg-slate-50 hover:bg-slate-100'}`}
+                    >
+                      <span className="mr-1 font-bold">{entry.number}.</span>
+                      {entry.clue}
+                    </button>
+                  </li>
+                ))}
+            </ol>
+          </section>
+        ))}
+      </div>
+
+      <RulesSection>
+        <li>
+          Elige una pista horizontal o vertical para resaltarla en la rejilla.
+        </li>
+        <li>
+          Escribe una letra por casilla; las letras compartidas sirven para
+          ambas palabras.
+        </li>
+        <li>Completa todas las pistas para resolver el crucigrama.</li>
+        <li>Usa Pista para revelar una letra (+10 s).</li>
+      </RulesSection>
+    </GameShell>
+  );
+};
+
+const CrosswordGame = ({ mode, meta }) => {
+  const { puzzle, loading, error } = useDailyPuzzle('crossword', mode);
+  return (
+    <PuzzleGate loading={loading} error={error}>
+      {puzzle && (
+        <CrosswordBoard
+          puzzle={puzzle.payload}
+          puzzleId={puzzle.id}
+          mode={mode}
+          meta={meta}
+        />
+      )}
+    </PuzzleGate>
+  );
+};
+
+export default CrosswordGame;

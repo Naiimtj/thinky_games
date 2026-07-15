@@ -117,7 +117,7 @@ The project does not enforce a base/shared/feature component hierarchy. Structur
 
 - **`src/components/`** — shared UI used across pages (`Layout.jsx`, `AuthForm.jsx`, `Leaderboard.jsx`, `ProtectedRoute.jsx`, plus game-agnostic pieces like `ZipCell.jsx`, `ZipGameBoard.jsx`)
 - **`src/pages/`** — route-level components rendered by `react-router-dom` (`HomePage.jsx`, `GamePage.jsx`, `LoginPage.jsx`, `RegisterPage.jsx`, `RankingsPage.jsx`)
-- **`src/games/{game}/`** — one self-contained folder per puzzle game (e.g. `crossclimb/`, `queens/`, `sudoku/`, `tango/`, `wend/`, `zip/`, `patches/`, `pinpoint/`), each holding its own `*Game.jsx`, `*Logic.js`, and `*Puzzles.js`
+- **`src/games/{game}/`** — one self-contained folder per puzzle game (e.g. `crossword/`, `queens/`, `sudoku/`, `tango/`, `wend/`, `zip/`, `patches/`, `pinpoint/`), each holding its own `*Game.jsx`, `*Logic.js`, and `*Puzzles.js`
 - **`src/games/registry.jsx`** — central registry wiring every game into `GameShell.jsx`
 - Before creating a new component, check `src/components/` for an existing reusable one — don't duplicate
 
@@ -250,7 +250,7 @@ The project does not enforce a base/shared/feature component hierarchy. Structur
 - **Framework**: Vite + React 18 — functional components with hooks
 - **Components**: PascalCase (`Layout.jsx`, `AuthForm.jsx`) — one component per file, exported as the file name
 - **Non-component JS files**: camelCase (`authApi.js`, `gamesApi.js`, `useAuthStore.js`, `zipLogic.js`)
-- **Game folders**: lowercase, one word (`crossclimb/`, `queens/`, `sudoku/`, `tango/`, `wend/`, `zip/`, `patches/`, `pinpoint/`)
+- **Game folders**: lowercase, one word (`crossword/`, `queens/`, `sudoku/`, `tango/`, `wend/`, `zip/`, `patches/`, `pinpoint/`)
 - **Custom hooks**: camelCase starting with `use` (`useDailyCountdown.js`, `useGameSession.js`)
 - **Variables, functions, object properties**: camelCase (`myVariable`, `fetchData`, `user.name`)
 - **Zustand stores**: `use<Domain>Store.js` exporting `use<Domain>Store`

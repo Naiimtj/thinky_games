@@ -1,4 +1,4 @@
-import CrossclimbGame from './crossclimb/CrossclimbGame';
+import CrosswordGame from './crossword/CrosswordGame';
 import PatchesGame from './patches/PatchesGame';
 import PinpointGame from './pinpoint/PinpointGame';
 import QueensGame from './queens/QueensGame';
@@ -53,11 +53,11 @@ export const GAMES = [
     playable: true,
   },
   {
-    id: 'crossclimb',
-    name: 'Crossclimb',
-    tagline: 'Escala de palabras',
-    icon: '/images/Crossclimb_icon.png',
-    Component: CrossclimbGame,
+    id: 'crossword',
+    name: 'Crucigrama',
+    tagline: 'Completa la rejilla',
+    icon: '/images/Crossword_icon.svg',
+    Component: CrosswordGame,
     playable: true,
   },
   {
