@@ -5,16 +5,12 @@ export default defineConfig(({ mode }) => ({
   publicDir: 'static',
   plugins: [
     react({
-      babel: {
-        plugins: [
-          [
-            '@locator/babel-jsx/dist',
-            {
-              env: 'development',
-            },
-          ],
-        ],
-      },
+      babel:
+        mode === 'development'
+          ? {
+              plugins: [['@locator/babel-jsx/dist', { env: 'development' }]],
+            }
+          : undefined,
     }),
   ],
   server: {

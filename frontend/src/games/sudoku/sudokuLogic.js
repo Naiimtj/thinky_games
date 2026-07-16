@@ -9,9 +9,6 @@ export const givenMask = (puzzle) =>
 const groupComplete = (values, size) =>
   !values.includes(0) && new Set(values).size === size;
 
-/** True when a row/column/box has no empty cells and no repeated values. */
-export const isGroupComplete = groupComplete;
-
 export const isSudokuSolved = (grid, size, boxHeight, boxWidth) => {
   for (let r = 0; r < size; r++) {
     if (!groupComplete(grid[r], size)) return false;

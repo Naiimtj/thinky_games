@@ -104,22 +104,22 @@ All stores use **Zustand** (`create`, optionally `+ persist`). One domain per st
 
 ## API
 
-| File          | Purpose                                                                                                                                  |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `authApi.js`  | `registerUser`, `loginUser`, `fetchCurrentUser` — plain `fetch()` calls to `/auth/*`                                                     |
-| `gamesApi.js` | `fetchGames`, `fetchDailyPuzzle(gameType, mode)` — games catalogue + backend-generated puzzle, `/games/*`                                |
-| `scoreApi.js` | `submitScore`, `fetchRankings`, `fetchDailyStatus`, `fetchDailyPlayedGames` — `/scores`, `/rankings`, bearer-authed via `getAuthToken()` |
+| File          | Purpose                                                                                                                                                                               |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `authApi.js`  | `registerUser`, `loginUser`, `fetchCurrentUser` — plain `fetch()` calls to `/auth/*`                                                                                                  |
+| `gamesApi.js` | `fetchGames`, `fetchDailyPuzzle(gameType, mode)` — games catalogue + backend-generated puzzle, `/games/*`                                                                             |
+| `scoreApi.js` | `submitScore`, `fetchRankings`, `fetchDailyPlayedGames`, `fetchDailySummary`, `fetchMyRanks`, `fetchMyScores`, `fetchDailyTop` — cookie-authenticated `/scores` and `/rankings` calls |
 
 All three read `VITE_API_BASE_URL` (fallback `http://localhost:8000`). There is no `dictionaryApi.js` anymore — clue/definition data is included in the puzzle payload returned by `fetchDailyPuzzle` when required.
 
 ## Logic Modules
 
-| File                              | Purpose                                                                |
-| --------------------------------- | ---------------------------------------------------------------------- |
-| `src/logic/zipLogic.js`           | Pure Zip game logic (path validation, solving)                         |
+| File                              | Purpose                                                               |
+| --------------------------------- | --------------------------------------------------------------------- |
+| `src/logic/zipLogic.js`           | Pure Zip game logic (path validation, solving)                        |
 | `src/games/{game}/{game}Logic.js` | Per-game pure logic (crossword, patches, queens, sudoku, tango, wend) |
-| `src/utils/formatTime.js`         | Shared mm:ss formatter (Leaderboard, GameShell)                        |
-| `src/utils/range.js`              | Shared `[0..n-1]` helper (GameShell, PatchesGame)                      |
+| `src/utils/formatTime.js`         | Shared mm:ss formatter (Leaderboard, GameShell)                       |
+| `src/utils/range.js`              | Shared `[0..n-1]` helper (GameShell, PatchesGame)                     |
 
 ## Puzzle Fetching (backend-generated)
 
@@ -135,16 +135,16 @@ All three read `VITE_API_BASE_URL` (fallback `http://localhost:8000`). There is 
 
 Registered in `src/games/registry.jsx` (`GAMES` array), rendered via `src/games/GameShell.jsx`. All games are currently `playable: true`:
 
-| Game        | Folder        | Playable | Notes                                                 |
-| ----------- | ------------- | :------: | ----------------------------------------------------- |
-| Zip         | `zip/`        |    ✅    | Has dedicated Zustand store + `src/logic/zipLogic.js` |
-| Queens      | `queens/`     |    ✅    |                                                       |
-| Tango       | `tango/`      |    ✅    |                                                       |
-| Mini Sudoku | `sudoku/`     |    ✅    |                                                       |
-| Pinpoint    | `pinpoint/`   |    ✅    | No `*Logic.js` file (data-only puzzles)               |
-| Crucigrama  | `crossword/`  |    ✅    |                                                       |
-| Wend        | `wend/`       |    ✅    |                                                       |
-| Patches     | `patches/`    |    ✅    |                                                       |
+| Game        | Folder       | Playable | Notes                                                 |
+| ----------- | ------------ | :------: | ----------------------------------------------------- |
+| Zip         | `zip/`       |    ✅    | Has dedicated Zustand store + `src/logic/zipLogic.js` |
+| Queens      | `queens/`    |    ✅    |                                                       |
+| Tango       | `tango/`     |    ✅    |                                                       |
+| Mini Sudoku | `sudoku/`    |    ✅    |                                                       |
+| Pinpoint    | `pinpoint/`  |    ✅    | No `*Logic.js` file (data-only puzzles)               |
+| Crucigrama  | `crossword/` |    ✅    |                                                       |
+| Wend        | `wend/`      |    ✅    |                                                       |
+| Patches     | `patches/`   |    ✅    |                                                       |
 
 > Check `src/games/registry.jsx` for the current `playable` status of each game — it changes as games are finished.
 

@@ -56,20 +56,6 @@ export const fetchRankings = async (period, gameType = 'zip') => {
   return response.json();
 };
 
-/** Whether the authenticated user already solved today's daily puzzle. */
-export const fetchDailyStatus = async (gameType = 'zip') => {
-  const response = await fetch(
-    `${API_BASE_URL}/scores/daily-status?game_type=${gameType}`,
-    authOptions,
-  );
-
-  if (!response.ok) {
-    handleExpiredSession(response);
-    throw new Error(`Failed to fetch daily status (HTTP ${response.status})`);
-  }
-  return response.json();
-};
-
 /** Game types the authenticated user already solved today, in one request. */
 export const fetchDailyPlayedGames = async () => {
   const response = await fetch(`${API_BASE_URL}/scores/daily-played`, {

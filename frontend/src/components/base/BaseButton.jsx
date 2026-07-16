@@ -105,8 +105,6 @@ export const AppButton = ({
   tooltip,
   tooltipPosition = tooltipPositions[0] || 'top',
   tooltipDisabled = false,
-  tooltipShowDelay = 100,
-  tooltipHideDelay = 0,
   icon,
   iconPosition = iconPositions[0] || 'left',
   iconSize,
@@ -117,6 +115,7 @@ export const AppButton = ({
   onClick,
   ...rest
 }) => {
+  const [showTooltip, setShowTooltip] = useState(false);
   const buttonStyle = determineStyle(variant, outlined, text);
 
   const hasPaddingOverride =
@@ -202,8 +201,6 @@ export const AppButton = ({
   if (!tooltip || tooltipDisabled) {
     return contentButton;
   }
-
-  const [showTooltip, setShowTooltip] = useState(false);
 
   const tooltipPlacementClasses = {
     top: 'bottom-full left-1/2 -translate-x-1/2 mb-2',

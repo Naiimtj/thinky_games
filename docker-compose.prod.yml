@@ -7,7 +7,7 @@
 # VIRTUAL_HOST/LETSENCRYPT_HOST y genera el certificado automáticamente.
 #
 # Requisitos previos en el servidor:
-#   1. El stack de nginx-proxy + acme-companion ya está levantado (docker-compose-original.yml).
+#   1. El stack de nginx-proxy + acme-companion ya está levantado en el servidor.
 #   2. Averigua el nombre real de esa red externa:  docker network ls | grep web
 #      y ajusta `networks.web.name` más abajo si no es "naiteca_web".
 #   3. Un registro DNS (ej. A/CNAME en DuckDNS) apuntando al servidor para el

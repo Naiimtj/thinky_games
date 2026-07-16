@@ -17,5 +17,4 @@ dist/
 # Backups (keep the folder, ignore the dumps)
 /backups/*
 !/backups/.gitkeep
-
-.DS_Store
+.coverage

@@ -2,13 +2,6 @@
 
 export const cellKey = (row, col) => `${row},${col}`;
 
-export const SHAPE_LABEL = {
-  SQUARE: 'Cuadrado',
-  VRECT: 'Rectángulo alto',
-  HRECT: 'Rectángulo ancho',
-  ANY: 'Cualquiera',
-};
-
 /** owner map with every seed cell assigned to its own figure. */
 export const buildInitialOwner = (seeds) => {
   const owner = {};

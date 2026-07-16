@@ -264,15 +264,6 @@ const WendBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
 
       <div className="mt-3 flex flex-wrap justify-center gap-2">
         <BaseButton
-          variant="secondary"
-          outlined
-          onClick={handleUndo}
-          disabled={path.length === 0}
-          className="disabled:cursor-not-allowed"
-        >
-          {t('wendGame.undo')}
-        </BaseButton>
-        <BaseButton
           variant="warning"
           outlined
           onClick={handleLetterHint}

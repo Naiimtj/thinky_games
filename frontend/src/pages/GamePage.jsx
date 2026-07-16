@@ -47,6 +47,7 @@ const DailyLockedNotice = ({ game }) => {
 
 const GamePage = () => {
   const { gameId, mode } = useParams();
+  const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
   const game = getGame(gameId);
 
@@ -103,8 +104,6 @@ const GamePage = () => {
   }, [dailyStatus]);
 
   if (!game) return <Navigate to="/" replace />;
-
-  const { t } = useTranslation();
 
   if (!game.playable) {
     return (
