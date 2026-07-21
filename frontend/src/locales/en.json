@@ -185,7 +185,7 @@
   },
   "patchesGame": {
     "tagline": "Complete every shape to fill the grid.",
-    "hint": "Tap a colored cell and drag to paint its shape; drag over it to erase.",
+    "hint": "Tap a number and drag to fill its shape; tap that number again or a painted cell to clear it.",
     "cellLabel": "Row {{row}}, column {{column}}",
     "undo": "Undo",
     "hintButton": "Hint (+10 s)",
@@ -198,9 +198,9 @@
       "size": "If a shape contains a number, it must have that size."
     },
     "rules": {
-      "paint": "Tap a colored cell and drag to paint its shape.",
+      "paint": "Tap a number and drag: every cell between the number and your finger fills at once.",
       "shape": "Every shape must have the indicated form and, if it has a number, that exact size.",
-      "erase": "Drag over painted cells to erase them."
+      "erase": "Tap a painted cell or its shape's number to clear it completely."
     }
   },
   "leaderboard": {

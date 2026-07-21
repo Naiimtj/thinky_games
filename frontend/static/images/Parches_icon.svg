@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Patches">
+  <rect width="128" height="128" rx="16" fill="#f8fafc"/>
+  <rect x="10" y="10" width="50" height="50" rx="10" fill="#ffffff" stroke="#0f172a" stroke-width="6"/>
+  <rect x="68" y="10" width="50" height="50" rx="10" fill="#ffffff" stroke="#0f172a" stroke-width="6" stroke-dasharray="9 8"/>
+  <rect x="10" y="68" width="50" height="50" rx="10" fill="#86e0ac" stroke="#0f172a" stroke-width="6"/>
+  <rect x="68" y="68" width="50" height="50" rx="10" fill="#ffffff" stroke="#0f172a" stroke-width="6"/>
+</svg>

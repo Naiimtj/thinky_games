@@ -43,8 +43,10 @@ export const useZipStore = create((set, get) => ({
   resetGame: () => set(createInitialState(get().puzzle)),
 
   /**
-   * Start a stroke. Following LinkedIn's Zip, a new stroke may only begin
-   * on the "1" checkpoint; grabbing the current head resumes the stroke.
+   * Start or resume a stroke. Grabbing the current head resumes drawing from
+   * there. Pressing any checkpoint that is already part of the path rewinds
+   * the path back to that checkpoint. Pressing checkpoint "1" starts fresh
+   * when it is not yet on the path.
    */
   beginPath: (cell) =>
     set((state) => {
@@ -55,10 +57,22 @@ export const useZipStore = create((set, get) => ({
         return { isDrawing: true };
       }
 
-      const start = state.puzzle.checkpoints.find((c) => c.order === 1);
-      const canStartHere =
-        start && start.row === cell.row && start.col === cell.col;
-      if (!canStartHere) return state;
+      const clickedCheckpoint = state.puzzle.checkpoints.find(
+        (c) => c.row === cell.row && c.col === cell.col,
+      );
+      if (!clickedCheckpoint) return state;
+
+      const checkpointIndex = state.currentPath.findIndex((step) =>
+        coordsEqual(step, cell),
+      );
+      if (checkpointIndex >= 0) {
+        return {
+          isDrawing: true,
+          currentPath: state.currentPath.slice(0, checkpointIndex + 1),
+        };
+      }
+
+      if (clickedCheckpoint.order !== 1) return state;
 
       return { isDrawing: true, currentPath: [cell] };
     }),

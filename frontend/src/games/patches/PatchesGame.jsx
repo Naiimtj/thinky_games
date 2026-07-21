@@ -150,6 +150,7 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
   const strokeRef = useRef(null);
   const snapshotRef = useRef(null);
   const overflowTimeoutRef = useRef(null);
+  const pendingClearRef = useRef(false);
 
   const clearOverflowTimer = () => {
     if (overflowTimeoutRef.current) {
@@ -163,6 +164,7 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
     setHistory([]);
     setOverflowSeed(null);
     strokeRef.current = null;
+    pendingClearRef.current = false;
     clearOverflowTimer();
     return clearOverflowTimer;
   }, [puzzle, seeds]);
@@ -179,32 +181,80 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
     getSolution: () => owner,
   });
 
-  const applyCell = (r, c) => {
-    const stroke = strokeRef.current;
-    if (!stroke) return;
-    const key = cellKey(r, c);
-    if (seedMap[key] !== undefined) return; // seed cells are fixed
-    setOwner((prev) => {
-      if (stroke.mode === 'paint') {
-        return prev[key] === stroke.seed
-          ? prev
-          : { ...prev, [key]: stroke.seed };
+  /** Whether a seed currently owns any non-seed (painted) cells. */
+  const hasOwnedCells = (index) =>
+    Object.entries(ownerRef.current).some(
+      ([key, value]) => value === index && seedMap[key] === undefined,
+    );
+
+  /** Clears every painted cell belonging to a seed, back to its initial state. */
+  const clearSeed = (index) => {
+    const before = ownerRef.current;
+    const next = { ...before };
+    let changed = false;
+    Object.keys(next).forEach((key) => {
+      if (next[key] === index && seedMap[key] === undefined) {
+        delete next[key];
+        changed = true;
       }
-      if (prev[key] !== stroke.seed) return prev;
-      const next = { ...prev };
-      delete next[key];
-      return next;
     });
+    if (changed) {
+      setHistory((h) => [...h, before]);
+      setOwner(next);
+    }
   };
 
-  const beginStroke = (strokeMode, seed) => {
+  /** Anchor is wherever the pointer went down, so a stroke isn't forced to start at the seed. */
+  const beginStroke = (seed, anchorRow, anchorCol) => {
     snapshotRef.current = ownerRef.current;
-    strokeRef.current = { mode: strokeMode, seed };
+    strokeRef.current = { seed, anchorRow, anchorCol, moved: false };
+  };
+
+  /**
+   * Fills the rectangle between the stroke's anchor cell and (row, col).
+   * Rebuilt from the pre-stroke snapshot every time, so:
+   *  - dragging back and forth only grows/shrinks THIS stroke's rectangle.
+   *  - cells claimed by earlier, already-finished strokes (e.g. the other side
+   *    of a seed that sits in the middle of its figure) are kept, letting the
+   *    player build up a shape from more than one drag.
+   *  - cells already owned by a different seed are never overwritten.
+   */
+  const applyRect = (row, col) => {
+    const stroke = strokeRef.current;
+    if (!stroke) return;
+    stroke.moved = true;
+    const r1 = Math.min(stroke.anchorRow, row);
+    const r2 = Math.max(stroke.anchorRow, row);
+    const c1 = Math.min(stroke.anchorCol, col);
+    const c2 = Math.max(stroke.anchorCol, col);
+    const snapshot = snapshotRef.current;
+    const next = { ...snapshot };
+    for (let r = r1; r <= r2; r++) {
+      for (let c = c1; c <= c2; c++) {
+        const key = cellKey(r, c);
+        if (seedMap[key] !== undefined) continue; // seed cells are fixed
+        if (snapshot[key] !== undefined && snapshot[key] !== stroke.seed) {
+          continue; // already claimed by another figure - never steal it
+        }
+        next[key] = stroke.seed;
+      }
+    }
+    setOwner(next);
   };
 
   const endStroke = () => {
     const stroke = strokeRef.current;
     if (!stroke) return;
+    // A tap (no drag) on a seed that already owns cells clears its whole figure;
+    // a real drag from the seed must extend it instead, even on the untouched side.
+    if (!stroke.moved && pendingClearRef.current) {
+      pendingClearRef.current = false;
+      strokeRef.current = null;
+      snapshotRef.current = null;
+      clearSeed(stroke.seed);
+      return;
+    }
+    pendingClearRef.current = false;
     const before = snapshotRef.current;
     const after = ownerRef.current;
     const changed = before && JSON.stringify(before) !== JSON.stringify(after);
@@ -215,7 +265,7 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
     snapshotRef.current = null;
 
     const seed = seeds[stroke.seed];
-    if (stroke.mode === 'paint' && changed && seed?.size != null) {
+    if (changed && seed?.size != null) {
       const count = Object.values(after).filter(
         (v) => v === stroke.seed,
       ).length;
@@ -239,12 +289,19 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
     const seedHere = seedMap[key];
     if (seedHere !== undefined) {
       setActiveSeed(seedHere);
-      beginStroke('paint', seedHere);
+      pendingClearRef.current = hasOwnedCells(seedHere);
+      beginStroke(seedHere, r, c);
       return;
     }
+    pendingClearRef.current = false;
     if (activeSeed === null) return;
-    beginStroke(owner[key] === activeSeed ? 'erase' : 'paint', activeSeed);
-    applyCell(r, c);
+    if (owner[key] === activeSeed) {
+      clearSeed(activeSeed);
+      return;
+    }
+    if (owner[key] !== undefined) return; // owned by another figure - can't take it
+    beginStroke(activeSeed, r, c);
+    applyRect(r, c);
   };
 
   const handleMove = (event) => {
@@ -253,7 +310,7 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
       .elementFromPoint(event.clientX, event.clientY)
       ?.closest('[data-cell]');
     if (element?.dataset.row === undefined) return;
-    applyCell(Number(element.dataset.row), Number(element.dataset.col));
+    applyRect(Number(element.dataset.row), Number(element.dataset.col));
   };
 
   const undo = () => {
@@ -299,6 +356,7 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
     setHistory([]);
     setOverflowSeed(null);
     strokeRef.current = null;
+    pendingClearRef.current = false;
     session.reset();
   };
 

@@ -84,7 +84,7 @@ export const GameShell = ({
   const countdown = useDailyCountdown();
 
   return (
-    <section className="mx-auto w-full max-w-md">
+    <section className="mx-auto w-full px-3 sm:max-w-md sm:px-0">
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-800 dark:text-slate-200">

@@ -12,6 +12,7 @@ import {
   buildGrid,
   entryCells,
   firstEmptyLetter,
+  gridBounds,
   isCrosswordSolved,
   normalizeLetter,
 } from './crosswordLogic';
@@ -30,6 +31,7 @@ const CrosswordBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
   const inputRefs = useRef({});
   const cells = board.cells ?? {};
   const grid = useMemo(() => buildGrid(entries, size), [entries, size]);
+  const bounds = useMemo(() => gridBounds(grid, size), [grid, size]);
   const activeEntry = entries.find((entry) => entry.id === activeEntryId);
   const answers = answersFromCells(entries, cells);
   const isComplete = entries.every(
@@ -59,19 +61,25 @@ const CrosswordBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
       cells: { ...previous.cells, [key]: normalizeLetter(value) },
     }));
 
-  const moveToNextCell = (key) => {
+  const moveToNextCell = (key, cellMap = cells) => {
     if (!activeEntry) return;
     const entryCellKeys = entryCells(activeEntry).map((cell) =>
       cellKey(cell.row, cell.col),
     );
-    const nextKey = entryCellKeys[entryCellKeys.indexOf(key) + 1];
-    inputRefs.current[nextKey]?.focus();
+    const currentIndex = entryCellKeys.indexOf(key);
+    const nextKey = entryCellKeys
+      .slice(currentIndex + 1)
+      .find((entryKey) => !cellMap[entryKey]);
+    if (nextKey) inputRefs.current[nextKey]?.focus();
   };
 
   const handleCellChange = (key, value) => {
     const letter = normalizeLetter(value);
-    setCell(key, value);
-    if (letter) moveToNextCell(key);
+    setBoard((previous) => {
+      const nextCells = { ...previous.cells, [key]: letter };
+      if (letter) moveToNextCell(key, nextCells);
+      return { ...previous, cells: nextCells };
+    });
   };
 
   const handleReset = () => {
@@ -105,13 +113,26 @@ const CrosswordBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
       hint={t('crosswordGame.hint')}
     >
       <div
-        className="grid overflow-hidden rounded-lg border-2 border-slate-700 bg-slate-700"
-        style={{ gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))` }}
+        className="grid overflow-hidden rounded-md border border-slate-700 bg-slate-700 justify-center items-center"
+        style={{
+          gridTemplateColumns: `repeat(${
+            bounds.maxCol - bounds.minCol + 3
+          }, minmax(0, 0.1fr))`,
+        }}
         role="grid"
         aria-label={t('crosswordGame.gridLabel')}
       >
         {grid.map((cell) => {
           const key = cellKey(cell.row, cell.col);
+          if (
+            cell.row < bounds.minRow - 1 ||
+            cell.row > bounds.maxRow + 1 ||
+            cell.col < bounds.minCol - 1 ||
+            cell.col > bounds.maxCol + 1
+          ) {
+            return null;
+          }
+
           if (cell.entryIds.length === 0) {
             return (
               <div
@@ -135,7 +156,7 @@ const CrosswordBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
               className="relative aspect-square bg-white"
             >
               {cell.number && (
-                <span className="pointer-events-none absolute left-0.5 top-0 text-[10px] font-bold leading-none text-slate-500">
+                <span className="pointer-events-none absolute left-0.5 top-0 text-[10px] font-bold leading-none text-slate-500 sm:text-[10px]">
                   {cell.number}
                 </span>
               )}
@@ -158,7 +179,7 @@ const CrosswordBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
                 inputMode="text"
                 autoComplete="off"
                 aria-label={t('crosswordGame.cellLabel', { numbers: label })}
-                className={`h-full w-full border bg-transparent pt-1 text-center font-mono text-lg font-bold uppercase text-slate-800 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 ${isIncorrect ? 'border-red-500' : 'border-slate-300'} ${isActive ? 'bg-amber-100' : ''}`}
+                className={`h-full w-full border bg-transparent text-center font-mono text-[8px] font-bold uppercase leading-none text-slate-800 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 sm:text-sm ${isIncorrect ? 'border-red-500' : 'border-slate-300'} ${isActive ? 'bg-amber-100' : ''}`}
               />
             </div>
           );
@@ -175,7 +196,7 @@ const CrosswordBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
         {t('crosswordGame.hintButton')}
       </BaseButton>
 
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+      <div className="mt-3 hidden gap-3 sm:grid sm:grid-cols-2">
         {['across', 'down'].map((direction) => (
           <section key={direction} aria-labelledby={`crossword-${direction}`}>
             <h2
@@ -187,12 +208,17 @@ const CrosswordBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
             <ol className="space-y-1">
               {entries
                 .filter((entry) => entry.direction === direction)
+                .sort((a, b) => {
+                  if (a.id === activeEntryId) return -1;
+                  if (b.id === activeEntryId) return 1;
+                  return a.number - b.number;
+                })
                 .map((entry) => (
                   <li key={entry.id}>
                     <button
                       type="button"
                       onClick={() => setActiveEntryId(entry.id)}
-                      className={`w-full rounded-lg px-2 py-1.5 text-left text-sm text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${activeEntry?.id === entry.id ? 'bg-amber-100 font-semibold' : 'bg-slate-50 hover:bg-slate-100'}`}
+                      className={`w-full rounded-lg px-2 py-1 text-left text-sm text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${activeEntry?.id === entry.id ? 'bg-amber-100 font-semibold' : 'bg-slate-50 hover:bg-slate-100'}`}
                     >
                       <span className="mr-1 font-bold">{entry.number}.</span>
                       {entry.clue}
@@ -202,6 +228,32 @@ const CrosswordBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
             </ol>
           </section>
         ))}
+      </div>
+
+      <div className="mt-2 sm:hidden">
+        <ol className="space-y-1">
+          {[...entries]
+            .sort((a, b) => {
+              if (a.id === activeEntryId) return -1;
+              if (b.id === activeEntryId) return 1;
+              return a.number - b.number;
+            })
+            .map((entry) => (
+              <li key={entry.id}>
+                <button
+                  type="button"
+                  onClick={() => setActiveEntryId(entry.id)}
+                  className={`w-full rounded-lg px-2 py-1 text-left text-sm text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${activeEntry?.id === entry.id ? 'bg-amber-100 font-semibold' : 'bg-slate-50 hover:bg-slate-100'}`}
+                >
+                  <span className="mr-1 font-bold">{entry.number}.</span>
+                  <span className="mr-1 inline-block w-3 text-xs text-slate-400">
+                    {directionLabel(entry.direction, t).charAt(0)}
+                  </span>
+                  {entry.clue}
+                </button>
+              </li>
+            ))}
+        </ol>
       </div>
 
       <RulesSection>

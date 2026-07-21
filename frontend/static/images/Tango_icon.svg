@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Tango">
+  <rect width="128" height="128" rx="16" fill="#f8fafc"/>
+  <rect x="8" y="8" width="112" height="112" rx="16" fill="#ffffff" stroke="#1e293b" stroke-width="6"/>
+  <g stroke="#1e293b" stroke-width="3">
+    <line x1="45.3" y1="8" x2="45.3" y2="120"/>
+    <line x1="82.7" y1="8" x2="82.7" y2="120"/>
+    <line x1="8" y1="45.3" x2="120" y2="45.3"/>
+    <line x1="8" y1="82.7" x2="120" y2="82.7"/>
+  </g>
+  <!-- colored cells -->
+  <rect x="46" y="9" width="36" height="36" fill="#fbb8a8"/>
+  <rect x="83.5" y="46" width="35.5" height="36" fill="#f2704e"/>
+  <rect x="83.5" y="83.5" width="35.5" height="35.5" fill="#f6a98c"/>
+  <!-- redraw grid lines over fills for crispness -->
+  <g stroke="#1e293b" stroke-width="3">
+    <line x1="45.3" y1="8" x2="45.3" y2="120"/>
+    <line x1="82.7" y1="8" x2="82.7" y2="120"/>
+    <line x1="8" y1="45.3" x2="120" y2="45.3"/>
+    <line x1="8" y1="82.7" x2="120" y2="82.7"/>
+  </g>
+  <rect x="8" y="8" width="112" height="112" rx="16" fill="none" stroke="#1e293b" stroke-width="6"/>
+  <!-- crescent symbols -->
+  <path d="M97,18 Q106,27 97,36" fill="none" stroke="#e2603f" stroke-width="5" stroke-linecap="round"/>
+  <path d="M18,58 Q27,67 18,76" fill="none" stroke="#e2603f" stroke-width="5" stroke-linecap="round"/>
+  <path d="M58,96 Q67,105 58,114" fill="none" stroke="#e2603f" stroke-width="5" stroke-linecap="round"/>
+</svg>

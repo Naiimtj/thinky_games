@@ -219,7 +219,7 @@ const WendBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
       </div>
 
       <div
-        className="mx-auto grid touch-none select-none gap-2"
+        className="mx-auto grid touch-none select-none gap-2 rounded-md border border-slate-700 bg-slate-700 p-1"
         style={{
           gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))`,
           maxWidth: `${size * 4}rem`,

@@ -182,7 +182,7 @@
   },
   "patchesGame": {
     "tagline": "Completa cada figura para rellenar la cuadrícula.",
-    "hint": "Toca una celda de color y arrastra para pintar su figura; arrastra sobre ella para borrar.",
+    "hint": "Toca un número y arrastra para rellenar su figura; toca de nuevo el número o una celda ya pintada para borrarla.",
     "cellLabel": "Fila {{row}}, columna {{column}}",
     "undo": "Deshacer",
     "hintButton": "Pista (+10 s)",
@@ -195,9 +195,9 @@
       "size": "Si la figura contiene un número, ese debe ser su tamaño."
     },
     "rules": {
-      "paint": "Toca una celda de color y arrastra para pintar su figura.",
+      "paint": "Toca un número y arrastra: se rellenan todas las celdas entre el número y tu dedo a la vez.",
       "shape": "Cada figura debe tener la forma indicada y, si tiene un número, ese debe ser su tamaño exacto.",
-      "erase": "Arrastra sobre celdas ya pintadas para borrarlas."
+      "erase": "Toca una celda ya pintada o el número de su figura para borrarla por completo."
     }
   },
   "leaderboard": {

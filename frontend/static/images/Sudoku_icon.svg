@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Mini Sudoku">
+  <rect width="128" height="128" rx="16" fill="#f8fafc"/>
+  <rect x="8" y="8" width="112" height="112" rx="16" fill="#ffffff" stroke="#0f172a" stroke-width="8"/>
+  <g stroke="#0f172a" stroke-width="5">
+    <line x1="45.3" y1="8" x2="45.3" y2="120"/>
+    <line x1="82.7" y1="8" x2="82.7" y2="120"/>
+    <line x1="8" y1="45.3" x2="120" y2="45.3"/>
+    <line x1="8" y1="82.7" x2="120" y2="82.7"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="30" text-anchor="middle">
+    <text x="26.5" y="37" fill="#0f172a">1</text>
+    <text x="64" y="37" fill="#2563eb">2</text>
+    <text x="101.5" y="37" fill="#0f172a">3</text>
+    <text x="64" y="74.5" fill="#0f172a">1</text>
+    <text x="26.5" y="112" fill="#2563eb">2</text>
+    <text x="64" y="112" fill="#0f172a">3</text>
+    <text x="101.5" y="112" fill="#2563eb">1</text>
+  </g>
+</svg>

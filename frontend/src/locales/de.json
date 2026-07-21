@@ -188,7 +188,7 @@
   },
   "patchesGame": {
     "tagline": "Vervollständige jede Form, um das Gitter zu füllen.",
-    "hint": "Tippe eine farbige Zelle an und ziehe, um ihre Form zu malen; ziehe darüber, um zu löschen.",
+    "hint": "Tippe eine Zahl an und ziehe, um ihre Form zu füllen; tippe die Zahl oder eine bemalte Zelle erneut an, um sie zu löschen.",
     "cellLabel": "Zeile {{row}}, Spalte {{column}}",
     "undo": "Rückgängig",
     "hintButton": "Hinweis (+10 s)",
@@ -201,9 +201,9 @@
       "size": "Enthält eine Form eine Zahl, muss sie diese Größe haben."
     },
     "rules": {
-      "paint": "Tippe eine farbige Zelle an und ziehe, um ihre Form zu malen.",
+      "paint": "Tippe eine Zahl an und ziehe: alle Zellen zwischen der Zahl und deinem Finger werden gleichzeitig gefüllt.",
       "shape": "Jede Form muss die angegebene Gestalt haben und, falls sie eine Zahl enthält, genau diese Größe.",
-      "erase": "Ziehe über bereits gemalte Zellen, um sie zu löschen."
+      "erase": "Tippe eine bemalte Zelle oder die Zahl ihrer Form an, um sie vollständig zu löschen."
     }
   },
   "leaderboard": {

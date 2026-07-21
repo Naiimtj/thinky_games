@@ -29,6 +29,25 @@ export const buildGrid = (entries, size) => {
   });
 };
 
+export const gridBounds = (grid, size) => {
+  const used = grid
+    .map((cell, index) => ({ ...cell, index }))
+    .filter((cell) => cell.entryIds.length > 0);
+
+  if (used.length === 0) {
+    return { minRow: 0, maxRow: size - 1, minCol: 0, maxCol: size - 1 };
+  }
+
+  const rows = used.map((cell) => cell.row);
+  const cols = used.map((cell) => cell.col);
+  return {
+    minRow: Math.min(...rows),
+    maxRow: Math.max(...rows),
+    minCol: Math.min(...cols),
+    maxCol: Math.max(...cols),
+  };
+};
+
 export const normalizeLetter = (value) =>
   value
     .normalize('NFD')
