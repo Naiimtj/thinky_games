@@ -109,6 +109,7 @@
   "crosswordGame": {
     "tagline": "Vervollständige die Wörter, die sich im Gitter kreuzen.",
     "hint": "Wähle einen Hinweis oder ein Feld und gib einen Buchstaben ein.",
+    "sortSelectedFirst": "Ausgewählten Hinweis zuerst anzeigen",
     "gridLabel": "Kreuzworträtselgitter",
     "cellLabel": "Feld für die Hinweise {{numbers}}",
     "hintButton": "Hinweis (+10 s)",

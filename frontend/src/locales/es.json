@@ -103,6 +103,7 @@
   "crosswordGame": {
     "tagline": "Completa las palabras que se cruzan en la rejilla.",
     "hint": "Selecciona una pista o casilla y escribe una letra.",
+    "sortSelectedFirst": "Poner primero la pista seleccionada",
     "gridLabel": "Rejilla del crucigrama",
     "cellLabel": "Casilla de las pistas {{numbers}}",
     "hintButton": "Pista (+10 s)",

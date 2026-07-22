@@ -106,6 +106,7 @@
   "crosswordGame": {
     "tagline": "Complete the words that cross in the grid.",
     "hint": "Select a clue or cell and type a letter.",
+    "sortSelectedFirst": "Show selected clue first",
     "gridLabel": "Crossword grid",
     "cellLabel": "Cell for clues {{numbers}}",
     "hintButton": "Hint (+10 s)",

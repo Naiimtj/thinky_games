@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import BaseButton from '../../components/base/BaseButton';
+import BaseToggleSwitch from '../../components/base/BaseToggleSwitch';
 import { GameShell, RulesSection } from '../GameShell';
 import { buildStorageKey, usePersistedState } from '../gamePersistence';
 import { PuzzleGate } from '../PuzzleGate';
@@ -22,17 +23,71 @@ const cellKey = (row, col) => `${row},${col}`;
 const directionLabel = (direction, t) =>
   t(`crosswordGame.directions.${direction}`);
 
+const Toggle = ({ checked, onChange, label }) => (
+  <div className="mb-3 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+    <span className="text-sm font-medium text-slate-600">{label}</span>
+    <BaseToggleSwitch value={checked} onChange={onChange} />
+  </div>
+);
+
 const CrosswordBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
   const { t } = useTranslation();
   const { entries, size } = puzzle;
   const boardKey = buildStorageKey('crossword', mode, puzzleId, 'board');
+  const sortSelectedFirstKey = buildStorageKey(
+    'crossword',
+    mode,
+    puzzleId,
+    'sortSelectedFirst',
+  );
   const [board, setBoard] = usePersistedState(boardKey, () => ({ cells: {} }));
+  const [sortSelectedFirst, setSortSelectedFirst] = usePersistedState(
+    sortSelectedFirstKey,
+    () => false,
+  );
   const [activeEntryId, setActiveEntryId] = useState(entries[0]?.id ?? null);
   const inputRefs = useRef({});
   const cells = board.cells ?? {};
   const grid = useMemo(() => buildGrid(entries, size), [entries, size]);
+  const gridByKey = useMemo(
+    () => new Map(grid.map((cell) => [cellKey(cell.row, cell.col), cell])),
+    [grid],
+  );
   const bounds = useMemo(() => gridBounds(grid, size), [grid, size]);
+  const visibleRows = useMemo(
+    () =>
+      Array.from(
+        { length: bounds.maxRow - bounds.minRow + 3 },
+        (_, index) => bounds.minRow - 1 + index,
+      ),
+    [bounds],
+  );
+  const visibleCols = useMemo(
+    () =>
+      Array.from(
+        { length: bounds.maxCol - bounds.minCol + 3 },
+        (_, index) => bounds.minCol - 1 + index,
+      ),
+    [bounds],
+  );
+  const visibleGrid = useMemo(
+    () =>
+      visibleRows.flatMap((row) =>
+        visibleCols.map(
+          (col) =>
+            gridByKey.get(cellKey(row, col)) ?? { row, col, entryIds: [] },
+        ),
+      ),
+    [gridByKey, visibleCols, visibleRows],
+  );
   const activeEntry = entries.find((entry) => entry.id === activeEntryId);
+  const compareEntries = (a, b) => {
+    if (sortSelectedFirst) {
+      if (a.id === activeEntryId) return -1;
+      if (b.id === activeEntryId) return 1;
+    }
+    return a.number - b.number;
+  };
   const answers = answersFromCells(entries, cells);
   const isComplete = entries.every(
     (entry) => answers[entry.id].length === entry.answer.length,
@@ -112,27 +167,22 @@ const CrosswordBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
       onReset={handleReset}
       hint={t('crosswordGame.hint')}
     >
+      <Toggle
+        checked={sortSelectedFirst}
+        onChange={() => setSortSelectedFirst((value) => !value)}
+        label={t('crosswordGame.sortSelectedFirst')}
+      />
+
       <div
         className="grid overflow-hidden rounded-md border border-slate-700 bg-slate-700 justify-center items-center"
         style={{
-          gridTemplateColumns: `repeat(${
-            bounds.maxCol - bounds.minCol + 3
-          }, minmax(0, 0.1fr))`,
+          gridTemplateColumns: `repeat(${visibleCols.length}, minmax(0, 0.1fr))`,
         }}
         role="grid"
         aria-label={t('crosswordGame.gridLabel')}
       >
-        {grid.map((cell) => {
+        {visibleGrid.map((cell) => {
           const key = cellKey(cell.row, cell.col);
-          if (
-            cell.row < bounds.minRow - 1 ||
-            cell.row > bounds.maxRow + 1 ||
-            cell.col < bounds.minCol - 1 ||
-            cell.col > bounds.maxCol + 1
-          ) {
-            return null;
-          }
-
           if (cell.entryIds.length === 0) {
             return (
               <div
@@ -208,11 +258,7 @@ const CrosswordBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
             <ol className="space-y-1">
               {entries
                 .filter((entry) => entry.direction === direction)
-                .sort((a, b) => {
-                  if (a.id === activeEntryId) return -1;
-                  if (b.id === activeEntryId) return 1;
-                  return a.number - b.number;
-                })
+                .sort(compareEntries)
                 .map((entry) => (
                   <li key={entry.id}>
                     <button
@@ -232,27 +278,21 @@ const CrosswordBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
 
       <div className="mt-2 sm:hidden">
         <ol className="space-y-1">
-          {[...entries]
-            .sort((a, b) => {
-              if (a.id === activeEntryId) return -1;
-              if (b.id === activeEntryId) return 1;
-              return a.number - b.number;
-            })
-            .map((entry) => (
-              <li key={entry.id}>
-                <button
-                  type="button"
-                  onClick={() => setActiveEntryId(entry.id)}
-                  className={`w-full rounded-lg px-2 py-1 text-left text-sm text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${activeEntry?.id === entry.id ? 'bg-amber-100 font-semibold' : 'bg-slate-50 hover:bg-slate-100'}`}
-                >
-                  <span className="mr-1 font-bold">{entry.number}.</span>
-                  <span className="mr-1 inline-block w-3 text-xs text-slate-400">
-                    {directionLabel(entry.direction, t).charAt(0)}
-                  </span>
-                  {entry.clue}
-                </button>
-              </li>
-            ))}
+          {[...entries].sort(compareEntries).map((entry) => (
+            <li key={entry.id}>
+              <button
+                type="button"
+                onClick={() => setActiveEntryId(entry.id)}
+                className={`w-full rounded-lg px-2 py-1 text-left text-sm text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${activeEntry?.id === entry.id ? 'bg-amber-100 font-semibold' : 'bg-slate-50 hover:bg-slate-100'}`}
+              >
+                <span className="mr-1 font-bold">{entry.number}.</span>
+                <span className="mr-1 inline-block w-3 text-xs text-slate-400">
+                  {directionLabel(entry.direction, t).charAt(0)}
+                </span>
+                {entry.clue}
+              </button>
+            </li>
+          ))}
         </ol>
       </div>
 

@@ -51,6 +51,38 @@ const getPerimeterBorder = (row, col, rows, cols, owner, groupSeed, color) => {
   };
 };
 
+const parseCell = (key) => key.split(',').map(Number);
+
+const getRegionBounds = (owner, seedIndex) => {
+  let minR = Infinity;
+  let maxR = -Infinity;
+  let minC = Infinity;
+  let maxC = -Infinity;
+  Object.entries(owner).forEach(([key, value]) => {
+    if (value !== seedIndex) return;
+    const [r, c] = parseCell(key);
+    minR = Math.min(minR, r);
+    maxR = Math.max(maxR, r);
+    minC = Math.min(minC, c);
+    maxC = Math.max(maxC, c);
+  });
+  if (minR === Infinity) return null;
+  return { minR, maxR, minC, maxC };
+};
+
+const canKeepShapeConstraint = (shape, size, width, height) => {
+  const area = width * height;
+  if (size != null && area > size) return false;
+  if (shape === 'HRECT' && width < height) return false;
+  if (shape === 'VRECT' && height < width) return false;
+  if (shape === 'SQUARE' && size != null) {
+    const side = Math.sqrt(size);
+    if (!Number.isInteger(side)) return false;
+    if (width > side || height > side) return false;
+  }
+  return true;
+};
+
 /** Renders a clue's shape as filled rect(s) matching its color; ANY is a horizontal+vertical cross. */
 const ClueGlyph = ({ shape, size, color }) => {
   const rectClass = 'absolute rounded-sm border-2';
@@ -143,30 +175,19 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
   );
   const [activeSeed, setActiveSeed] = useState(null);
   const [history, setHistory] = useState([]);
-  const [overflowSeed, setOverflowSeed] = useState(null);
 
   const ownerRef = useRef(owner);
   ownerRef.current = owner;
   const strokeRef = useRef(null);
   const snapshotRef = useRef(null);
-  const overflowTimeoutRef = useRef(null);
   const pendingClearRef = useRef(false);
-
-  const clearOverflowTimer = () => {
-    if (overflowTimeoutRef.current) {
-      clearTimeout(overflowTimeoutRef.current);
-      overflowTimeoutRef.current = null;
-    }
-  };
 
   useEffect(() => {
     setActiveSeed(null);
     setHistory([]);
-    setOverflowSeed(null);
     strokeRef.current = null;
     pendingClearRef.current = false;
-    clearOverflowTimer();
-    return clearOverflowTimer;
+    return undefined;
   }, [puzzle, seeds]);
 
   const solved = useMemo(
@@ -204,41 +225,52 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
     }
   };
 
-  /** Anchor is wherever the pointer went down, so a stroke isn't forced to start at the seed. */
-  const beginStroke = (seed, anchorRow, anchorCol) => {
+  /** Stroke can only begin on the seed itself or already owned cells. */
+  const beginStroke = (seed) => {
     snapshotRef.current = ownerRef.current;
-    strokeRef.current = { seed, anchorRow, anchorCol, moved: false };
+    strokeRef.current = { seed, moved: false };
   };
 
   /**
-   * Fills the rectangle between the stroke's anchor cell and (row, col).
-   * Rebuilt from the pre-stroke snapshot every time, so:
-   *  - dragging back and forth only grows/shrinks THIS stroke's rectangle.
-   *  - cells claimed by earlier, already-finished strokes (e.g. the other side
-   *    of a seed that sits in the middle of its figure) are kept, letting the
-   *    player build up a shape from more than one drag.
-   *  - cells already owned by a different seed are never overwritten.
+   * While dragging, the figure expands to a solid rectangle that includes the
+   * current region and the hovered cell. Irregular shapes are never allowed.
    */
   const applyRect = (row, col) => {
     const stroke = strokeRef.current;
     if (!stroke) return;
-    stroke.moved = true;
-    const r1 = Math.min(stroke.anchorRow, row);
-    const r2 = Math.max(stroke.anchorRow, row);
-    const c1 = Math.min(stroke.anchorCol, col);
-    const c2 = Math.max(stroke.anchorCol, col);
-    const snapshot = snapshotRef.current;
-    const next = { ...snapshot };
+    const current = ownerRef.current;
+    const bounds = getRegionBounds(current, stroke.seed);
+    if (!bounds) return;
+
+    const r1 = Math.min(bounds.minR, row);
+    const r2 = Math.max(bounds.maxR, row);
+    const c1 = Math.min(bounds.minC, col);
+    const c2 = Math.max(bounds.maxC, col);
+    const width = c2 - c1 + 1;
+    const height = r2 - r1 + 1;
+    const seed = seeds[stroke.seed];
+    if (!canKeepShapeConstraint(seed?.shape, seed?.size, width, height)) {
+      return;
+    }
+
+    const next = { ...current };
     for (let r = r1; r <= r2; r++) {
       for (let c = c1; c <= c2; c++) {
         const key = cellKey(r, c);
-        if (seedMap[key] !== undefined) continue; // seed cells are fixed
-        if (snapshot[key] !== undefined && snapshot[key] !== stroke.seed) {
-          continue; // already claimed by another figure - never steal it
+        const fixedSeed = seedMap[key];
+        if (fixedSeed !== undefined && fixedSeed !== stroke.seed) {
+          return;
+        }
+        if (current[key] !== undefined && current[key] !== stroke.seed) {
+          return;
         }
         next[key] = stroke.seed;
       }
     }
+
+    const changed = JSON.stringify(next) !== JSON.stringify(current);
+    if (!changed) return;
+    stroke.moved = true;
     setOwner(next);
   };
 
@@ -263,44 +295,20 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
     }
     strokeRef.current = null;
     snapshotRef.current = null;
-
-    const seed = seeds[stroke.seed];
-    if (changed && seed?.size != null) {
-      const count = Object.values(after).filter(
-        (v) => v === stroke.seed,
-      ).length;
-      if (count > seed.size) {
-        clearOverflowTimer();
-        setOverflowSeed(stroke.seed);
-        overflowTimeoutRef.current = setTimeout(() => {
-          setOwner(before);
-          setHistory((h) => h.slice(0, -1));
-          setOverflowSeed(null);
-          overflowTimeoutRef.current = null;
-        }, 1000);
-      }
-    }
   };
 
   const handleCellDown = (r, c, event) => {
     event.preventDefault();
     if (solved) return;
     const key = cellKey(r, c);
-    const seedHere = seedMap[key];
-    if (seedHere !== undefined) {
-      setActiveSeed(seedHere);
-      pendingClearRef.current = hasOwnedCells(seedHere);
-      beginStroke(seedHere, r, c);
+    const selectedSeed = owner[key];
+    if (selectedSeed === undefined) {
+      pendingClearRef.current = false;
       return;
     }
-    pendingClearRef.current = false;
-    if (activeSeed === null) return;
-    if (owner[key] === activeSeed) {
-      clearSeed(activeSeed);
-      return;
-    }
-    if (owner[key] !== undefined) return; // owned by another figure - can't take it
-    beginStroke(activeSeed, r, c);
+    setActiveSeed(selectedSeed);
+    pendingClearRef.current = hasOwnedCells(selectedSeed);
+    beginStroke(selectedSeed);
     applyRect(r, c);
   };
 
@@ -350,11 +358,9 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
   };
 
   const handleReset = () => {
-    clearOverflowTimer();
     setOwner(buildInitialOwner(seeds));
     setActiveSeed(null);
     setHistory([]);
-    setOverflowSeed(null);
     strokeRef.current = null;
     pendingClearRef.current = false;
     session.reset();
@@ -413,12 +419,8 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
             const isSeed = seedIndex !== undefined;
             const filled = ownerIndex !== undefined;
             const seed = isSeed ? seeds[seedIndex] : null;
-            const isOverflowCell =
-              overflowSeed !== null && ownerIndex === overflowSeed;
-            const highlightSeed =
-              overflowSeed === null ? activeSeed : overflowSeed;
-            const highlightColor =
-              overflowSeed === null ? colorOf(activeSeed) : '#DC2626';
+            const highlightSeed = activeSeed;
+            const highlightColor = colorOf(activeSeed);
             const isActiveCell =
               highlightSeed !== null && ownerIndex === highlightSeed;
             const activeBorderStyle = isActiveCell
@@ -451,10 +453,7 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
                   <span
                     className="absolute inset-0"
                     style={{
-                      backgroundColor: hexToRgba(
-                        isOverflowCell ? '#DC2626' : colorOf(ownerIndex),
-                        isOverflowCell ? 0.5 : 0.4,
-                      ),
+                      backgroundColor: hexToRgba(colorOf(ownerIndex), 0.4),
                     }}
                   />
                 )}
@@ -463,17 +462,14 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
                     <span
                       className="absolute inset-0"
                       style={{
-                        backgroundColor: hexToRgba(
-                          isOverflowCell ? '#DC2626' : colorOf(seedIndex),
-                          isOverflowCell ? 0.5 : 0.4,
-                        ),
+                        backgroundColor: hexToRgba(colorOf(seedIndex), 0.4),
                       }}
                     />
                     <span className="absolute inset-0 flex items-center justify-center">
                       <ClueGlyph
                         shape={seed.shape}
                         size={seed.size}
-                        color={isOverflowCell ? '#DC2626' : colorOf(seedIndex)}
+                        color={colorOf(seedIndex)}
                       />
                     </span>
                   </>
