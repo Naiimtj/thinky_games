@@ -1,20 +1,19 @@
 """Locale-aware word pools and category sets for word games.
 
-The module keeps hand-curated, frequency-tuned pools for the languages we
-support (Spanish, English, German). Each pool entry carries an answer and a
-simple clue/definition so word games can work fully offline and without
-external API keys, while still producing content adapted to the player's
-language.
-
-For more exotic words, `fetch_definition` in `wiktionary.py` can enrich the
-pools at generation time, but the curated base guarantees that every puzzle
-has usable content even when the network or the dictionary service is down.
+The module keeps hand-curated, frequency-tuned fallback pools for the languages
+we support (Spanish, English, German). When ``DICTIONARY_SERVICE_URL`` is
+configured, the backend fetches a curated pool from the external dictionary
+service instead. Each pool entry carries an answer and a simple clue/definition
+so word games can work fully offline and without external API keys, while still
+producing content adapted to the player's language.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
+from app.config.env import get_settings
+from app.core.dictionary_client import common_words as service_common_words
 from app.core.games.wiktionary import fetch_definition
 
 
@@ -147,7 +146,15 @@ PINPOINT_CATEGORIES: dict[str, list[dict]] = {
 
 
 def common_words(lang: str = "es") -> list[WordEntry]:
-    """Return the curated common-word pool for ``lang``."""
+    """Return the curated common-word pool for ``lang``.
+
+    Prefer the external dictionary service when configured; fall back to the
+    bundled hand-curated lists otherwise.
+    """
+    if get_settings().dictionary_service_url:
+        service_words = service_common_words(lang)
+        if service_words:
+            return service_words
     return list(COMMON_WORDS_BY_LANG[normalize_locale(lang)])
 
 

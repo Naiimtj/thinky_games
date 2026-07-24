@@ -177,7 +177,12 @@ def test_crossword_uses_rae_words_and_excludes_recent_answers(monkeypatch):
     from app.core.games.localized_words import WordEntry
 
     monkeypatch.setattr(
-        crossword, "get_settings", lambda: SimpleNamespace(rae_key="test-key")
+        crossword,
+        "get_settings",
+        lambda: SimpleNamespace(
+            rae_key="test-key",
+            dictionary_service_url="",
+        ),
     )
     monkeypatch.setattr(
         crossword,

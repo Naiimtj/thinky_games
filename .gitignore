@@ -18,3 +18,9 @@ dist/
 /backups/*
 !/backups/.gitkeep
 .coverage
+
+# Dictionary
+data
+de_words_15k.json
+en_words_15k.json
+es_words_15k.json

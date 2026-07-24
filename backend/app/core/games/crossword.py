@@ -6,11 +6,11 @@ import unicodedata
 from datetime import date, timedelta
 
 from app.config.env import get_settings
+from app.core.dictionary_client import crossword_candidates, fetch_clue
 from app.core.games.base import GeneratedPuzzle, Payload
 from app.core.games.daily import utc_today
 from app.core.games.localized_words import common_words
 from app.core.games.prng import mulberry32, shuffle_in_place
-from app.core.games.rae import fetch_clue
 
 DEMO_SEED = 1
 GRID_SIZE = 11
@@ -241,27 +241,29 @@ def _recent_used_words(target_date: date, lang: str = "es") -> set[str]:
 def _generate_from_dict(
     seed: int, lang: str, excluded: set[str]
 ) -> list[dict[str, object]] | None:
-    """Build a crossword from the localized word pool, optionally via Wiktionary."""
+    """Build a crossword from the localized word pool or dictionary service."""
     candidates: list[dict[str, str]] = []
     seen = set(excluded)
-    pool = [
-        entry
-        for entry in common_words(lang)
-        if MIN_WORD_LENGTH <= len(entry.answer) <= MAX_WORD_LENGTH
-        and entry.answer not in seen
-    ]
+
+    settings = get_settings()
+    if settings.dictionary_service_url:
+        pool = crossword_candidates(lang, MIN_WORD_LENGTH, MAX_WORD_LENGTH)
+        pool = [entry for entry in pool if entry["answer"] not in seen]
+    else:
+        pool = [
+            {"answer": _normalise_answer(entry.answer), "clue": entry.clue}
+            for entry in common_words(lang)
+            if MIN_WORD_LENGTH <= len(entry.answer) <= MAX_WORD_LENGTH
+            and entry.answer not in seen
+        ]
     shuffle_in_place(pool, mulberry32(seed))
 
-    api_key = get_settings().rae_key
+    api_key = settings.rae_key
     for entry in pool[:MAX_RAE_CANDIDATES]:
-        answer = _normalise_answer(entry.answer)
-        # Spanish can use RAE when configured. Curated clues keep all locales
-        # deterministic and usable when a dictionary service is unavailable.
-        clue = entry.clue
+        answer = _normalise_answer(entry["answer"])
+        clue = entry["clue"]
         if lang == "es" and api_key:
-            clue = fetch_clue(entry.answer.lower(), api_key)
-        if clue is None:
-            clue = entry.clue
+            clue = fetch_clue(entry["answer"].lower(), api_key) or clue
         if not clue:
             continue
         seen.add(answer)

@@ -4,12 +4,14 @@ from datetime import datetime
 
 from sqlalchemy import (
     JSON,
+    Boolean,
     Column,
     Date,
     DateTime,
     ForeignKey,
     Integer,
     String,
+    Text,
     UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
@@ -78,5 +80,47 @@ class DailyPuzzle(Base):
             "locale",
             "puzzle_date",
             name="uq_daily_puzzle_game_locale_date",
+        ),
+    )
+
+
+class DictionaryWord(Base):
+    """A curated word usable by word games (crossword, pinpoint, wend, etc.).
+
+    Words are stored per language with a normalized form suitable for grid
+    matching and a display form that preserves accents and special characters.
+    """
+
+    __tablename__ = "dictionary_words"
+
+    id = Column(Integer, primary_key=True, index=True)
+    word = Column(String(50), nullable=False, index=True)
+    display_word = Column(String(50), nullable=False)
+    normalized_word = Column(String(50), nullable=False, index=True)
+    definition = Column(Text, nullable=False)
+    clue = Column(String(255), nullable=False)
+    category = Column(String(30), nullable=False, index=True)
+    difficulty = Column(String(10), nullable=False, index=True)
+    length = Column(Integer, nullable=False, index=True)
+    language = Column(String(2), nullable=False, index=True)
+    is_common = Column(Boolean, default=True, nullable=False)
+    suitable_for_children = Column(Boolean, default=True, nullable=False)
+    suitable_for_crossword = Column(Boolean, default=True, nullable=False)
+    suitable_for_word_search = Column(Boolean, default=True, nullable=False)
+    contains_accent = Column(Boolean, default=False, nullable=False)
+    tags = Column(JSON, default=list, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "normalized_word",
+            "language",
+            name="uq_dictionary_word_normalized_language",
         ),
     )

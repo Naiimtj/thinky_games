@@ -86,6 +86,14 @@ docker-logs:
 db-up:
     docker compose up -d db
 
+# Start only the dictionary PostgreSQL container.
+dict-db-up:
+    docker compose up -d dictionary-db
+
+# Run the dictionary service locally (requires dict-db-up or external Postgres).
+run-dictionary:
+    cd dictionary-service && uv run uvicorn app.main:app --reload --port 8100
+
 # Apply Alembic migrations against the configured database.
 migrate:
     cd backend && uv run alembic upgrade head
@@ -106,9 +114,49 @@ backup-now tier="daily" keep="5":
 prod-rebuild-app:
     docker compose -f docker-compose.prod.yml up -d --build backend frontend
 
+# ---------------------------------------------------------------------------
+# Dictionary service seeding (useful when rebuilding the server from scratch)
+# ---------------------------------------------------------------------------
+
+# Rebuild the dictionary database from scratch and import Spanish/English/German seeds.
+# WARNING: this drops the dictionary PostgreSQL database and recreates it.
+seed-dictionary: dict-db-up
+    cd dictionary-service && uv run python scripts/seed_dictionary.py
+
+# Import dictionary seeds assuming the service and DB are already running.
+import-dictionary-seeds:
+    cd dictionary-service && curl -s -X POST http://127.0.0.1:8100/words/es/import -H "Content-Type: application/json" -H "X-Admin-Password: thinky" --data @scripts/es_words_15k.json
+    cd dictionary-service && curl -s -X POST http://127.0.0.1:8100/words/en/import -H "Content-Type: application/json" -H "X-Admin-Password: thinky" --data @scripts/en_words_15k.json
+    cd dictionary-service && curl -s -X POST http://127.0.0.1:8100/words/de/import -H "Content-Type: application/json" -H "X-Admin-Password: thinky" --data @scripts/de_words_15k.json
+
+# ---------------------------------------------------------------------------
+# Daily puzzle regeneration
+# ---------------------------------------------------------------------------
+
+# Regenerate daily puzzles for wend, pinpoint and crossword across es/en/de.
+regenerate-puzzles:
+    cd backend && uv run python scripts/regenerate_daily_puzzles.py --games wend pinpoint crossword --delete-existing --days 14
+
+# Regenerate daily puzzles for all playable games across all locales.
+regenerate-all-puzzles:
+    cd backend && uv run python scripts/regenerate_daily_puzzles.py --all-games --delete-existing --days 14
+
 # Truncate all pregenerated daily puzzles so they get regenerated on next backend start.
+reset-puzzles:
+    cd backend && uv run python -c "from sqlalchemy import create_engine, text; from app.config.env import get_settings; engine = create_engine(get_settings().database_url); conn=engine.begin(); conn.execute(text('TRUNCATE TABLE daily_puzzles')); conn.commit(); print('daily_puzzles truncated.')"
+
+# Truncate all pregenerated daily puzzles inside the Docker MySQL container.
 prod-reset-puzzles:
     docker exec -it thinky-mysql mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "TRUNCATE TABLE thinky_games.daily_puzzles;"
+
+# ---------------------------------------------------------------------------
+# Full server rebuild from scratch
+# ---------------------------------------------------------------------------
+
+# Wipe and recreate the dictionary DB, then regenerate all daily puzzles.
+# Useful after copying the project to a fresh server.
+rebuild-content: seed-dictionary regenerate-all-puzzles
+    @echo "Content rebuild complete. Dictionary + daily puzzles ready."
 
 # Truncate puzzles for a single game type, e.g. `just prod-reset-puzzle tango`.
 prod-reset-puzzle game_type:

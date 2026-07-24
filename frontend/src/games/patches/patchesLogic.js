@@ -27,7 +27,7 @@ const ORTHO = [
   [0, -1],
 ];
 
-const regionCells = (owner, index) =>
+export const regionCells = (owner, index) =>
   Object.keys(owner)
     .filter((k) => owner[k] === index)
     .map((k) => k.split(',').map(Number));

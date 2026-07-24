@@ -69,5 +69,36 @@ services:
       db:
         condition: service_healthy
 
+  dictionary-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: dictionary
+      POSTGRES_USER: dict
+      POSTGRES_PASSWORD: dict
+    volumes:
+      - dictionary_data:/var/lib/postgresql/data
+    ports:
+      - '5433:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U dict -d dictionary']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  dictionary-service:
+    build: ./dictionary-service
+    environment:
+      DATABASE_URL: postgresql+psycopg2://dict:dict@dictionary-db:5432/dictionary
+      ADMIN_PASSWORD: thinky
+      CORS_ORIGINS: '["http://localhost:5173","http://localhost:8080"]'
+      APP_NAME: Dictionary Service
+      DEBUG: 'false'
+    depends_on:
+      dictionary-db:
+        condition: service_healthy
+    ports:
+      - '8100:8100'
+
 volumes:
   mysql_data:
+  dictionary_data:

@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     # Required for automatic Crossword words; also enables Wend definitions.
     rae_key: str = ""
 
+    # Optional external dictionary service. When set, word-based games read
+    # their curated pools from it instead of the local hardcoded lists.
+    dictionary_service_url: str = ""
+    dictionary_service_admin_password: str = ""
+
     @property
     def database_url(self) -> str:
         """Build the SQLAlchemy MySQL connection URL from discrete parts."""

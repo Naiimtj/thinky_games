@@ -11,7 +11,9 @@ import { range } from '../../utils/range';
 import {
   buildInitialOwner,
   cellKey,
+  figureMatches,
   isPatchesSolved,
+  regionCells,
   seedCellMap,
 } from './patchesLogic';
 
@@ -68,19 +70,6 @@ const getRegionBounds = (owner, seedIndex) => {
   });
   if (minR === Infinity) return null;
   return { minR, maxR, minC, maxC };
-};
-
-const canKeepShapeConstraint = (shape, size, width, height) => {
-  const area = width * height;
-  if (size != null && area > size) return false;
-  if (shape === 'HRECT' && width < height) return false;
-  if (shape === 'VRECT' && height < width) return false;
-  if (shape === 'SQUARE' && size != null) {
-    const side = Math.sqrt(size);
-    if (!Number.isInteger(side)) return false;
-    if (width > side || height > side) return false;
-  }
-  return true;
 };
 
 /** Renders a clue's shape as filled rect(s) matching its color; ANY is a horizontal+vertical cross. */
@@ -175,16 +164,33 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
   );
   const [activeSeed, setActiveSeed] = useState(null);
   const [history, setHistory] = useState([]);
+  const [errorSeed, setErrorSeed] = useState(null);
 
   const ownerRef = useRef(owner);
   ownerRef.current = owner;
   const strokeRef = useRef(null);
   const snapshotRef = useRef(null);
   const pendingClearRef = useRef(false);
+  const errorSeedRef = useRef(null);
+  const errorTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    errorSeedRef.current = errorSeed;
+  }, [errorSeed]);
+
+  useEffect(() => {
+    return () => {
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
+        errorTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     setActiveSeed(null);
     setHistory([]);
+    setErrorSeed(null);
     strokeRef.current = null;
     pendingClearRef.current = false;
     return undefined;
@@ -225,8 +231,32 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
     }
   };
 
+  /** Resets a seed's painted cells without adding an undo entry. */
+  const resetSeed = (index) => {
+    setOwner((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      Object.keys(next).forEach((key) => {
+        if (next[key] === index && seedMap[key] === undefined) {
+          delete next[key];
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  };
+
   /** Stroke can only begin on the seed itself or already owned cells. */
   const beginStroke = (seed) => {
+    if (errorTimeoutRef.current) {
+      clearTimeout(errorTimeoutRef.current);
+      errorTimeoutRef.current = null;
+      const seedToReset = errorSeedRef.current;
+      if (seedToReset !== null) {
+        resetSeed(seedToReset);
+      }
+      setErrorSeed(null);
+    }
     snapshotRef.current = ownerRef.current;
     strokeRef.current = { seed, moved: false };
   };
@@ -248,11 +278,6 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
     const c2 = Math.max(bounds.maxC, col);
     const width = c2 - c1 + 1;
     const height = r2 - r1 + 1;
-    const seed = seeds[stroke.seed];
-    if (!canKeepShapeConstraint(seed?.shape, seed?.size, width, height)) {
-      return;
-    }
-
     const next = { ...current };
     for (let r = r1; r <= r2; r++) {
       for (let c = c1; c <= c2; c++) {
@@ -291,7 +316,18 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
     const after = ownerRef.current;
     const changed = before && JSON.stringify(before) !== JSON.stringify(after);
     if (changed) {
-      setHistory((h) => [...h, before]);
+      const seed = seeds[stroke.seed];
+      const cells = regionCells(after, stroke.seed);
+      if (!figureMatches(cells, seed.shape, seed.size)) {
+        setErrorSeed(stroke.seed);
+        errorTimeoutRef.current = setTimeout(() => {
+          resetSeed(stroke.seed);
+          setErrorSeed(null);
+          errorTimeoutRef.current = null;
+        }, 450);
+      } else {
+        setHistory((h) => [...h, before]);
+      }
     }
     strokeRef.current = null;
     snapshotRef.current = null;
@@ -361,6 +397,7 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
     setOwner(buildInitialOwner(seeds));
     setActiveSeed(null);
     setHistory([]);
+    setErrorSeed(null);
     strokeRef.current = null;
     pendingClearRef.current = false;
     session.reset();
@@ -423,15 +460,28 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
             const highlightColor = colorOf(activeSeed);
             const isActiveCell =
               highlightSeed !== null && ownerIndex === highlightSeed;
-            const activeBorderStyle = isActiveCell
+            const isErrorCell = errorSeed !== null && ownerIndex === errorSeed;
+            const activeBorderStyle =
+              isActiveCell && !isErrorCell
+                ? getPerimeterBorder(
+                    row,
+                    col,
+                    rows,
+                    cols,
+                    owner,
+                    highlightSeed,
+                    highlightColor,
+                  )
+                : undefined;
+            const errorBorderStyle = isErrorCell
               ? getPerimeterBorder(
                   row,
                   col,
                   rows,
                   cols,
                   owner,
-                  highlightSeed,
-                  highlightColor,
+                  errorSeed,
+                  '#ef4444',
                 )
               : undefined;
             return (
@@ -474,11 +524,20 @@ const PatchesBoard = ({ puzzle, puzzleId, mode, meta }) => {
                     </span>
                   </>
                 )}
-                {isActiveCell && (
+                {isActiveCell && !isErrorCell && (
                   <span
                     className="pointer-events-none absolute inset-0"
                     style={activeBorderStyle}
                   />
+                )}
+                {isErrorCell && (
+                  <>
+                    <span
+                      className="pointer-events-none absolute inset-0"
+                      style={errorBorderStyle}
+                    />
+                    <span className="pointer-events-none absolute inset-0 animate-pulse bg-red-500/90" />
+                  </>
                 )}
               </button>
             );

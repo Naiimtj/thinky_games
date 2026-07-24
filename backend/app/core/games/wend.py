@@ -42,7 +42,11 @@ Coord = dict[str, int]
 
 def _choose_words(rng, lang: str = "es") -> list[str]:
     """Pick ``WORD_COUNT`` distinct common words that fit the grid in a straight line."""
-    pool = [entry.answer for entry in common_words(lang) if len(entry.answer) <= SIZE]
+    pool = [
+        _normalize_word(entry.answer)
+        for entry in common_words(lang)
+        if 3 <= len(_normalize_word(entry.answer)) <= SIZE
+    ]
     shuffle_in_place(pool, rng)
     return pool[:WORD_COUNT]
 
@@ -98,6 +102,14 @@ def _lookup_definitions(words: list[str], lang: str = "es") -> dict[str, str]:
     """Return localized curated clues without network-dependent generation."""
     curated = {entry.answer: entry.clue for entry in common_words(lang)}
     return {word: curated[word] for word in words if word in curated}
+
+
+def _normalize_word(word: str) -> str:
+    """Uppercase and strip accents for Wend grid matching."""
+    import unicodedata
+
+    normalized = unicodedata.normalize("NFD", word)
+    return "".join(letter for letter in normalized.upper() if "A" <= letter <= "Z")
 
 
 def _generate_puzzle(seed: int, lang: str = "es") -> Payload:
