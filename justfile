@@ -114,6 +114,49 @@ backup-now tier="daily" keep="5":
 prod-rebuild-app:
     docker compose -f docker-compose.prod.yml up -d --build backend frontend
 
+# Deploy or update the dictionary service and its Postgres database in production.
+prod-deploy-dictionary:
+    docker compose -f docker-compose.prod.yml up -d --build dictionary-db dictionary-service
+
+# Full production deploy: app + dictionary service.
+# On the server this exposes DB ports on 127.0.0.1:3306 / 127.0.0.1:5433.
+prod-deploy:
+    docker compose -f docker-compose.prod.yml up -d --build
+
+# Local production deploy with alternate DB ports to avoid conflicts (e.g. DataGrip on 3306).
+# Uses docker-compose.override.yml if present. MySQL -> 3307, PostgreSQL -> 5434.
+prod-deploy-local:
+    docker compose -f docker-compose.prod.yml -f docker-compose.override.yml up -d --build
+
+# Seed the production dictionary DB by running the seed script inside a one-off container.
+# This drops and recreates the dictionary PostgreSQL database used by the live service.
+prod-seed-dictionary:
+    docker compose -f docker-compose.prod.yml up -d dictionary-db
+    docker compose -f docker-compose.prod.yml run --rm dictionary-service uv run python scripts/seed_dictionary.py
+    docker compose -f docker-compose.prod.yml restart dictionary-service
+
+# Same as prod-seed-dictionary but for a local deploy started with `prod-deploy-local`.
+prod-seed-dictionary-local:
+    docker compose -f docker-compose.prod.yml -f docker-compose.override.yml up -d dictionary-db
+    docker compose -f docker-compose.prod.yml -f docker-compose.override.yml run --rm dictionary-service uv run python scripts/seed_dictionary.py
+    docker compose -f docker-compose.prod.yml -f docker-compose.override.yml restart dictionary-service
+
+# Regenerate all daily puzzles in the production backend container.
+prod-regenerate-all-puzzles:
+    docker compose -f docker-compose.prod.yml exec -T backend uv run python scripts/regenerate_daily_puzzles.py --all-games --delete-existing --days 14
+
+# Same as prod-regenerate-all-puzzles but for a local deploy started with `prod-deploy-local`.
+prod-regenerate-all-puzzles-local:
+    docker compose -f docker-compose.prod.yml -f docker-compose.override.yml exec -T backend uv run python scripts/regenerate_daily_puzzles.py --all-games --delete-existing --days 14
+
+# Wipe dictionary DB and regenerate all daily puzzles in production.
+prod-rebuild-content: prod-seed-dictionary prod-regenerate-all-puzzles
+    @echo "Production content rebuild complete."
+
+# Wipe dictionary DB and regenerate all daily puzzles in a local deploy.
+prod-rebuild-content-local: prod-seed-dictionary-local prod-regenerate-all-puzzles-local
+    @echo "Local production content rebuild complete."
+
 # ---------------------------------------------------------------------------
 # Dictionary service seeding (useful when rebuilding the server from scratch)
 # ---------------------------------------------------------------------------
@@ -121,7 +164,7 @@ prod-rebuild-app:
 # Rebuild the dictionary database from scratch and import Spanish/English/German seeds.
 # WARNING: this drops the dictionary PostgreSQL database and recreates it.
 seed-dictionary: dict-db-up
-    cd dictionary-service && uv run python scripts/seed_dictionary.py
+    cd dictionary-service && DATABASE_URL=postgresql+psycopg2://dict:dict@localhost:5433/dictionary uv run python scripts/seed_dictionary.py
 
 # Import dictionary seeds assuming the service and DB are already running.
 import-dictionary-seeds:

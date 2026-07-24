@@ -48,7 +48,8 @@ _BLACKLIST: set[str] = {
     "gilipollas", "cabron", "cabrona", "cabrón", "cabróna", "coño", "carajo",
     "mierda", "joder", "puta", "puto", "maricón", "maricon", "tonto", "tonta",
     "imbecil", "imbécil", "idiota", "estupido", "estúpido", "estupida", "estúpida",
-    "mema", "memo", "abibollo", "patán", "patan", "maleducado",
+    "mema", "memo", "abibollo", "patán", "patan", "maleducado", "maleducada", "malnacido", "malnacida", "malparido", "malparida",
+    "zorra", "zorro", "perra", "perro", "puta", "puto", "polla", "pene", "vagina", "esclavo", "esclava", 
 }
 
 # Patterns that indicate the entry is a toponym, gentilic, or otherwise unsuitable.

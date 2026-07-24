@@ -41,8 +41,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    # Solo accesible desde el propio servidor (SSH tunnel para DataGrip/mysql client).
-    # Quita este bloque si no necesitas acceso directo a la base de datos.
+    # Expuesto solo en 127.0.0.1 para conexiones locales (DataGrip/SSH tunnel).
+    # En un servidor con acceso SSH esto es seguro; ajusta si quieres cerrarlo.
     ports:
       - '127.0.0.1:3306:3306'
     networks:
@@ -61,6 +61,8 @@ services:
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
       CORS_ORIGINS: ${CORS_ORIGINS:-["https://thinkygames.duckdns.org"]}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
+      DICTIONARY_SERVICE_URL: http://dictionary-service:8100
+      DICTIONARY_SERVICE_ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
       RAE_KEY: ${RAE_KEY:-}
       TZ: ${TZ:-Europe/Madrid}
     volumes:
@@ -107,6 +109,50 @@ services:
     networks:
       - web
 
+  dictionary-db:
+    image: postgres:16
+    container_name: thinky-dictionary-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DICTIONARY_DB:-dictionary}
+      POSTGRES_USER: ${DICTIONARY_USER:-dict}
+      POSTGRES_PASSWORD: ${DICTIONARY_PASSWORD:?DICTIONARY_PASSWORD is required}
+      TZ: ${TZ:-Europe/Madrid}
+    volumes:
+      - thinky_dictionary_data:/var/lib/postgresql/data
+    # Expuesto solo en 127.0.0.1 para conexiones locales (DataGrip/SSH tunnel).
+    # En un servidor con acceso SSH esto es seguro; ajusta si quieres cerrarlo.
+    ports:
+      - '127.0.0.1:5433:5432'
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U ${DICTIONARY_USER:-dict} -d ${DICTIONARY_DB:-dictionary}',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - web
+
+  dictionary-service:
+    build: ./dictionary-service
+    container_name: thinky-dictionary-service
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg2://${DICTIONARY_USER:-dict}:${DICTIONARY_PASSWORD:?DICTIONARY_PASSWORD is required}@dictionary-db:5432/${DICTIONARY_DB:-dictionary}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
+      CORS_ORIGINS: ${CORS_ORIGINS:-["https://thinkygames.duckdns.org"]}
+      APP_NAME: Dictionary Service
+      DEBUG: 'false'
+      TZ: ${TZ:-Europe/Madrid}
+    depends_on:
+      dictionary-db:
+        condition: service_healthy
+    networks:
+      - web
+
 networks:
   web:
     external: true
@@ -115,3 +161,4 @@ networks:
 
 volumes:
   thinky_mysql_data:
+  thinky_dictionary_data:

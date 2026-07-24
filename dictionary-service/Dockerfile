@@ -2,8 +2,10 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install uv.
-RUN pip install --no-cache-dir uv
+# Install uv and the PostgreSQL client for seed scripts.
+RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir uv
 
 # Copy dependency files first for better caching.
 COPY pyproject.toml .
@@ -12,6 +14,7 @@ COPY pyproject.toml .
 RUN uv sync
 
 COPY app ./app
+COPY scripts ./scripts
 
 EXPOSE 8100
 
