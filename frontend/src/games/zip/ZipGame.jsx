@@ -14,7 +14,6 @@ import { GAME_STATE, useGameSession } from '../useGameSession';
 const ZipBoard = ({ puzzle: targetPuzzle, mode, meta }) => {
   const { t } = useTranslation();
   const initGame = useZipStore((state) => state.initGame);
-  const activeId = useZipStore((state) => state.puzzle?.id);
   const puzzle = useZipStore((state) => state.puzzle);
   const currentPath = useZipStore((state) => state.currentPath);
   const resetGame = useZipStore((state) => state.resetGame);
@@ -22,14 +21,12 @@ const ZipBoard = ({ puzzle: targetPuzzle, mode, meta }) => {
 
   const boardKey = buildStorageKey('zip', mode, targetPuzzle.id, 'board');
 
-  // Load the puzzle only when it changes, restoring any persisted path so a
-  // page reload resumes mid-game instead of resetting.
+  // Always rehydrate from persisted state on mount; this prevents stale
+  // in-memory state from leaking when reopening the same puzzle id.
   useEffect(() => {
-    if (activeId !== targetPuzzle.id) {
-      initGame(targetPuzzle);
-      restorePath(readStorage(boardKey));
-    }
-  }, [activeId, targetPuzzle, initGame, boardKey, restorePath]);
+    initGame(targetPuzzle);
+    restorePath(readStorage(boardKey) ?? []);
+  }, [targetPuzzle, initGame, boardKey, restorePath]);
 
   // Persist the drawn path as it grows.
   useEffect(() => {

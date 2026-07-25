@@ -129,6 +129,11 @@ const HomePage = () => {
   const [games, setGames] = useState(FALLBACK_GAMES);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setGames(FALLBACK_GAMES);
+      return;
+    }
+
     let cancelled = false;
     loadGamesCatalog().then((list) => {
       if (!cancelled && Array.isArray(list) && list.length > 0) setGames(list);
@@ -136,7 +141,7 @@ const HomePage = () => {
     return () => {
       cancelled = true;
     };
-  }, [loadGamesCatalog]);
+  }, [isAuthenticated, loadGamesCatalog]);
 
   useEffect(() => {
     if (!isAuthenticated) return;

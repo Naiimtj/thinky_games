@@ -14,8 +14,47 @@ import {
   registerUser,
 } from '../api/authApi';
 import { useDailyGamesStore } from './useDailyGamesStore';
+import { useZipStore } from './useZipStore';
 
-localStorage.removeItem('thinky-auth');
+try {
+  localStorage.removeItem('thinky-auth');
+} catch {
+  // ignore
+}
+
+const LOCAL_STORAGE_KEYS_TO_KEEP = [
+  'i18nextLng',
+  'LOCATOR_OPTIONS',
+  'thinky-theme',
+];
+
+const clearBrowserStorage = () => {
+  try {
+    const preserved = LOCAL_STORAGE_KEYS_TO_KEEP.reduce((acc, key) => {
+      const value = localStorage.getItem(key);
+      if (value !== null) acc[key] = value;
+      return acc;
+    }, {});
+    localStorage.clear();
+    Object.entries(preserved).forEach(([key, value]) => {
+      localStorage.setItem(key, value);
+    });
+  } catch {
+    // ignore
+  }
+  try {
+    sessionStorage.clear();
+  } catch {
+    // ignore
+  }
+};
+
+const resetClientGameState = () => {
+  useDailyGamesStore.getState().resetDaily();
+  useZipStore.getState().resetGame();
+  clearBrowserStorage();
+};
+
 let sessionCheckPromise = null;
 
 export const useAuthStore = create((set, get) => ({
@@ -27,6 +66,7 @@ export const useAuthStore = create((set, get) => ({
     useDailyGamesStore.getState().resetDaily();
     await loginUser({ username, password });
     const user = await fetchCurrentUser();
+    resetClientGameState();
     set({ user, initialized: true });
     return user;
   },
@@ -56,7 +96,7 @@ export const useAuthStore = create((set, get) => ({
 
   /** Clear the session. */
   logout: () => {
-    useDailyGamesStore.getState().resetDaily();
+    resetClientGameState();
     void logoutUser();
     set({ user: null, initialized: true });
   },

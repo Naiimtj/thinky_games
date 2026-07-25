@@ -1,9 +1,9 @@
 /**
  * Fetch the puzzle for a game/mode.
  *
- * Both daily and demo puzzles are fetched from the backend so word games use
- * content appropriate to the selected locale. Spanish demo data remains a
- * fallback when the API is unavailable.
+ * Daily puzzles are fetched from the backend.
+ * Guest demos are local/offline and locale-aware, so unauthenticated users
+ * can play without any backend call.
  * Returns `{ id, payload, seed, date, fallback, ... }` plus loading and error
  * flags so games can show a placeholder until the board is ready.
  */
@@ -12,7 +12,8 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { fetchDailyPuzzle } from '../api/gamesApi';
-import { DEMO_PUZZLES } from './demoPuzzles';
+import { useAuthStore } from '../store/useAuthStore';
+import { getDemoPuzzle } from './demoPuzzles';
 
 const initialState = () => ({ puzzle: null, loading: true, error: null });
 
@@ -20,6 +21,7 @@ const supportedLocales = new Set(['es', 'en', 'de']);
 
 export const useDailyPuzzle = (gameType, mode) => {
   const { i18n } = useTranslation();
+  const user = useAuthStore((state) => state.user);
   const locale = supportedLocales.has(i18n.resolvedLanguage)
     ? i18n.resolvedLanguage
     : 'es';
@@ -29,6 +31,20 @@ export const useDailyPuzzle = (gameType, mode) => {
     let cancelled = false;
     setState(initialState());
 
+    if (mode === 'demo' && !user) {
+      const puzzle = getDemoPuzzle(gameType, locale);
+      setState({
+        puzzle,
+        loading: false,
+        error: puzzle
+          ? null
+          : new Error(`Missing local demo puzzle: ${gameType}`),
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
+
     fetchDailyPuzzle(gameType, mode, locale)
       .then((puzzle) => {
         if (!cancelled) setState({ puzzle, loading: false, error: null });
@@ -36,7 +52,7 @@ export const useDailyPuzzle = (gameType, mode) => {
       .catch((error) => {
         if (cancelled) return;
         const fallback =
-          mode === 'demo' && locale === 'es' ? DEMO_PUZZLES[gameType] : null;
+          mode === 'demo' ? getDemoPuzzle(gameType, locale) : null;
         setState({
           puzzle: fallback,
           loading: false,
@@ -47,7 +63,7 @@ export const useDailyPuzzle = (gameType, mode) => {
     return () => {
       cancelled = true;
     };
-  }, [gameType, mode, locale]);
+  }, [gameType, mode, locale, user]);
 
   return state;
 };
