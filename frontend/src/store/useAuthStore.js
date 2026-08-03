@@ -61,6 +61,8 @@ export const useAuthStore = create((set, get) => ({
   user: null,
   initialized: false,
 
+  setUser: (user) => set({ user, initialized: true }),
+
   /** Log in and load the user profile. */
   login: async ({ username, password }) => {
     useDailyGamesStore.getState().resetDaily();

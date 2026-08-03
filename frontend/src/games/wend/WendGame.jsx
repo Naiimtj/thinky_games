@@ -203,6 +203,20 @@ const WendBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
   };
 
   const forming = wordFromPath(grid, path);
+  const foundWordSet = useMemo(
+    () => new Set(found.map((entry) => entry.word)),
+    [found],
+  );
+  const orderedWords = useMemo(
+    () =>
+      [...words].sort((a, b) => {
+        const aFound = foundWordSet.has(a);
+        const bFound = foundWordSet.has(b);
+        if (aFound === bFound) return 0;
+        return aFound ? 1 : -1;
+      }),
+    [words, foundWordSet],
+  );
 
   return (
     <GameShell
@@ -214,96 +228,98 @@ const WendBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
       onReset={handleReset}
       hint={t('wendGame.hint')}
     >
-      <div className="mb-2 h-6 text-center font-mono text-lg font-bold tracking-widest text-indigo-600">
-        {forming}
-      </div>
+      <div className="px-0">
+        <div className="mb-2 h-6 text-center font-mono text-lg font-bold tracking-widest text-indigo-600">
+          {forming}
+        </div>
 
-      <div
-        className="mx-auto grid touch-none select-none gap-2 rounded-md border border-slate-700 bg-slate-700 p-1"
-        style={{
-          gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))`,
-          maxWidth: `${size * 4}rem`,
-        }}
-        onPointerMove={handlePointerMove}
-        onPointerUp={finish}
-        onPointerLeave={finish}
-      >
-        {grid.flatMap((letters, row) =>
-          letters.map((letter, col) => {
-            const key = cellKey(row, col);
-            if (!letter) {
+        <div
+          className="mx-auto grid touch-none select-none gap-2 rounded-md border border-slate-700 bg-slate-700 p-1"
+          style={{
+            gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))`,
+            maxWidth: `${size * 4}rem`,
+          }}
+          onPointerMove={handlePointerMove}
+          onPointerUp={finish}
+          onPointerLeave={finish}
+        >
+          {grid.flatMap((letters, row) =>
+            letters.map((letter, col) => {
+              const key = cellKey(row, col);
+              if (!letter) {
+                return (
+                  <div key={key} aria-hidden="true" className="aspect-square" />
+                );
+              }
               return (
-                <div key={key} aria-hidden="true" className="aspect-square" />
+                <button
+                  key={key}
+                  type="button"
+                  data-cell
+                  data-row={row}
+                  data-col={col}
+                  onPointerDown={(event) => {
+                    event.preventDefault();
+                    begin({ row, col });
+                  }}
+                  className={`flex aspect-square items-center justify-center rounded-lg border border-slate-200 text-2xl font-black transition-colors ${cellTone(
+                    foundKeys.has(key),
+                    activeKeys.has(key),
+                    wrongKeys.has(key),
+                    hintFoundKeys.has(key),
+                    hinting && activeKeys.has(key),
+                  )}`}
+                >
+                  {letter}
+                </button>
               );
-            }
+            }),
+          )}
+        </div>
+
+        <div className="mt-3 flex flex-wrap justify-center gap-2">
+          <BaseButton
+            variant="warning"
+            outlined
+            onClick={handleLetterHint}
+            disabled={solved}
+            className="flex-1 rounded-full disabled:cursor-not-allowed"
+          >
+            {t('wendGame.letterHint')}
+          </BaseButton>
+          <BaseButton
+            variant="warning"
+            outlined
+            onClick={handleDefinitionHint}
+            disabled={solved || !nextDefinitionWord}
+            className="flex-1 rounded-full disabled:cursor-not-allowed"
+          >
+            {t('wendGame.definitionHint')}
+          </BaseButton>
+        </div>
+
+        <div className="mt-4 flex flex-col gap-2">
+          {orderedWords.map((word) => {
+            const isFound = found.some((entry) => entry.word === word);
+            const definition = definitions?.[word];
             return (
-              <button
-                key={key}
-                type="button"
-                data-cell
-                data-row={row}
-                data-col={col}
-                onPointerDown={(event) => {
-                  event.preventDefault();
-                  begin({ row, col });
-                }}
-                className={`flex aspect-square items-center justify-center rounded-lg border border-slate-200 text-2xl font-black transition-colors ${cellTone(
-                  foundKeys.has(key),
-                  activeKeys.has(key),
-                  wrongKeys.has(key),
-                  hintFoundKeys.has(key),
-                  hinting && activeKeys.has(key),
-                )}`}
-              >
-                {letter}
-              </button>
+              <div key={word} className="flex flex-col gap-1">
+                <span
+                  className={`self-start rounded-full px-3 py-1 text-sm font-semibold ${isFound ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}
+                >
+                  {isFound
+                    ? word
+                    : t('wendGame.wordLength', { count: word.length })}
+                </span>
+                {(solved || revealedDefs.includes(word)) && definition && (
+                  <p className="px-3 text-sm leading-snug text-slate-600 dark:text-primary">
+                    {definition}
+                  </p>
+                )}
+              </div>
             );
-          }),
-        )}
-      </div>
-
-      <div className="mt-3 flex flex-wrap justify-center gap-2">
-        <BaseButton
-          variant="warning"
-          outlined
-          onClick={handleLetterHint}
-          disabled={solved}
-          className="flex-1 rounded-full disabled:cursor-not-allowed"
-        >
-          {t('wendGame.letterHint')}
-        </BaseButton>
-        <BaseButton
-          variant="warning"
-          outlined
-          onClick={handleDefinitionHint}
-          disabled={solved || !nextDefinitionWord}
-          className="flex-1 rounded-full disabled:cursor-not-allowed"
-        >
-          {t('wendGame.definitionHint')}
-        </BaseButton>
-      </div>
-
-      <div className="mt-4 flex flex-col gap-2">
-        {words.map((word) => {
-          const isFound = found.some((entry) => entry.word === word);
-          const definition = definitions?.[word];
-          return (
-            <div key={word} className="flex flex-col gap-1">
-              <span
-                className={`self-start rounded-full px-3 py-1 text-sm font-semibold ${isFound ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}
-              >
-                {isFound
-                  ? word
-                  : t('wendGame.wordLength', { count: word.length })}
-              </span>
-              {(solved || revealedDefs.includes(word)) && definition && (
-                <p className="px-3 text-sm leading-snug text-slate-600 dark:text-primary">
-                  {definition}
-                </p>
-              )}
-            </div>
-          );
-        })}
+          })}
+        </div>
       </div>
 
       <RulesSection>

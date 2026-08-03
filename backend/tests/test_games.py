@@ -114,6 +114,100 @@ def test_generated_zip_has_unique_solution(seed):
     assert zip_puzzle.count_solutions(puzzle.payload) == 1
 
 
+def _find_zip_alternative_solution(payload, canonical):
+    """Find a full non-repeating path that differs from the canonical path."""
+    size = payload["size"]
+    total = size * size
+    checkpoints = payload["checkpoints"]
+    checkpoint_order = {(cp["row"], cp["col"]): cp["order"] for cp in checkpoints}
+    wall_set = zip_puzzle.build_wall_set(payload["walls"])
+
+    def visited_checkpoint_orders(path):
+        return [
+            checkpoint_order[(cell["row"], cell["col"])]
+            for cell in path
+            if (cell["row"], cell["col"]) in checkpoint_order
+        ]
+
+    def checkpoints_are_valid(sequence):
+        return len(sequence) == len(checkpoints) and all(
+            index == 0 or sequence[index] > sequence[index - 1]
+            for index in range(len(sequence))
+        )
+
+    for start_row in range(size):
+        for start_col in range(size):
+            start = {"row": start_row, "col": start_col}
+            visited = {(start_row, start_col)}
+            trail = [start]
+            seen_orders = []
+            start_order = checkpoint_order.get((start_row, start_col))
+            if start_order is not None:
+                seen_orders.append(start_order)
+
+            alternative = None
+
+            def dfs(cell):
+                nonlocal alternative
+                if alternative is not None:
+                    return
+
+                if len(trail) == total:
+                    sequence = visited_checkpoint_orders(trail)
+                    if checkpoints_are_valid(sequence) and trail != canonical:
+                        alternative = [dict(step) for step in trail]
+                    return
+
+                for neighbour in zip_puzzle._neighbours(cell, size):
+                    key = (neighbour["row"], neighbour["col"])
+                    if key in visited:
+                        continue
+                    if not zip_puzzle.can_connect(wall_set, cell, neighbour):
+                        continue
+
+                    next_order = checkpoint_order.get(key)
+                    if (
+                        next_order is not None
+                        and seen_orders
+                        and next_order <= seen_orders[-1]
+                    ):
+                        continue
+
+                    visited.add(key)
+                    trail.append(neighbour)
+                    if next_order is not None:
+                        seen_orders.append(next_order)
+
+                    dfs(neighbour)
+
+                    if next_order is not None:
+                        seen_orders.pop()
+                    trail.pop()
+                    visited.remove(key)
+
+            dfs(start)
+            if alternative is not None:
+                return alternative
+
+    return None
+
+
+def test_zip_validate_rejects_path_that_does_not_start_at_checkpoint_one():
+    payload = zip_puzzle.generate(1).payload
+    canonical = zip_puzzle.solve(payload)
+    checkpoint_one = next(cp for cp in payload["checkpoints"] if cp["order"] == 1)
+
+    alternative = _find_zip_alternative_solution(payload, canonical)
+
+    assert alternative is not None
+    assert alternative != canonical
+    assert alternative[0] != {
+        "row": checkpoint_one["row"],
+        "col": checkpoint_one["col"],
+    }
+    assert zip_puzzle.validate(payload, alternative) is False
+
+
 @pytest.mark.parametrize("seed", [1, 2, 3])
 def test_generated_queens_solution_is_valid(seed):
     puzzle = queens.generate(seed)
@@ -138,6 +232,12 @@ def test_generated_sudoku_has_unique_solution(seed):
 def test_generated_tango_has_unique_solution(seed):
     puzzle = tango.generate(seed)
     assert tango.count_solutions(puzzle.payload) == 1
+
+
+@pytest.mark.parametrize("seed", [1, 2, 3])
+def test_generated_tango_has_at_least_five_givens(seed):
+    puzzle = tango.generate(seed)
+    assert len(puzzle.payload["given"]) >= 5
 
 
 def test_pinpoint_generation_is_deterministic():
@@ -171,7 +271,7 @@ def test_all_crossword_layouts_are_valid():
         assert crossword._is_valid_layout(puzzle) is True
 
 
-def test_crossword_uses_rae_words_and_excludes_recent_answers(monkeypatch):
+def test_crossword_uses_curated_words_and_excludes_recent_answers(monkeypatch):
     from types import SimpleNamespace
 
     from app.core.games.localized_words import WordEntry
@@ -180,7 +280,6 @@ def test_crossword_uses_rae_words_and_excludes_recent_answers(monkeypatch):
         crossword,
         "get_settings",
         lambda: SimpleNamespace(
-            rae_key="test-key",
             dictionary_service_url="",
         ),
     )
@@ -193,25 +292,22 @@ def test_crossword_uses_rae_words_and_excludes_recent_answers(monkeypatch):
         crossword,
         "common_words",
         lambda lang="es": [
-            WordEntry("USADO", ""),
-            WordEntry("CAMINO", ""),
-            WordEntry("MARINO", ""),
-            WordEntry("RATON", ""),
-            WordEntry("TORRE", ""),
-            WordEntry("RITMO", ""),
+            WordEntry("USADO", "descartado"),
+            WordEntry("CAMINO", "pista camino"),
+            WordEntry("MARINO", "pista marino"),
+            WordEntry("RATON", "pista raton"),
+            WordEntry("TORRE", "pista torre"),
+            WordEntry("RITMO", "pista ritmo"),
         ],
     )
     monkeypatch.setattr(crossword, "shuffle_in_place", lambda words, rng: words)
-    monkeypatch.setattr(
-        crossword, "fetch_clue", lambda word, api_key="": f"definición de {word}"
-    )
 
     payload = crossword.generate_for_date(2026200, "es", utc_today()).payload
 
     assert payload["size"] == crossword.GRID_SIZE
     assert len(payload["entries"]) == crossword.WORD_COUNT
     assert "USADO" not in {entry["answer"] for entry in payload["entries"]}
-    assert all(entry["clue"].startswith("definición de") for entry in payload["entries"])
+    assert all(entry["clue"].startswith("pista ") for entry in payload["entries"])
     assert crossword._is_valid_layout(payload["entries"]) is True
     assert crossword.validate(payload, crossword.solve(payload)) is True
 
@@ -230,6 +326,57 @@ def test_wend_includes_definitions_when_available(monkeypatch):
     assert payload["definitions"]
     # Every defined entry maps to one of the puzzle's target words.
     assert set(payload["definitions"]) <= set(payload["words"])
+
+
+@pytest.mark.parametrize("seed", [1, 2, 3])
+def test_wend_uses_requested_word_length_profile(seed):
+    payload = wend.generate(seed, "es").payload
+    words = payload["words"]
+
+    short_count = sum(len(word) <= 4 for word in words)
+    medium_count = sum(5 <= len(word) <= 6 for word in words)
+    long_count = sum(7 <= len(word) <= 8 for word in words)
+
+    assert short_count == 1
+    assert medium_count == 3
+    assert long_count == 1
+
+
+@pytest.mark.parametrize("seed", [1, 2, 3])
+def test_wend_has_exactly_one_diagonal_word(seed):
+    payload = wend.generate(seed, "es").payload
+    grid = payload["grid"]
+    size = payload["size"]
+
+    diagonal_word_count = 0
+    for word in payload["words"]:
+        length = len(word)
+        found_diagonal_for_word = False
+        for row in range(size):
+            if found_diagonal_for_word:
+                break
+            for col in range(size):
+                if grid[row][col] != word[0]:
+                    continue
+                for dr, dc in wend.DIRECTIONS:
+                    if dr == 0 or dc == 0:
+                        continue
+                    end_row = row + dr * (length - 1)
+                    end_col = col + dc * (length - 1)
+                    if not (0 <= end_row < size and 0 <= end_col < size):
+                        continue
+                    if all(
+                        grid[row + dr * i][col + dc * i] == letter
+                        for i, letter in enumerate(word)
+                    ):
+                        found_diagonal_for_word = True
+                        break
+                if found_diagonal_for_word:
+                    break
+        if found_diagonal_for_word:
+            diagonal_word_count += 1
+
+    assert diagonal_word_count == 1
 
 
 # --- Solution validation on submit ------------------------------------------

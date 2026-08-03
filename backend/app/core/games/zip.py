@@ -269,6 +269,19 @@ def _is_checkpoint_order_respected(
     )
 
 
+def _starts_at_checkpoint_one(path: list[Coord], checkpoints: list[dict]) -> bool:
+    """The first path cell must be the checkpoint with order 1."""
+    if not path:
+        return False
+    start_checkpoint = next((cp for cp in checkpoints if cp["order"] == 1), None)
+    if start_checkpoint is None:
+        return False
+    return (
+        path[0]["row"] == int(start_checkpoint["row"])
+        and path[0]["col"] == int(start_checkpoint["col"])
+    )
+
+
 def validate(payload: Payload, solution: object) -> bool:
     """Whether ``solution`` (a full path of ``{row, col}``) solves the puzzle.
 
@@ -297,7 +310,9 @@ def validate(payload: Payload, solution: object) -> bool:
     for i in range(len(path) - 1):
         if not can_connect(wall_set, path[i], path[i + 1]):
             return False
-    return _is_checkpoint_order_respected(path, payload["checkpoints"])
+    return _starts_at_checkpoint_one(
+        path, payload["checkpoints"]
+    ) and _is_checkpoint_order_respected(path, payload["checkpoints"])
 
 
 def solve(payload: Payload) -> list[Coord] | None:

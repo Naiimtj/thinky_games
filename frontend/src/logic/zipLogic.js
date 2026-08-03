@@ -23,7 +23,7 @@ export const areAdjacent = (first, second) => {
 /** Order-independent key that identifies the wall between two cells. */
 const wallKey = (first, second) =>
   [cellKey(first.row, first.col), cellKey(second.row, second.col)]
-    .sort()
+    .sort((left, right) => left.localeCompare(right))
     .join('|');
 
 /** Build a Set of blocked edges from the puzzle's wall list. */
@@ -73,6 +73,21 @@ export const areAllCellsFilled = (path, size) =>
 const isStrictlyAscending = (values) =>
   values.every((value, index) => index === 0 || value > values[index - 1]);
 
+/** Return true when the first drawn cell is checkpoint 1. */
+export const startsAtCheckpointOne = (path, checkpoints) => {
+  if (path.length === 0) return false;
+  const startCheckpoint = checkpoints.find(
+    (checkpoint) => checkpoint.order === 1,
+  );
+  return Boolean(
+    startCheckpoint &&
+    coordsEqual(path[0], {
+      row: startCheckpoint.row,
+      col: startCheckpoint.col,
+    }),
+  );
+};
+
 /**
  * Return true when the path crosses the checkpoints in ascending order and
  * touches every one of them.
@@ -97,9 +112,10 @@ export const isCheckpointOrderRespected = (path, checkpoints) => {
 
 /**
  * The puzzle is solved when the single continuous path fills the whole grid
- * and visits the numbered checkpoints in ascending order.
+ * starts at checkpoint 1 and visits the numbered checkpoints in ascending order.
  */
 export const isPuzzleSolved = (puzzle, path) =>
+  startsAtCheckpointOne(path, puzzle.checkpoints) &&
   areAllCellsFilled(path, puzzle.size) &&
   isCheckpointOrderRespected(path, puzzle.checkpoints);
 

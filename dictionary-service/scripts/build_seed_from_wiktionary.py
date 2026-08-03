@@ -519,8 +519,8 @@ def _difficulty_for(length: int, title: str) -> str:
     return "hard"
 
 
-def _make_clue(definition: str, max_len: int = 120) -> str:
-    """Return a crossword-friendly clue shorter than the definition."""
+def _make_clue(definition: str) -> str:
+    """Return a crossword-friendly clue based on the first definition sentence."""
     # Take the first sentence.
     clue = re.split(r"(?<=[.!?])\s+", definition.strip())[0]
     # Remove leading article-like fragments for brevity.
@@ -529,8 +529,6 @@ def _make_clue(definition: str, max_len: int = 120) -> str:
     # Ensure it ends with a period if it is a statement.
     if clue and clue[-1].isalnum():
         clue += "."
-    if len(clue) > max_len:
-        clue = clue[: max_len - 1].rsplit(" ", 1)[0] + "."
     return clue
 
 

@@ -16,6 +16,7 @@ from app.core.games.prng import mulberry32, shuffle_in_place
 SIZE = 6
 HALF = SIZE // 2
 DEMO_SEED = 1
+MIN_GIVENS = 5
 SUN = 0
 MOON = 1
 EMPTY = -1
@@ -194,6 +195,8 @@ def _generate_puzzle(seed: int) -> Payload:
     )
 
     for clue in clues:
+        if clue["kind"] == "given" and len(given_set) <= MIN_GIVENS:
+            continue
         if clue["kind"] == "given":
             trial_givens = [g for g in given_set if g is not clue["ref"]]
             trial_constraints = constraint_set

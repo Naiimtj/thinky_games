@@ -1,18 +1,43 @@
 {
   "games": {
-    "zip": { "name": "Zip", "tagline": "Une los números en un solo trazo" },
-    "queens": { "name": "Queens", "tagline": "Corona cada región" },
-    "tango": { "name": "Tango", "tagline": "Armoniza la rejilla" },
-    "sudoku": { "name": "Mini Sudoku", "tagline": "Rellena del 1 al 6" },
-    "pinpoint": { "name": "Pinpoint", "tagline": "Adivina la categoría" },
-    "crossword": { "name": "Crucigrama", "tagline": "Completa la rejilla" },
-    "wend": { "name": "Wend", "tagline": "Ábrete paso entre palabras" },
-    "patches": { "name": "Patches", "tagline": "¡A darle forma!" }
+    "zip": {
+      "name": "Zip",
+      "tagline": "Une los números en un solo trazo"
+    },
+    "queens": {
+      "name": "Queens",
+      "tagline": "Corona cada región"
+    },
+    "tango": {
+      "name": "Tango",
+      "tagline": "Armoniza la rejilla"
+    },
+    "sudoku": {
+      "name": "Mini Sudoku",
+      "tagline": "Rellena del 1 al 6"
+    },
+    "pinpoint": {
+      "name": "Pinpoint",
+      "tagline": "Adivina la categoría"
+    },
+    "crossword": {
+      "name": "Crucigrama",
+      "tagline": "Completa la rejilla"
+    },
+    "wend": {
+      "name": "Wend",
+      "tagline": "Ábrete paso entre palabras"
+    },
+    "patches": {
+      "name": "Patches",
+      "tagline": "¡A darle forma!"
+    }
   },
   "layout": {
     "nav": {
       "home": "Inicio",
       "rankings": "Rankings",
+      "profile": "Perfil",
       "login": "Entrar",
       "register": "Registrarse",
       "logout": "Salir"
@@ -75,6 +100,79 @@
   "rankingsPage": {
     "title": "Rankings"
   },
+  "profile": {
+    "title": "Tu perfil",
+    "loading": "Cargando perfil…",
+    "saving": "Guardando…",
+    "searching": "Buscando…",
+    "memberSince": "Miembro desde {{date}}",
+    "messages": {
+      "accountSaved": "Datos de cuenta actualizados.",
+      "privacySaved": "Preferencias de privacidad guardadas.",
+      "friendSaved": "Preferencia de amigo actualizada.",
+      "friendRemoved": "Amigo eliminado de tu lista de compartición.",
+      "avatarSaved": "Foto de perfil actualizada."
+    },
+    "avatar": {
+      "title": "Foto de perfil",
+      "uploadTitle": "Subir imagen",
+      "browse": "Buscar archivo",
+      "dragAndDrop": "Arrastra y suelta una imagen aquí",
+      "accepted": "Formato aceptado:",
+      "limit": "Límite por archivo:",
+      "maxFiles": "Máximo de archivos",
+      "maxReached": "Has alcanzado el máximo",
+      "invalidTitle": "Formato inválido",
+      "invalidLine1": "Recuerda que el archivo debe ser",
+      "invalidLine2": "y menor que",
+      "save": "Guardar foto"
+    },
+    "account": {
+      "title": "Cuenta",
+      "description": "Actualiza tu usuario, email o contraseña.",
+      "username": "Usuario",
+      "email": "Email",
+      "password": "Nueva contraseña",
+      "passwordPlaceholder": "Déjala vacía para no cambiarla",
+      "save": "Guardar cambios"
+    },
+    "privacy": {
+      "title": "Privacidad",
+      "description": "Elige si tus tiempos se muestran en rankings para todos los usuarios.",
+      "shareGlobally": "Compartir mis resultados con todos"
+    },
+    "friends": {
+      "title": "Amigos",
+      "description": "Añade amigos y decide si ellos pueden ver tus tiempos.",
+      "searchLabel": "Buscar usuario o correo",
+      "searchPlaceholder": "Escribe un usuario o correo",
+      "clearSearch": "Limpiar búsqueda",
+      "searchButton": "Buscar",
+      "add": "Añadir",
+      "added": "Añadido",
+      "remove": "Quitar",
+      "empty": "Todavía no tienes amigos en esta lista.",
+      "shareWithFriend": "Permitir ver mis tiempos"
+    },
+    "delete": {
+      "title": "Eliminar cuenta",
+      "description": "Esta acción borra tu cuenta y tus datos de juego de forma permanente.",
+      "action": "Eliminar mi cuenta",
+      "confirm": "¿Seguro que quieres eliminar tu cuenta? Esta acción no se puede deshacer."
+    },
+    "errors": {
+      "load": "No se pudo cargar tu perfil.",
+      "update": "No se pudo actualizar tu cuenta.",
+      "privacy": "No se pudo guardar la privacidad.",
+      "search": "No se pudo buscar usuarios.",
+      "friendSave": "No se pudo guardar la preferencia del amigo.",
+      "friendDelete": "No se pudo eliminar el amigo.",
+      "delete": "No se pudo eliminar la cuenta.",
+      "avatarUpload": "No se pudo subir la foto de perfil.",
+      "avatarUploadServer": "Error al subir la imagen, contacta con el administrador.",
+      "avatarMissing": "Selecciona una imagen antes de subirla."
+    }
+  },
   "gamePage": {
     "loading": "Cargando…",
     "backToGames": "← Todos los juegos",
@@ -107,6 +205,8 @@
     "gridLabel": "Rejilla del crucigrama",
     "cellLabel": "Casilla de las pistas {{numbers}}",
     "hintButton": "Pista (+10 s)",
+    "clearWordButton": "Borrar palabra {{number}}",
+    "clearWordButtonNone": "Borrar palabra seleccionada",
     "directions": {
       "across": "Horizontal",
       "down": "Vertical"

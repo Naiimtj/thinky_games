@@ -63,7 +63,10 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
       DICTIONARY_SERVICE_URL: http://dictionary-service:8100
       DICTIONARY_SERVICE_ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
-      RAE_KEY: ${RAE_KEY:-}
+      CLOUDINARY_KEY: ${CLOUDINARY_KEY:?CLOUDINARY_KEY is required}
+      CLOUDINARY_SECRET: ${CLOUDINARY_SECRET:?CLOUDINARY_SECRET is required}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-dznwlaen6}
+      CLOUDINARY_FOLDER: ${CLOUDINARY_FOLDER:-thinkyGames}
       TZ: ${TZ:-Europe/Madrid}
     volumes:
       - ./backups:/app/backups

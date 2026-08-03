@@ -33,7 +33,7 @@ const colorClasses = {
     contained:
       'bg-btn-primary dark:bg-btn-primary-dark text-white hover:bg-btn-primary-hover dark:hover:bg-btn-primary-hover',
     outlined:
-      'border border-btn-primary hover:bg-btn-primary/10 active:bg-btn-primary/20 rounded-full text-sm font-semibold px-4 py-2.5 bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100',
+      'border border-btn-primary hover:bg-btn-primary/30 dark:hover:bg-btn-primary/90 active:bg-btn-primary/20 rounded-full text-sm font-semibold px-4 py-2.5 bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100',
     text: 'dark:text-btn-primary text-btn-primary-dark hover:underline hover:bg-transparent',
   },
   secondary: {

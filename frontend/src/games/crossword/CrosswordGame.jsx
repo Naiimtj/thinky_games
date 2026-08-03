@@ -13,6 +13,7 @@ import {
   buildGrid,
   entryCells,
   firstEmptyLetter,
+  firstEmptyLetterInEntry,
   gridBounds,
   isCrosswordSolved,
   normalizeLetter,
@@ -46,6 +47,7 @@ const CrosswordBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
     () => false,
   );
   const [activeEntryId, setActiveEntryId] = useState(entries[0]?.id ?? null);
+  const [pendingRestore, setPendingRestore] = useState(null);
   const inputRefs = useRef({});
   const cells = board.cells ?? {};
   const grid = useMemo(() => buildGrid(entries, size), [entries, size]);
@@ -81,6 +83,12 @@ const CrosswordBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
     [gridByKey, visibleCols, visibleRows],
   );
   const activeEntry = entries.find((entry) => entry.id === activeEntryId);
+  const activeWordCellKeys = useMemo(() => {
+    if (!activeEntry) return new Set();
+    return new Set(
+      entryCells(activeEntry).map((cell) => cellKey(cell.row, cell.col)),
+    );
+  }, [activeEntry]);
   const compareEntries = (a, b) => {
     if (sortSelectedFirst) {
       if (a.id === activeEntryId) return -1;
@@ -135,19 +143,64 @@ const CrosswordBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
       if (letter) moveToNextCell(key, nextCells);
       return { ...previous, cells: nextCells };
     });
+    if (pendingRestore?.key === key && letter) {
+      setPendingRestore(null);
+    }
+  };
+
+  const handleCellFocus = (cell, key) => {
+    setActiveEntryId((current) =>
+      cell.entryIds.includes(current) ? current : cell.entryIds[0],
+    );
+
+    const currentValue = cells[key] ?? '';
+    if (!currentValue) return;
+
+    setPendingRestore({ key, previous: currentValue });
+    setBoard((previous) => ({
+      ...previous,
+      cells: { ...previous.cells, [key]: '' },
+    }));
+  };
+
+  const handleCellBlur = (key) => {
+    if (pendingRestore?.key !== key) return;
+    if (!cells[key]) {
+      setCell(key, pendingRestore.previous);
+    }
+    setPendingRestore(null);
   };
 
   const handleReset = () => {
     setBoard({ cells: {} });
     setActiveEntryId(entries[0]?.id ?? null);
+    setPendingRestore(null);
     session.reset();
   };
 
   const handleHint = () => {
-    const hint = firstEmptyLetter(entries, cells);
+    const hint =
+      firstEmptyLetterInEntry(activeEntry, cells) ??
+      firstEmptyLetter(entries, cells);
     if (!hint) return;
     setCell(hint.key, hint.letter);
+    setPendingRestore(null);
     session.addSeconds(10);
+  };
+
+  const handleClearWord = () => {
+    if (!activeEntry) return;
+    const wordCells = entryCells(activeEntry).map((cell) =>
+      cellKey(cell.row, cell.col),
+    );
+    setBoard((previous) => {
+      const nextCells = { ...previous.cells };
+      wordCells.forEach((key) => {
+        nextCells[key] = '';
+      });
+      return { ...previous, cells: nextCells };
+    });
+    setPendingRestore(null);
   };
 
   const selectCell = (cell) => {
@@ -156,6 +209,10 @@ const CrosswordBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
       : cell.entryIds[0];
     setActiveEntryId(nextEntryId);
   };
+
+  const clearWordLabel = activeEntry
+    ? t('crosswordGame.clearWordButton', { number: activeEntry.number })
+    : t('crosswordGame.clearWordButtonNone');
 
   return (
     <GameShell
@@ -193,8 +250,22 @@ const CrosswordBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
             );
           }
           const isActive = cell.entryIds.includes(activeEntryId);
+          const isInActiveWord = activeWordCellKeys.has(key);
           const isIncorrect = cell.entryIds.some((id) =>
             incorrectEntryIds.has(id),
+          );
+          const showWordOutline = isInActiveWord && activeWordCellKeys.size > 1;
+          const hasTopNeighbor = activeWordCellKeys.has(
+            cellKey(cell.row - 1, cell.col),
+          );
+          const hasRightNeighbor = activeWordCellKeys.has(
+            cellKey(cell.row, cell.col + 1),
+          );
+          const hasBottomNeighbor = activeWordCellKeys.has(
+            cellKey(cell.row + 1, cell.col),
+          );
+          const hasLeftNeighbor = activeWordCellKeys.has(
+            cellKey(cell.row, cell.col - 1),
           );
           const label = cell.entryIds
             .map((id) => entries.find((entry) => entry.id === id)?.number)
@@ -216,21 +287,22 @@ const CrosswordBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
                   inputRefs.current[key] = element;
                 }}
                 value={cells[key] ?? ''}
-                onFocus={() =>
-                  setActiveEntryId((current) =>
-                    cell.entryIds.includes(current)
-                      ? current
-                      : cell.entryIds[0],
-                  )
-                }
+                onFocus={() => handleCellFocus(cell, key)}
+                onBlur={() => handleCellBlur(key)}
                 onClick={() => selectCell(cell)}
                 onChange={(event) => handleCellChange(key, event.target.value)}
                 maxLength={1}
                 inputMode="text"
                 autoComplete="off"
                 aria-label={t('crosswordGame.cellLabel', { numbers: label })}
-                className={`h-full w-full border bg-transparent text-center font-mono text-[8px] font-bold uppercase leading-none text-slate-800 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 sm:text-sm ${isIncorrect ? 'border-red-500' : 'border-slate-300'} ${isActive ? 'bg-amber-100' : ''}`}
+                className={`h-full w-full border bg-transparent text-center font-mono text-[8px] font-bold uppercase leading-none text-slate-800 outline-none sm:text-sm ${isIncorrect ? 'border-red-500' : 'border-slate-300'} ${isActive ? 'bg-amber-100' : ''}`}
               />
+              {showWordOutline && (
+                <span
+                  aria-hidden="true"
+                  className={`pointer-events-none absolute inset-0 z-10 border-warning ${!hasTopNeighbor ? 'border-t-[3px]' : ''} ${!hasRightNeighbor ? 'border-r-[3px]' : ''} ${!hasBottomNeighbor ? 'border-b-[3px]' : ''} ${!hasLeftNeighbor ? 'border-l-[3px]' : ''}`}
+                />
+              )}
             </div>
           );
         })}
@@ -244,6 +316,16 @@ const CrosswordBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
         className="mt-3 w-full"
       >
         {t('crosswordGame.hintButton')}
+      </BaseButton>
+
+      <BaseButton
+        variant="secondary"
+        outlined
+        onClick={handleClearWord}
+        disabled={isSolved || !activeEntry}
+        className="mt-2 w-full"
+      >
+        {clearWordLabel}
       </BaseButton>
 
       <div className="mt-3 hidden gap-3 sm:grid sm:grid-cols-2">

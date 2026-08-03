@@ -45,19 +45,29 @@ export const useZipStore = create((set, get) => ({
   /**
    * Start or resume a stroke. Grabbing the current head resumes drawing from
    * there. Pressing any checkpoint that is already part of the path rewinds
-   * the path back to that checkpoint. Pressing checkpoint "1" starts fresh
-   * when it is not yet on the path.
+   * the path back to that checkpoint. A new attempt must start on checkpoint 1.
    */
   beginPath: (cell) =>
     set((state) => {
       if (isPuzzleSolved(state.puzzle, state.currentPath)) return state;
+
+      if (state.currentPath.length === 0) {
+        const isCheckpointOne = state.puzzle.checkpoints.some(
+          (checkpoint) =>
+            checkpoint.order === 1 &&
+            checkpoint.row === cell.row &&
+            checkpoint.col === cell.col,
+        );
+        if (!isCheckpointOne) return state;
+        return { isDrawing: true, currentPath: [cell] };
+      }
 
       const head = state.currentPath[state.currentPath.length - 1];
       if (head && coordsEqual(head, cell)) {
         return { isDrawing: true };
       }
 
-      const clickedCheckpoint = state.puzzle.checkpoints.find(
+      const clickedCheckpoint = state.puzzle.checkpoints.some(
         (c) => c.row === cell.row && c.col === cell.col,
       );
       if (!clickedCheckpoint) return state;
@@ -72,9 +82,7 @@ export const useZipStore = create((set, get) => ({
         };
       }
 
-      if (clickedCheckpoint.order !== 1) return state;
-
-      return { isDrawing: true, currentPath: [cell] };
+      return state;
     }),
 
   /** Extend the current stroke to an adjacent cell (or backtrack). */

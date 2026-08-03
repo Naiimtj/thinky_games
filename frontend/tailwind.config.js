@@ -10,7 +10,7 @@ export default {
         'primary-dark': 'oklch(35.146% 0.21683 277.426)',
 
         // Primary button
-        'btn-primary': 'oklch(58.5% 0.233 277.117)',
+        'btn-primary': 'oklch(58.5% 0.233 277.117 / <alpha-value>)',
         'btn-primary-hover': 'oklch(51.1% 0.262 276.966)',
         'btn-primary-active': 'oklch(25.5% 0.262 276.966)',
         'btn-primary-dark': 'oklch(41.1% 0.262 276.966)',

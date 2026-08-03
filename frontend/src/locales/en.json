@@ -4,18 +4,40 @@
       "name": "Zip",
       "tagline": "Connect the numbers in a single stroke"
     },
-    "queens": { "name": "Queens", "tagline": "Crown each region" },
-    "tango": { "name": "Tango", "tagline": "Harmonize the grid" },
-    "sudoku": { "name": "Mini Sudoku", "tagline": "Fill from 1 to 6" },
-    "pinpoint": { "name": "Pinpoint", "tagline": "Guess the category" },
-    "crossword": { "name": "Crossword", "tagline": "Complete the grid" },
-    "wend": { "name": "Wend", "tagline": "Make your way through words" },
-    "patches": { "name": "Patches", "tagline": "Shape it up!" }
+    "queens": {
+      "name": "Queens",
+      "tagline": "Crown each region"
+    },
+    "tango": {
+      "name": "Tango",
+      "tagline": "Harmonize the grid"
+    },
+    "sudoku": {
+      "name": "Mini Sudoku",
+      "tagline": "Fill from 1 to 6"
+    },
+    "pinpoint": {
+      "name": "Pinpoint",
+      "tagline": "Guess the category"
+    },
+    "crossword": {
+      "name": "Crossword",
+      "tagline": "Complete the grid"
+    },
+    "wend": {
+      "name": "Wend",
+      "tagline": "Make your way through words"
+    },
+    "patches": {
+      "name": "Patches",
+      "tagline": "Shape it up!"
+    }
   },
   "layout": {
     "nav": {
       "home": "Home",
       "rankings": "Rankings",
+      "profile": "Profile",
       "login": "Log in",
       "register": "Sign up",
       "logout": "Log out"
@@ -78,6 +100,79 @@
   "rankingsPage": {
     "title": "Rankings"
   },
+  "profile": {
+    "title": "Your profile",
+    "loading": "Loading profile…",
+    "saving": "Saving…",
+    "searching": "Searching…",
+    "memberSince": "Member since {{date}}",
+    "messages": {
+      "accountSaved": "Account details updated.",
+      "privacySaved": "Privacy preferences saved.",
+      "friendSaved": "Friend preference updated.",
+      "friendRemoved": "Friend removed from your sharing list.",
+      "avatarSaved": "Profile picture updated."
+    },
+    "avatar": {
+      "title": "Profile picture",
+      "uploadTitle": "Upload image",
+      "browse": "Browse file",
+      "dragAndDrop": "Drag and drop an image here",
+      "accepted": "Accepted format:",
+      "limit": "Per-file limit:",
+      "maxFiles": "Max files",
+      "maxReached": "Maximum reached",
+      "invalidTitle": "Invalid format",
+      "invalidLine1": "Remember the file must be",
+      "invalidLine2": "and smaller than",
+      "save": "Save picture"
+    },
+    "account": {
+      "title": "Account",
+      "description": "Update your username, email, or password.",
+      "username": "Username",
+      "email": "Email",
+      "password": "New password",
+      "passwordPlaceholder": "Leave blank to keep current password",
+      "save": "Save changes"
+    },
+    "privacy": {
+      "title": "Privacy",
+      "description": "Choose whether your times appear in rankings for everyone.",
+      "shareGlobally": "Share my results with everyone"
+    },
+    "friends": {
+      "title": "Friends",
+      "description": "Add friends and decide whether they can see your times.",
+      "searchLabel": "Search user or email",
+      "searchPlaceholder": "Type a username or email",
+      "clearSearch": "Clear search",
+      "searchButton": "Search",
+      "add": "Add",
+      "added": "Added",
+      "remove": "Remove",
+      "empty": "You do not have friends in this list yet.",
+      "shareWithFriend": "Allow viewing my times"
+    },
+    "delete": {
+      "title": "Delete account",
+      "description": "This action permanently removes your account and game data.",
+      "action": "Delete my account",
+      "confirm": "Are you sure you want to delete your account? This cannot be undone."
+    },
+    "errors": {
+      "load": "Could not load your profile.",
+      "update": "Could not update your account.",
+      "privacy": "Could not save privacy settings.",
+      "search": "Could not search users.",
+      "friendSave": "Could not save friend preference.",
+      "friendDelete": "Could not remove friend.",
+      "delete": "Could not delete account.",
+      "avatarUpload": "Could not upload profile picture.",
+      "avatarUploadServer": "Image upload failed. Please contact the administrator.",
+      "avatarMissing": "Select an image before uploading."
+    }
+  },
   "gamePage": {
     "loading": "Loading…",
     "backToGames": "← All games",
@@ -110,6 +205,8 @@
     "gridLabel": "Crossword grid",
     "cellLabel": "Cell for clues {{numbers}}",
     "hintButton": "Hint (+10 s)",
+    "clearWordButton": "Clear word {{number}}",
+    "clearWordButtonNone": "Clear selected word",
     "directions": {
       "across": "Across",
       "down": "Down"

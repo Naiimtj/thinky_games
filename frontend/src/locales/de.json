@@ -4,21 +4,40 @@
       "name": "Zip",
       "tagline": "Verbinde die Zahlen in einem einzigen Strich"
     },
-    "queens": { "name": "Queens", "tagline": "Kröne jede Region" },
-    "tango": { "name": "Tango", "tagline": "Harmonisiere das Gitter" },
-    "sudoku": { "name": "Mini Sudoku", "tagline": "Fülle von 1 bis 6" },
-    "pinpoint": { "name": "Pinpoint", "tagline": "Errate die Kategorie" },
+    "queens": {
+      "name": "Queens",
+      "tagline": "Kröne jede Region"
+    },
+    "tango": {
+      "name": "Tango",
+      "tagline": "Harmonisiere das Gitter"
+    },
+    "sudoku": {
+      "name": "Mini Sudoku",
+      "tagline": "Fülle von 1 bis 6"
+    },
+    "pinpoint": {
+      "name": "Pinpoint",
+      "tagline": "Errate die Kategorie"
+    },
     "crossword": {
       "name": "Kreuzworträtsel",
       "tagline": "Vervollständige das Gitter"
     },
-    "wend": { "name": "Wend", "tagline": "Bahne dir einen Weg durch Wörter" },
-    "patches": { "name": "Patches", "tagline": "Gib ihm Form!" }
+    "wend": {
+      "name": "Wend",
+      "tagline": "Bahne dir einen Weg durch Wörter"
+    },
+    "patches": {
+      "name": "Patches",
+      "tagline": "Gib ihm Form!"
+    }
   },
   "layout": {
     "nav": {
       "home": "Startseite",
       "rankings": "Ranglisten",
+      "profile": "Profil",
       "login": "Anmelden",
       "register": "Registrieren",
       "logout": "Abmelden"
@@ -81,6 +100,79 @@
   "rankingsPage": {
     "title": "Ranglisten"
   },
+  "profile": {
+    "title": "Dein Profil",
+    "loading": "Profil wird geladen…",
+    "saving": "Wird gespeichert…",
+    "searching": "Wird gesucht…",
+    "memberSince": "Mitglied seit {{date}}",
+    "messages": {
+      "accountSaved": "Kontodaten aktualisiert.",
+      "privacySaved": "Datenschutzeinstellungen gespeichert.",
+      "friendSaved": "Freundes-Einstellung aktualisiert.",
+      "friendRemoved": "Freund aus deiner Freigabeliste entfernt.",
+      "avatarSaved": "Profilbild aktualisiert."
+    },
+    "avatar": {
+      "title": "Profilbild",
+      "uploadTitle": "Bild hochladen",
+      "browse": "Datei wählen",
+      "dragAndDrop": "Bild hierher ziehen und ablegen",
+      "accepted": "Akzeptiertes Format:",
+      "limit": "Limit pro Datei:",
+      "maxFiles": "Maximale Dateien",
+      "maxReached": "Maximum erreicht",
+      "invalidTitle": "Ungültiges Format",
+      "invalidLine1": "Die Datei muss",
+      "invalidLine2": "sein und kleiner als",
+      "save": "Bild speichern"
+    },
+    "account": {
+      "title": "Konto",
+      "description": "Aktualisiere Benutzername, E-Mail oder Passwort.",
+      "username": "Benutzername",
+      "email": "E-Mail",
+      "password": "Neues Passwort",
+      "passwordPlaceholder": "Leer lassen, um das Passwort beizubehalten",
+      "save": "Änderungen speichern"
+    },
+    "privacy": {
+      "title": "Datenschutz",
+      "description": "Lege fest, ob deine Zeiten für alle in Ranglisten sichtbar sind.",
+      "shareGlobally": "Meine Ergebnisse mit allen teilen"
+    },
+    "friends": {
+      "title": "Freunde",
+      "description": "Füge Freunde hinzu und entscheide, ob sie deine Zeiten sehen können.",
+      "searchLabel": "Benutzer oder E-Mail suchen",
+      "searchPlaceholder": "Benutzernamen oder E-Mail eingeben",
+      "clearSearch": "Suche leeren",
+      "searchButton": "Suchen",
+      "add": "Hinzufügen",
+      "added": "Hinzugefügt",
+      "remove": "Entfernen",
+      "empty": "Du hast noch keine Freunde in dieser Liste.",
+      "shareWithFriend": "Meine Zeiten freigeben"
+    },
+    "delete": {
+      "title": "Konto löschen",
+      "description": "Diese Aktion löscht dein Konto und deine Spieldaten dauerhaft.",
+      "action": "Mein Konto löschen",
+      "confirm": "Möchtest du dein Konto wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+    },
+    "errors": {
+      "load": "Dein Profil konnte nicht geladen werden.",
+      "update": "Dein Konto konnte nicht aktualisiert werden.",
+      "privacy": "Datenschutzeinstellungen konnten nicht gespeichert werden.",
+      "search": "Benutzer konnten nicht gesucht werden.",
+      "friendSave": "Freundes-Einstellung konnte nicht gespeichert werden.",
+      "friendDelete": "Freund konnte nicht entfernt werden.",
+      "delete": "Konto konnte nicht gelöscht werden.",
+      "avatarUpload": "Profilbild konnte nicht hochgeladen werden.",
+      "avatarUploadServer": "Fehler beim Hochladen des Bildes. Bitte kontaktiere den Administrator.",
+      "avatarMissing": "Wähle vor dem Hochladen ein Bild aus."
+    }
+  },
   "gamePage": {
     "loading": "Laden…",
     "backToGames": "← Alle Spiele",
@@ -113,6 +205,8 @@
     "gridLabel": "Kreuzworträtselgitter",
     "cellLabel": "Feld für die Hinweise {{numbers}}",
     "hintButton": "Hinweis (+10 s)",
+    "clearWordButton": "Wort {{number}} löschen",
+    "clearWordButtonNone": "Ausgewähltes Wort löschen",
     "directions": {
       "across": "Waagerecht",
       "down": "Senkrecht"

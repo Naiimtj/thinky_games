@@ -134,15 +134,20 @@ def read_my_scores(
 @router.get(
     "/rankings",
     response_model=list[RankingEntry],
-    dependencies=[Depends(get_current_user)],
 )
 def read_rankings(
     period: RankingPeriod = Query(default=RankingPeriod.GLOBAL),
     game_type: str = Query(default="zip", max_length=30),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> list[RankingEntry]:
     """Return the leaderboard for the requested period. Requires authentication."""
-    return get_rankings(db, period=period, game_type=game_type)
+    return get_rankings(
+        db,
+        viewer_id=current_user.id,
+        period=period,
+        game_type=game_type,
+    )
 
 
 @router.get(
@@ -154,17 +159,21 @@ def read_my_ranks(
     db: Session = Depends(get_db),
 ) -> list[UserGameRank]:
     """Daily/monthly/global rank of the authenticated user for every game they've played."""
-    return get_user_ranks(db, user_id=current_user.id)
+    return get_user_ranks(
+        db,
+        user_id=current_user.id,
+        viewer_id=current_user.id,
+    )
 
 
 @router.get(
     "/rankings/daily-top",
     response_model=list[GameTopEntries],
-    dependencies=[Depends(get_current_user)],
 )
 def read_daily_top(
     limit: int = Query(default=3, ge=1, le=50),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> list[GameTopEntries]:
     """Top N entries of today's leaderboard for every game with scores today."""
-    return get_daily_top_n(db, limit=limit)
+    return get_daily_top_n(db, viewer_id=current_user.id, limit=limit)

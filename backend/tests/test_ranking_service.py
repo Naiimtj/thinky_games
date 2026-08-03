@@ -52,7 +52,7 @@ def test_get_rankings_orders_by_fastest_time(db_session):
     for completion_time in (95, 42, 60):
         _add_score(db_session, user.id, completion_time)
 
-    entries = get_rankings(db_session, RankingPeriod.GLOBAL)
+    entries = get_rankings(db_session, viewer_id=user.id, period=RankingPeriod.GLOBAL)
 
     assert [entry.completion_time for entry in entries] == [42, 60, 95]
     assert [entry.rank for entry in entries] == [1, 2, 3]
@@ -67,8 +67,8 @@ def test_daily_ranking_excludes_scores_from_previous_days(db_session):
         created_at=datetime.utcnow() - timedelta(days=2),
     )
 
-    daily = get_rankings(db_session, RankingPeriod.DAILY)
-    global_board = get_rankings(db_session, RankingPeriod.GLOBAL)
+    daily = get_rankings(db_session, viewer_id=user.id, period=RankingPeriod.DAILY)
+    global_board = get_rankings(db_session, viewer_id=user.id, period=RankingPeriod.GLOBAL)
 
     assert daily == []
     assert len(global_board) == 1
@@ -79,7 +79,12 @@ def test_rankings_are_limited(db_session):
     for completion_time in range(1, 6):
         _add_score(db_session, user.id, completion_time)
 
-    entries = get_rankings(db_session, RankingPeriod.GLOBAL, limit=3)
+    entries = get_rankings(
+        db_session,
+        viewer_id=user.id,
+        period=RankingPeriod.GLOBAL,
+        limit=3,
+    )
 
     assert len(entries) == 3
     assert [entry.completion_time for entry in entries] == [1, 2, 3]
@@ -102,7 +107,7 @@ def test_get_user_ranks_reports_position_across_periods(db_session):
     _add_score(db_session, user.id, completion_time=10)
     _add_score(db_session, other.id, completion_time=20)
 
-    ranks = get_user_ranks(db_session, user_id=user.id)
+    ranks = get_user_ranks(db_session, user_id=user.id, viewer_id=user.id)
 
     assert len(ranks) == 1
     entry = ranks[0]
@@ -115,4 +120,4 @@ def test_get_user_ranks_reports_position_across_periods(db_session):
 def test_get_user_ranks_empty_without_history(db_session):
     user = _create_user(db_session)
 
-    assert get_user_ranks(db_session, user_id=user.id) == []
+    assert get_user_ranks(db_session, user_id=user.id, viewer_id=user.id) == []

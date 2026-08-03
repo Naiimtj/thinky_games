@@ -5,6 +5,7 @@ import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
 import { useThemeStore } from '../store/useThemeStore';
 import BaseButton from './base/BaseButton';
+import UserAvatar from './UserAvatar';
 import { Close } from './icons/Close';
 import { Menu } from './icons/Menu';
 import { Moon } from './icons/Moon';
@@ -44,7 +45,7 @@ const Layout = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
-    void checkSession();
+    checkSession();
   }, [checkSession]);
 
   const closeMenu = () => setIsMenuOpen(false);
@@ -63,7 +64,7 @@ const Layout = () => {
               alt="Thinky Games"
               className="h-8 w-8"
             />
-            Thinky Games
+            <span>Thinky Games</span>
           </Link>
 
           {/* Desktop nav */}
@@ -94,9 +95,16 @@ const Layout = () => {
             )}
             {initialized && user ? (
               <div className="flex items-center gap-3">
-                <span className="text-slate-400 dark:text-primary-active">
-                  {user?.username}
-                </span>
+                <Link
+                  to="/profile"
+                  className="flex items-center gap-2 text-slate-500 hover:text-slate-700 dark:text-primary-active dark:hover:text-slate-100"
+                >
+                  <UserAvatar
+                    username={user?.username}
+                    avatarUrl={user?.avatar_url}
+                    size="sm"
+                  />
+                </Link>
                 <BaseButton
                   variant="secondary"
                   text
@@ -171,19 +179,37 @@ const Layout = () => {
                 {t('layout.nav.home')}
               </NavLink>
               {user && (
-                <NavLink
-                  to="/rankings"
-                  className={mobileNavClass}
-                  onClick={closeMenu}
-                >
-                  {t('layout.nav.rankings')}
-                </NavLink>
+                <>
+                  <NavLink
+                    to="/rankings"
+                    className={mobileNavClass}
+                    onClick={closeMenu}
+                  >
+                    {t('layout.nav.rankings')}
+                  </NavLink>
+                  <NavLink
+                    to="/profile"
+                    className={mobileNavClass}
+                    onClick={closeMenu}
+                  >
+                    {t('layout.nav.profile')}
+                  </NavLink>
+                </>
               )}
               {user ? (
                 <>
-                  <span className="px-3 py-2 text-slate-400 dark:text-primary-active">
-                    {user?.username}
-                  </span>
+                  <Link
+                    to="/profile"
+                    className="flex items-center gap-2 px-3 py-2 text-slate-500 dark:text-primary-active"
+                    onClick={closeMenu}
+                  >
+                    <UserAvatar
+                      username={user?.username}
+                      avatarUrl={user?.avatar_url}
+                      size="sm"
+                    />
+                    <span>{user?.username}</span>
+                  </Link>
                   <BaseButton
                     variant="secondary"
                     text

@@ -80,3 +80,12 @@ export const firstEmptyLetter = (entries, cells) => {
   }
   return null;
 };
+
+export const firstEmptyLetterInEntry = (entry, cells) => {
+  if (!entry) return null;
+  for (const [index, cell] of entryCells(entry).entries()) {
+    const key = cellKey(cell.row, cell.col);
+    if (!cells[key]) return { key, letter: entry.answer[index] };
+  }
+  return null;
+};

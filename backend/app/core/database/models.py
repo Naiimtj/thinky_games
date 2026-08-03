@@ -14,6 +14,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
+from sqlalchemy.dialects.mysql import MEDIUMTEXT
 from sqlalchemy.orm import relationship
 
 from app.core.database.database import Base
@@ -28,12 +29,57 @@ class User(Base):
     username = Column(String(50), unique=True, index=True, nullable=False)
     email = Column(String(255), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
+    avatar_url = Column(Text().with_variant(MEDIUMTEXT(), "mysql"), nullable=True)
+    share_results_globally = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     scores = relationship(
         "Score",
         back_populates="user",
         cascade="all, delete-orphan",
+    )
+    friend_preferences = relationship(
+        "FriendPreference",
+        foreign_keys="FriendPreference.user_id",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+
+class FriendPreference(Base):
+    """Privacy preference for sharing a user's times with a specific friend."""
+
+    __tablename__ = "friend_preferences"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    friend_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    share_times = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    user = relationship(
+        "User",
+        foreign_keys=[user_id],
+        back_populates="friend_preferences",
+    )
+    friend = relationship("User", foreign_keys=[friend_id])
+
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id",
+            "friend_id",
+            name="uq_friend_preference_user_friend",
+        ),
     )
 
 

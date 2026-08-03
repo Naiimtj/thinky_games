@@ -1,0 +1,61 @@
+name: Bug report
+description: Report a reproducible bug in Thinky Games
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please fill only the sections you can reproduce with concrete data.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is wrong?
+      placeholder: Short problem statement.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Exact sequence to reproduce.
+      placeholder: |
+        1. Go to ...
+        2. Click ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - frontend
+        - backend
+        - dictionary-service
+        - docker/infra
+        - migrations
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: Example: local docker, production server, browser/device.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / traces
+      description: Paste relevant logs, stack traces, response payloads, or screenshots.

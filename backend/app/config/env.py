@@ -32,13 +32,16 @@ class Settings(BaseSettings):
     backup_data_dir: str = "/app/backups"
     run_migrations_on_startup: bool = True
 
-    # Required for automatic Crossword words; also enables Wend definitions.
-    rae_key: str = ""
-
     # Optional external dictionary service. When set, word-based games read
     # their curated pools from it instead of the local hardcoded lists.
     dictionary_service_url: str = ""
     dictionary_service_admin_password: str = ""
+
+    # Cloudinary avatar storage.
+    cloudinary_key: str = ""
+    cloudinary_secret: str = ""
+    cloudinary_cloud_name: str = "dznwlaen6"
+    cloudinary_folder: str = "thinkyGames"
 
     @property
     def database_url(self) -> str:

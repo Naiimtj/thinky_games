@@ -85,10 +85,11 @@ const BaseTextInput = ({
   const variantClasses = {
     filled:
       'bg-gray-100 border-b-2 border-gray-300 focus-within:border-textPrimary',
-    underlined: 'border-b-2 border-gray-300 focus-within:border-textPrimary',
+    underlined:
+      'bg-white border-b-2 border-gray-300 focus-within:border-textPrimary',
     outlined:
-      'border-2 border-gray-300 rounded-md focus-within:border-textPrimary',
-    plain: 'border-none',
+      'bg-white border-2 border-gray-300 rounded-md focus-within:border-textPrimary',
+    plain: 'bg-white border-none',
     solo: 'bg-white border-2 border-gray-300 rounded-md focus-within:border-textPrimary',
     'solo-inverted':
       'bg-gray-100 border-2 border-gray-300 rounded-md focus-within:border-textPrimary',
@@ -96,15 +97,23 @@ const BaseTextInput = ({
       'bg-gray-100 border-none rounded-md focus-within:ring-2 focus-within:ring-blue-500',
   };
 
+  const hasPrependAction = Boolean(prependIconComponent || onPrependIconClick);
+  const hasAppendAction = Boolean(appendIconComponent || onAppendIconClick);
+  const useContainerLayout = Boolean(
+    prependIcon || appendIcon || hasPrependAction || hasAppendAction,
+  );
+
   // Styling for input when inside container (with icons)
   const inputInContainerClass = `flex-1 bg-transparent outline-none border-none text-base sm:text-sm text-gray-900 placeholder-gray-400 ${
     disabled ? 'cursor-not-allowed opacity-60' : ''
   } ${hasError ? 'border-alert focus:border-alert' : ''} ${
-    prependIconComponent || appendIconComponent ? 'p-2' : 'px-0'
+    prependIconComponent || appendIconComponent || prependIcon || appendIcon
+      ? 'p-2'
+      : 'px-3 py-2'
   }`;
 
   // Styling for standalone input (no icons)
-  const standaloneInputClass = `w-full px-3 py-2 text-base sm:text-sm outline-none transition-colors ${
+  const standaloneInputClass = `w-full px-3 py-2 text-base sm:text-sm text-gray-900 placeholder-gray-400 outline-none transition-colors ${
     variantClasses[variant] || variantClasses.outlined
   } ${disabled ? 'bg-gray-100 cursor-not-allowed opacity-60' : ''} ${
     hasError ? 'border-alert focus:border-alert' : ''
@@ -115,17 +124,16 @@ const BaseTextInput = ({
       <BaseLabel label={label} tooltip={tooltip} mandatory={mandatory} />
 
       <div className="w-full relative">
-        {(prependIcon ||
-          appendIcon ||
-          prependIconComponent ||
-          appendIconComponent) && (
+        {useContainerLayout && (
           <div
             className={`flex items-center w-full ${
               variantClasses[variant] || variantClasses.outlined
             } ${hasError ? 'border-alert' : ''} transition-colors`}
           >
             {prependIcon && (
-              <i className={`${prependIcon} text-gray-400 ml-2`} />
+              <i
+                className={`${prependIcon} text-gray-400 dark:text-gray-500 ml-2`}
+              />
             )}
             {prependIconComponent && (
               <button
@@ -133,7 +141,7 @@ const BaseTextInput = ({
                 onClick={onPrependIconClick}
                 disabled={disabled}
                 aria-label={prependIconAriaLabel}
-                className="ml-2 text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-60"
+                className="ml-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors disabled:opacity-60"
               >
                 {prependIconComponent}
               </button>
@@ -151,14 +159,18 @@ const BaseTextInput = ({
               className={inputInContainerClass}
               {...(props.field ? {} : { ...props })}
             />
-            {appendIcon && <i className={`${appendIcon} text-gray-400 mr-2`} />}
+            {appendIcon && (
+              <i
+                className={`${appendIcon} text-gray-400 dark:text-gray-500 mr-2 `}
+              />
+            )}
             {appendIconComponent && (
               <button
                 type="button"
                 onClick={onAppendIconClick}
                 disabled={disabled}
                 aria-label={appendIconAriaLabel}
-                className="mr-2 text-gray-500 transition-colors disabled:opacity-60 cursor-pointer hover:text-textPrimary"
+                className="mr-2 text-gray-500 dark:text-gray-400 transition-colors disabled:opacity-60 cursor-pointer hover:text-textPrimary dark:hover:text-btn-primary"
               >
                 {appendIconComponent}
               </button>
@@ -166,29 +178,26 @@ const BaseTextInput = ({
           </div>
         )}
 
-        {!prependIcon &&
-          !appendIcon &&
-          !prependIconComponent &&
-          !appendIconComponent && (
-            <input
-              ref={ref}
-              type="text"
-              value={displayValue}
-              placeholder={placeholder}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              onKeyUp={handleKeyUp}
-              disabled={disabled}
-              maxLength={maxLength}
-              className={standaloneInputClass}
-              {...(props.field ? {} : { ...props })}
-            />
-          )}
+        {!useContainerLayout && (
+          <input
+            ref={ref}
+            type="text"
+            value={displayValue}
+            placeholder={placeholder}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            onKeyUp={handleKeyUp}
+            disabled={disabled}
+            maxLength={maxLength}
+            className={standaloneInputClass}
+            {...(props.field ? {} : { ...props })}
+          />
+        )}
       </div>
 
       {/* Character Count */}
       {showCharCount && maxLength && (
-        <div className="w-full flex justify-end text-xs text-gray-500">
+        <div className="w-full flex justify-end text-xs text-gray-500 dark:text-gray-400">
           {displayValue?.length || 0}/{maxLength}
         </div>
       )}
@@ -203,7 +212,7 @@ const BaseTextInput = ({
 
       {/* Warning Messages */}
       {warningMessages?.length > 0 && !hasError && (
-        <em className="text-yellow-600 text-sm flex items-start gap-1">
+        <em className="text-yellow-600 dark:text-yellow-400 text-sm flex items-start gap-1">
           <i className="pi pi-exclamation-circle mt-0.5" />
           <span>
             {warningMessages.map((message) => (
@@ -215,7 +224,9 @@ const BaseTextInput = ({
 
       {/* Helper Text / Hint */}
       {(helperText || hint) && !hideDetails && (
-        <small className="text-gray-500 text-xs">{helperText || hint}</small>
+        <small className="text-gray-500 dark:text-gray-400 text-xs">
+          {helperText || hint}
+        </small>
       )}
     </div>
   );

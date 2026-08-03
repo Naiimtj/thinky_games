@@ -1,0 +1,44 @@
+name: Feature request
+description: Propose a new feature or improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: What user/developer pain are we solving?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the preferred approach.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other options and why they are less suitable.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - frontend
+        - backend
+        - dictionary-service
+        - docker/infra
+        - docs/devex
+    validations:
+      required: true
+  - type: checkboxes
+    id: impact
+    attributes:
+      label: Impact
+      options:
+        - label: Requires database migration
+        - label: Requires API contract change
+        - label: Requires translation updates (es/en/de)
+        - label: Requires deployment/runbook updates

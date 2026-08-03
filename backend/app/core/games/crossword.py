@@ -6,10 +6,10 @@ import unicodedata
 from datetime import date, timedelta
 
 from app.config.env import get_settings
-from app.core.dictionary_client import crossword_candidates, fetch_clue
+from app.core.dictionary_client import crossword_candidates
 from app.core.games.base import GeneratedPuzzle, Payload
 from app.core.games.daily import utc_today
-from app.core.games.localized_words import common_words
+from app.core.games.localized_words import common_words, normalize_locale
 from app.core.games.prng import mulberry32, shuffle_in_place
 
 DEMO_SEED = 1
@@ -18,13 +18,14 @@ FALLBACK_GRID_SIZE = 7
 WORD_COUNT = 5
 MIN_WORD_LENGTH = 5
 MAX_WORD_LENGTH = 8
-MAX_RAE_CANDIDATES = 40
+MAX_CANDIDATES = 40
 RECENT_WINDOW_DAYS = 90
 
 # Each puzzle shares a compact, fully connected crossword layout. Answers are
 # part of the payload because the existing client session detects a completed
 # board locally before it can submit the solution to the server for validation.
-CROSSWORD_PUZZLES: list[list[dict[str, object]]] = [
+FALLBACK_CROSSWORD_PUZZLES_BY_LANG: dict[str, list[list[dict[str, object]]]] = {
+    "es": [
     [
         {"answer": "CAMA", "clue": "Mueble para dormir", "row": 1, "col": 1, "direction": "down"},
         {"answer": "CASA", "clue": "Lugar donde vives", "row": 1, "col": 3, "direction": "down"},
@@ -46,7 +47,57 @@ CROSSWORD_PUZZLES: list[list[dict[str, object]]] = [
         {"answer": "CAMA", "clue": "Mueble para dormir", "row": 2, "col": 4, "direction": "down"},
         {"answer": "ROSA", "clue": "Flor con espinas", "row": 3, "col": 1, "direction": "across"},
     ],
-]
+    ],
+    "en": [
+        [
+            {"answer": "LAMP", "clue": "Object that gives light", "row": 1, "col": 1, "direction": "down"},
+            {"answer": "SEAL", "clue": "Marine animal or official stamp", "row": 1, "col": 3, "direction": "down"},
+            {"answer": "PEAR", "clue": "Sweet fruit", "row": 2, "col": 2, "direction": "down"},
+            {"answer": "BLUE", "clue": "A primary color", "row": 2, "col": 4, "direction": "down"},
+            {"answer": "MEAL", "clue": "Food eaten at one time", "row": 3, "col": 1, "direction": "across"},
+        ],
+        [
+            {"answer": "HILL", "clue": "Raised area of land", "row": 3, "col": 1, "direction": "down"},
+            {"answer": "BOOK", "clue": "A written work", "row": 2, "col": 2, "direction": "down"},
+            {"answer": "ARMY", "clue": "Organized military force", "row": 1, "col": 3, "direction": "down"},
+            {"answer": "BEAR", "clue": "Large mammal", "row": 2, "col": 4, "direction": "down"},
+            {"answer": "HOME", "clue": "Place where you live", "row": 3, "col": 1, "direction": "across"},
+        ],
+        [
+            {"answer": "RAIN", "clue": "Water falling from clouds", "row": 3, "col": 1, "direction": "down"},
+            {"answer": "BOOK", "clue": "A written work", "row": 2, "col": 2, "direction": "down"},
+            {"answer": "LEAF", "clue": "Green part of a plant", "row": 1, "col": 3, "direction": "down"},
+            {"answer": "EDGE", "clue": "Outer border", "row": 2, "col": 4, "direction": "down"},
+            {"answer": "ROAD", "clue": "Route for vehicles", "row": 3, "col": 1, "direction": "across"},
+        ],
+    ],
+    "de": [
+        [
+            {"answer": "ARME", "clue": "Gliedmaßen am Oberkörper", "row": 1, "col": 1, "direction": "down"},
+            {"answer": "IDEE", "clue": "Gedanke oder Einfall", "row": 1, "col": 3, "direction": "down"},
+            {"answer": "BERG", "clue": "Hohe Erhebung", "row": 2, "col": 2, "direction": "down"},
+            {"answer": "ERDE", "clue": "Unser Planet", "row": 2, "col": 4, "direction": "down"},
+            {"answer": "MEER", "clue": "Große Salzwasserfläche", "row": 3, "col": 1, "direction": "across"},
+        ],
+        [
+            {"answer": "HEMD", "clue": "Kleidungsstück am Oberkörper", "row": 3, "col": 1, "direction": "down"},
+            {"answer": "KALT", "clue": "Nicht warm", "row": 2, "col": 2, "direction": "down"},
+            {"answer": "NEUN", "clue": "Zahl nach acht", "row": 1, "col": 3, "direction": "down"},
+            {"answer": "ASTE", "clue": "Mehrzahl von Ast", "row": 2, "col": 4, "direction": "down"},
+            {"answer": "HAUS", "clue": "Gebäude zum Wohnen", "row": 3, "col": 1, "direction": "across"},
+        ],
+        [
+            {"answer": "REIF", "clue": "Frostiger Belag am Morgen", "row": 3, "col": 1, "direction": "down"},
+            {"answer": "MOND", "clue": "Natürlicher Satellit der Erde", "row": 2, "col": 2, "direction": "down"},
+            {"answer": "FAST", "clue": "Beinahe", "row": 1, "col": 3, "direction": "down"},
+            {"answer": "BERG", "clue": "Hohe Erhebung", "row": 2, "col": 4, "direction": "down"},
+            {"answer": "ROSE", "clue": "Blume mit Dornen", "row": 3, "col": 1, "direction": "across"},
+        ],
+    ],
+}
+
+# Backwards compatibility for existing tests/helpers that inspect the constant.
+CROSSWORD_PUZZLES = FALLBACK_CROSSWORD_PUZZLES_BY_LANG["es"]
 
 
 def _entry_cells(entry: dict[str, object]) -> list[tuple[int, int]]:
@@ -245,8 +296,7 @@ def _generate_from_dict(
     candidates: list[dict[str, str]] = []
     seen = set(excluded)
 
-    settings = get_settings()
-    if settings.dictionary_service_url:
+    if get_settings().dictionary_service_url:
         pool = crossword_candidates(lang, MIN_WORD_LENGTH, MAX_WORD_LENGTH)
         pool = [entry for entry in pool if entry["answer"] not in seen]
     else:
@@ -258,12 +308,9 @@ def _generate_from_dict(
         ]
     shuffle_in_place(pool, mulberry32(seed))
 
-    api_key = settings.rae_key
-    for entry in pool[:MAX_RAE_CANDIDATES]:
+    for entry in pool[:MAX_CANDIDATES]:
         answer = _normalise_answer(entry["answer"])
         clue = entry["clue"]
-        if lang == "es" and api_key:
-            clue = fetch_clue(entry["answer"].lower(), api_key) or clue
         if not clue:
             continue
         seen.add(answer)
@@ -286,7 +333,9 @@ def _generate_puzzle(
         entries = _generate_from_dict(seed, lang, set())
     if entries is not None:
         return {"size": GRID_SIZE, "entries": entries}
-    fallback_entries = _number_entries(CROSSWORD_PUZZLES[seed % len(CROSSWORD_PUZZLES)])
+    locale = normalize_locale(lang)
+    fallback_pool = FALLBACK_CROSSWORD_PUZZLES_BY_LANG[locale]
+    fallback_entries = _number_entries(fallback_pool[seed % len(fallback_pool)])
     return {"size": FALLBACK_GRID_SIZE, "entries": fallback_entries}
 
 

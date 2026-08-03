@@ -24,7 +24,7 @@ class _WordBase:
     display_word = Column(String(50), nullable=False)
     normalized_word = Column(String(50), nullable=False, index=True)
     definition = Column(Text, nullable=False)
-    clue = Column(String(255), nullable=False)
+    clue = Column(Text, nullable=False)
     category = Column(String(30), nullable=False, index=True)
     difficulty = Column(String(10), nullable=False, index=True)
     length = Column(Integer, nullable=False, index=True)

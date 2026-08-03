@@ -13,7 +13,7 @@ from app.config.env import get_settings
 from app.core.crud.puzzles import top_up_buffer
 from app.core.database.database import SessionLocal
 from app.core.database.seed import run_seed
-from app.routers import auth, backup, dictionary, games, health, scores
+from app.routers import auth, backup, dictionary, games, health, scores, users
 
 settings = get_settings()
 BACKEND_ROOT = Path(__file__).resolve().parent.parent
@@ -74,6 +74,7 @@ app.add_middleware(
 
 app.include_router(health.router)
 app.include_router(auth.router)
+app.include_router(users.router)
 app.include_router(scores.router)
 app.include_router(games.router)
 app.include_router(dictionary.router)

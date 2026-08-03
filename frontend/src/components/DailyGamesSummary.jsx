@@ -184,7 +184,7 @@ const DailyGamesSummary = () => {
       )}
 
       {!isLoading && !error && (
-        <ul className="flex flex-col">
+        <ul className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2">
           {rows.map((stat) => (
             <GameSummaryRow
               key={stat.game_type}

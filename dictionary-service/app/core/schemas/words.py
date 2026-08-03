@@ -38,7 +38,7 @@ class WordBase(BaseModel):
     display_word: str = Field(..., min_length=3, max_length=50)
     normalized_word: str = Field(..., min_length=3, max_length=50)
     definition: str = Field(..., min_length=10, max_length=500)
-    clue: str = Field(..., min_length=3, max_length=255)
+    clue: str = Field(..., min_length=3, max_length=500)
     category: str
     difficulty: str
     length: int = Field(..., ge=3, le=12)
@@ -92,7 +92,7 @@ class WordUpdate(BaseModel):
     display_word: str | None = Field(default=None, min_length=3, max_length=50)
     normalized_word: str | None = Field(default=None, min_length=3, max_length=50)
     definition: str | None = Field(default=None, min_length=10, max_length=500)
-    clue: str | None = Field(default=None, min_length=3, max_length=255)
+    clue: str | None = Field(default=None, min_length=3, max_length=500)
     category: str | None = None
     difficulty: str | None = None
     length: int | None = Field(default=None, ge=3, le=12)

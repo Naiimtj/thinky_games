@@ -9,7 +9,8 @@ from datetime import datetime, timedelta
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import APIKeyHeader, OAuth2PasswordBearer
-from jose import JWTError, jwt
+import jwt
+from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
@@ -51,7 +52,7 @@ def decode_access_token(token: str) -> str | None:
             settings.jwt_secret_key,
             algorithms=[settings.jwt_algorithm],
         )
-    except JWTError:
+    except InvalidTokenError:
         return None
     return payload.get("sub")
 

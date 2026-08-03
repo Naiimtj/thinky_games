@@ -62,6 +62,8 @@ ENGLISH_COMMON_WORDS: list[WordEntry] = [
     WordEntry("BOOK", "Set of written pages"),
     WordEntry("SCHOOL", "Place where people are taught"),
     WordEntry("FOREST", "Area covered with trees"),
+    WordEntry("RAINBOW", "Arc of colors seen after rain"),
+    WordEntry("MOUNTAIN", "Very high natural elevation of land"),
     WordEntry("JUMP", "Push yourself off the ground"),
 ]
 

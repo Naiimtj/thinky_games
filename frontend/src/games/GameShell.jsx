@@ -18,17 +18,47 @@ const CONFETTI_COLORS = [
   '#f472b6',
 ];
 
+const CONFETTI_PIECES = 84;
+
+const confettiShapeClass = (index) => {
+  const shape = index % 6;
+  if (shape === 0) return 'confetti-piece--circle';
+  if (shape === 1) return 'confetti-piece--slim';
+  if (shape === 2) return 'confetti-piece--wide';
+  return 'confetti-piece--rect';
+};
+
+const buildConfettiStyle = (index) => {
+  const base = index + 1;
+  const left = (base * 37) % 100;
+  const sway = 18 + ((base * 29) % 36);
+  const spin = 620 + ((base * 53) % 820);
+  const depth = 220 + ((base * 17) % 300);
+  const duration = 2.8 + ((base * 11) % 23) / 10;
+  const delay = ((base * 7) % 16) * 0.07;
+  const size = 0.36 + ((base * 19) % 20) / 100;
+  const opacity = 0.8 + ((base * 13) % 20) / 100;
+
+  return {
+    left: `${left}%`,
+    backgroundColor: CONFETTI_COLORS[index % CONFETTI_COLORS.length],
+    '--confetti-sway': `${sway}px`,
+    '--confetti-spin': `${spin}deg`,
+    '--confetti-depth': `${depth}px`,
+    '--confetti-duration': `${duration}s`,
+    '--confetti-delay': `${delay}s`,
+    '--confetti-size': `${size}rem`,
+    '--confetti-opacity': opacity,
+  };
+};
+
 const Confetti = () => (
-  <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden">
-    {range(48).map((i) => (
+  <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden [perspective:700px]">
+    {range(CONFETTI_PIECES).map((i) => (
       <span
         key={i}
-        className="confetti-piece"
-        style={{
-          left: `${(i * 97) % 100}%`,
-          backgroundColor: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-          animationDelay: `${(i % 12) * 0.12}s`,
-        }}
+        className={`confetti-piece ${confettiShapeClass(i)}`}
+        style={buildConfettiStyle(i)}
       />
     ))}
   </div>
@@ -84,7 +114,7 @@ export const GameShell = ({
   const countdown = useDailyCountdown();
 
   return (
-    <section className="mx-auto w-full px-3 sm:max-w-md sm:px-0">
+    <section className="mx-auto w-full px-0 sm:max-w-md">
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-800 dark:text-slate-200">

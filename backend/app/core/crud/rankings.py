@@ -9,9 +9,11 @@ time, the higher the position.
 from datetime import datetime
 from enum import Enum
 
+from sqlalchemy import and_, exists, or_
+from sqlalchemy.orm import aliased
 from sqlalchemy.orm import Session
 
-from app.core.database.models import Score, User
+from app.core.database.models import FriendPreference, Score, User
 from app.core.schemas.score import GameTopEntries, RankingEntry, UserGameRank
 
 DEFAULT_RANKING_LIMIT = 50
@@ -28,13 +30,20 @@ class RankingPeriod(str, Enum):
 
 def get_rankings(
     db: Session,
+    viewer_id: int,
     period: RankingPeriod,
     game_type: str = "zip",
     limit: int = DEFAULT_RANKING_LIMIT,
 ) -> list[RankingEntry]:
     """Return the fastest times for a period as ranked leaderboard entries."""
     starts_at = _period_start(period)
-    rows = _query_fastest_times(db, game_type=game_type, starts_at=starts_at, limit=limit)
+    rows = _query_fastest_times(
+        db,
+        viewer_id=viewer_id,
+        game_type=game_type,
+        starts_at=starts_at,
+        limit=limit,
+    )
     return _to_ranking_entries(rows)
 
 
@@ -50,6 +59,7 @@ def _period_start(period: RankingPeriod) -> datetime | None:
 
 def _query_fastest_times(
     db: Session,
+    viewer_id: int,
     game_type: str,
     starts_at: datetime | None,
     limit: int,
@@ -58,7 +68,10 @@ def _query_fastest_times(
     query = (
         db.query(Score.completion_time, Score.created_at, User.username)
         .join(User, User.id == Score.user_id)
-        .filter(Score.game_type == game_type)
+        .filter(
+            Score.game_type == game_type,
+            _visibility_filter_for_viewer(viewer_id),
+        )
     )
     if starts_at is not None:
         query = query.filter(Score.created_at >= starts_at)
@@ -84,13 +97,14 @@ def _to_ranking_entries(rows) -> list[RankingEntry]:
 
 
 def get_daily_top_n(
-    db: Session, limit: int = DEFAULT_TOP_N
+    db: Session, viewer_id: int, limit: int = DEFAULT_TOP_N
 ) -> list[GameTopEntries]:
     """Top N entries of today's leaderboard for every game with scores today."""
     starts_at = _period_start(RankingPeriod.DAILY)
     game_types = (
         db.query(Score.game_type)
-        .filter(Score.created_at >= starts_at)
+        .join(User, User.id == Score.user_id)
+        .filter(Score.created_at >= starts_at, _visibility_filter_for_viewer(viewer_id))
         .distinct()
         .all()
     )
@@ -99,7 +113,11 @@ def get_daily_top_n(
             game_type=game_type,
             entries=_to_ranking_entries(
                 _query_fastest_times(
-                    db, game_type=game_type, starts_at=starts_at, limit=limit
+                    db,
+                    viewer_id=viewer_id,
+                    game_type=game_type,
+                    starts_at=starts_at,
+                    limit=limit,
                 )
             ),
         )
@@ -107,7 +125,7 @@ def get_daily_top_n(
     ]
 
 
-def get_user_ranks(db: Session, user_id: int) -> list[UserGameRank]:
+def get_user_ranks(db: Session, user_id: int, viewer_id: int) -> list[UserGameRank]:
     """The authenticated user's daily/monthly/global rank for every game they've played."""
     game_types = (
         db.query(Score.game_type)
@@ -119,13 +137,13 @@ def get_user_ranks(db: Session, user_id: int) -> list[UserGameRank]:
         UserGameRank(
             game_type=game_type,
             daily_rank=_rank_of_user_best(
-                db, user_id, game_type, RankingPeriod.DAILY
+                db, user_id, viewer_id, game_type, RankingPeriod.DAILY
             ),
             monthly_rank=_rank_of_user_best(
-                db, user_id, game_type, RankingPeriod.MONTHLY
+                db, user_id, viewer_id, game_type, RankingPeriod.MONTHLY
             ),
             global_rank=_rank_of_user_best(
-                db, user_id, game_type, RankingPeriod.GLOBAL
+                db, user_id, viewer_id, game_type, RankingPeriod.GLOBAL
             ),
         )
         for (game_type,) in game_types
@@ -133,7 +151,11 @@ def get_user_ranks(db: Session, user_id: int) -> list[UserGameRank]:
 
 
 def _rank_of_user_best(
-    db: Session, user_id: int, game_type: str, period: RankingPeriod
+    db: Session,
+    user_id: int,
+    viewer_id: int,
+    game_type: str,
+    period: RankingPeriod,
 ) -> int | None:
     """Position of the user's fastest time in a period's full leaderboard.
 
@@ -142,7 +164,11 @@ def _rank_of_user_best(
     fastest) row. ``None`` if the user has no scores in that window.
     """
     starts_at = _period_start(period)
-    query = db.query(Score.user_id).filter(Score.game_type == game_type)
+    query = (
+        db.query(Score.user_id)
+        .join(User, User.id == Score.user_id)
+        .filter(Score.game_type == game_type, _visibility_filter_for_viewer(viewer_id))
+    )
     if starts_at is not None:
         query = query.filter(Score.created_at >= starts_at)
 
@@ -154,3 +180,19 @@ def _rank_of_user_best(
         if row.user_id == user_id:
             return position
     return None
+
+
+def _visibility_filter_for_viewer(viewer_id: int):
+    """A score is visible when owner is public, is the viewer, or shared with viewer."""
+    friend_pref = aliased(FriendPreference)
+    return or_(
+        User.id == viewer_id,
+        User.share_results_globally.is_(True),
+        exists().where(
+            and_(
+                friend_pref.user_id == User.id,
+                friend_pref.friend_id == viewer_id,
+                friend_pref.share_times.is_(True),
+            )
+        ),
+    )

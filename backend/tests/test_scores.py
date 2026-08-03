@@ -87,6 +87,92 @@ def test_rankings_are_ordered_fastest_first(client, auth_headers):
     assert [entry["rank"] for entry in board] == [1, 2, 3]
 
 
+def test_rankings_hide_users_with_global_sharing_disabled(client, auth_headers):
+    owner = client.post(
+        "/auth/register",
+        json={
+            "username": "private_owner",
+            "email": "private_owner@example.com",
+            "password": "supersecret1",
+        },
+    ).json()
+    client.post(
+        "/auth/login",
+        data={"username": "private_owner", "password": "supersecret1"},
+    )
+    client.patch(
+        "/users/me/privacy",
+        json={"share_results_globally": False},
+    )
+    client.post(
+        "/scores",
+        json={"completion_time": 33, "game_type": "mock-a"},
+    )
+
+    viewer = client.post(
+        "/auth/register",
+        json={
+            "username": "viewer_user",
+            "email": "viewer_user@example.com",
+            "password": "supersecret1",
+        },
+    ).json()
+    client.post(
+        "/auth/login",
+        data={"username": viewer["username"], "password": "supersecret1"},
+    )
+
+    board = client.get("/rankings?period=global&game_type=mock-a").json()
+
+    assert board == []
+    assert owner["id"] != viewer["id"]
+
+
+def test_rankings_allow_private_user_when_shared_with_friend(client, auth_headers):
+    owner = client.post(
+        "/auth/register",
+        json={
+            "username": "owner_friend",
+            "email": "owner_friend@example.com",
+            "password": "supersecret1",
+        },
+    ).json()
+    viewer = client.post(
+        "/auth/register",
+        json={
+            "username": "viewer_friend",
+            "email": "viewer_friend@example.com",
+            "password": "supersecret1",
+        },
+    ).json()
+
+    client.post(
+        "/auth/login",
+        data={"username": owner["username"], "password": "supersecret1"},
+    )
+    client.patch(
+        "/users/me/privacy",
+        json={"share_results_globally": False},
+    )
+    client.post(
+        "/users/me/friends",
+        json={"friend_id": viewer["id"], "share_times": True},
+    )
+    client.post(
+        "/scores",
+        json={"completion_time": 31, "game_type": "mock-a"},
+    )
+
+    client.post(
+        "/auth/login",
+        data={"username": viewer["username"], "password": "supersecret1"},
+    )
+    board = client.get("/rankings?period=global&game_type=mock-a").json()
+
+    assert len(board) == 1
+    assert board[0]["username"] == owner["username"]
+
+
 def test_rankings_require_authentication(client):
     response = client.get("/rankings")
 

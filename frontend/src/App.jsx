@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import GamePage from './pages/GamePage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
+import ProfilePage from './pages/ProfilePage';
 import RankingsPage from './pages/RankingsPage';
 import RegisterPage from './pages/RegisterPage';
 
@@ -17,6 +18,7 @@ const App = () => (
       <Route path="register" element={<RegisterPage />} />
       <Route element={<ProtectedRoute />}>
         <Route path="rankings" element={<RankingsPage />} />
+        <Route path="profile" element={<ProfilePage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Route>
