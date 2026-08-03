@@ -90,7 +90,7 @@ const GameSummaryRow = ({ game, stat, onClick, t }) => {
   const isNewBest = stat.played_today && stat.today_time <= stat.best_time;
 
   return (
-    <li className="w-full border-b border-slate-100 last:border-0 dark:border-slate-700">
+    <li className="w-full border-b border-slate-100 md:border-r last:border-b-0 md:[&:nth-last-child(2)]:border-b-0 dark:border-slate-700">
       <button
         type="button"
         onClick={onClick}
@@ -184,7 +184,7 @@ const DailyGamesSummary = () => {
       )}
 
       {!isLoading && !error && (
-        <ul className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2">
+        <ul className="grid w-full grid-cols-1 sm:grid-cols-2">
           {rows.map((stat) => (
             <GameSummaryRow
               key={stat.game_type}

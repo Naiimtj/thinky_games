@@ -327,3 +327,41 @@ def test_backup_endpoints_reject_missing_or_wrong_admin_password(client, monkeyp
         headers={"X-Admin-Password": "wrong"},
     )
     assert wrong.status_code == 403
+
+
+def test_backup_create_returns_500_when_backup_service_fails(client, monkeypatch):
+    from app.routers import backup
+
+    admin_headers = _as_admin(monkeypatch)
+    monkeypatch.setattr(
+        backup,
+        "create_backup",
+        lambda: {
+            "status": "error",
+            "message": "Cannot create backup directory: [Errno 30] Read-only file system: '/app'",
+        },
+    )
+
+    response = client.post("/db/backup", headers=admin_headers)
+
+    assert response.status_code == 500
+    assert "Cannot create backup directory" in response.json()["detail"]
+
+
+def test_backup_restore_returns_400_when_backup_file_is_missing(client, monkeypatch):
+    from app.routers import backup
+
+    admin_headers = _as_admin(monkeypatch)
+    monkeypatch.setattr(
+        backup,
+        "restore_backup",
+        lambda _file: {"status": "error", "message": "Backup file not found"},
+    )
+
+    response = client.post(
+        "/db/backup/restore?file=manual/missing.sql.gz",
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Backup file not found"

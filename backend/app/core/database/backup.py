@@ -27,14 +27,18 @@ def _mysql_conn_args() -> list[str]:
         f"--user={settings.MYSQL_USER}",
         f"--password={settings.MYSQL_PASSWORD}",
         "--protocol=TCP",
-        "--skip-ssl",
     ]
 
 
 def create_backup() -> dict:
     """Run ``mysqldump`` and store a compressed ``.sql.gz`` file under ``manual/``."""
     manual_dir = BACKUP_DIR / "manual"
-    manual_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        manual_dir.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        logger.error("Backup failed while creating directory %s: %s", manual_dir, exc)
+        return {"status": "error", "message": f"Cannot create backup directory: {exc}"}
+
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     filename = f"thinky_games_{stamp}.sql.gz"
     filepath = manual_dir / filename
@@ -56,8 +60,12 @@ def create_backup() -> dict:
         logger.error("Backup failed: %s", message)
         return {"status": "error", "message": message}
 
-    with gzip.open(filepath, "wb") as fh:
-        fh.write(result.stdout)
+    try:
+        with gzip.open(filepath, "wb") as fh:
+            fh.write(result.stdout)
+    except OSError as exc:
+        logger.error("Backup failed while writing file %s: %s", filepath, exc)
+        return {"status": "error", "message": f"Cannot write backup file: {exc}"}
 
     return {"status": "ok", "message": f"Backup created: {filename}"}
 
