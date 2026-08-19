@@ -27,3 +27,7 @@ data
 de_words_15k.json
 en_words_15k.json
 es_words_15k.json
+
+.DS_Store
+Archive.zip
+.vscode
