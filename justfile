@@ -42,6 +42,10 @@ run-backend-network:
 run-frontend:
     cd frontend && npm run dev
 
+# Run the frontend network server.
+run-frontend-network:
+    cd frontend && npm run network
+
 # Build the production frontend bundle.
 build-frontend:
     cd frontend && npm run build
@@ -77,7 +81,7 @@ docker-down:
 # Fully wipe Thinky Games Docker resources (containers, images, volumes, network).
 # This only targets resources prefixed with "thinky-games".
 docker-clean-all:
-    docker-compose down -v --remove-orphans || true
+    docker compose down -v --remove-orphans || true
     docker ps -aq --filter "name=thinky-games" | xargs -r docker rm -f
     docker images --format "{{"{{"}}.Repository{{"}}"}}:{{"{{"}}.Tag{{"}}"}} {{"{{"}}.ID{{"}}"}}" | grep '^thinky-games' | awk '{print $2}' | xargs -r docker rmi -f
     docker volume ls --format "{{"{{"}}.Name{{"}}"}}" | grep '^thinky-games' | xargs -r docker volume rm -f
@@ -85,9 +89,9 @@ docker-clean-all:
 
 # Reinstall the full local stack from zero after a full cleanup.
 docker-reinstall-from-zero: docker-clean-all
-    docker-compose up -d --build db backend frontend backup dictionary-db
-    docker-compose run --rm dictionary-service uv run python scripts/seed_dictionary.py
-    docker-compose up -d dictionary-service
+    docker compose up -d --build db backend frontend backup dictionary-db
+    docker compose run --rm dictionary-service uv run python scripts/seed_dictionary.py
+    docker compose up -d dictionary-service
 
 # Follow container logs.
 docker-logs:
@@ -113,6 +117,10 @@ run-dictionary:
 migrate:
     cd backend && uv run alembic upgrade head
 
+# Apply Alembic migrations inside the backend container.
+migrate-docker:
+    docker compose exec -T backend uv run alembic upgrade head
+
 # Create a new Alembic revision (autogenerate from model changes).
 revision message:
     cd backend && uv run alembic revision --autogenerate -m "{{message}}"
@@ -137,6 +145,10 @@ prod-deploy-dictionary:
 # On the server this exposes DB ports on 127.0.0.1:3306 / 127.0.0.1:5433.
 prod-deploy:
     docker compose -f docker-compose.prod.yml up -d --build
+
+# Apply Alembic migrations inside the production backend container.
+prod-migrate:
+    docker compose -f docker-compose.prod.yml exec -T backend uv run alembic upgrade head
 
 # Local production deploy (same as prod-deploy).
 prod-deploy-local:
@@ -177,6 +189,10 @@ prod-regenerate-puzzles-local:
 # Wipe dictionary DB and regenerate all daily puzzles in production.
 prod-rebuild-content: prod-seed-dictionary prod-regenerate-all-puzzles
     @echo "Production content rebuild complete."
+
+# Full production bootstrap: rebuild containers, migrate DB and regenerate content.
+prod-bootstrap-all: prod-deploy prod-migrate prod-rebuild-content
+    @echo "Production bootstrap complete."
 
 # Wipe dictionary DB and regenerate all daily puzzles in a local deploy.
 prod-rebuild-content-local: prod-seed-dictionary-local prod-regenerate-all-puzzles-local

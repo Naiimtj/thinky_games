@@ -18,7 +18,16 @@ const CONFETTI_COLORS = [
   '#f472b6',
 ];
 
-const CONFETTI_PIECES = 84;
+const CONFETTI_PIECE_COUNT = 36;
+
+const CONFETTI_DIMENSIONS = [
+  [1.02, 1.02],
+  [0.52, 1.72],
+  [1.4, 0.76],
+  [1, 1.5],
+  [1, 1.5],
+  [1, 1.5],
+];
 
 const confettiShapeClass = (index) => {
   const shape = index % 6;
@@ -31,35 +40,43 @@ const confettiShapeClass = (index) => {
 const buildConfettiStyle = (index) => {
   const base = index + 1;
   const left = (base * 37) % 100;
-  const sway = 18 + ((base * 29) % 36);
-  const spin = 620 + ((base * 53) % 820);
-  const depth = 220 + ((base * 17) % 300);
-  const duration = 2.8 + ((base * 11) % 23) / 10;
-  const delay = ((base * 7) % 16) * 0.07;
-  const size = 0.36 + ((base * 19) % 20) / 100;
-  const opacity = 0.8 + ((base * 13) % 20) / 100;
+  const direction = base % 2 === 0 ? 1 : -1;
+  const drift = 18 + ((base * 29) % 34);
+  const spin = direction * (540 + ((base * 53) % 540));
+  const duration = 2.6 + ((base * 11) % 12) / 10;
+  const delay = ((base * 7) % 10) * 0.06;
+  const size = 0.36 + ((base * 19) % 18) / 100;
+  const opacity = 0.82 + ((base * 13) % 16) / 100;
+  const [widthScale, heightScale] =
+    CONFETTI_DIMENSIONS[index % CONFETTI_DIMENSIONS.length];
 
   return {
     left: `${left}%`,
+    width: `${(size * widthScale).toFixed(3)}rem`,
+    height: `${(size * heightScale).toFixed(3)}rem`,
     backgroundColor: CONFETTI_COLORS[index % CONFETTI_COLORS.length],
-    '--confetti-sway': `${sway}px`,
+    '--confetti-start-x': `${Math.round(drift * direction * -0.25)}px`,
+    '--confetti-end-x': `${drift * direction}px`,
     '--confetti-spin': `${spin}deg`,
-    '--confetti-depth': `${depth}px`,
     '--confetti-duration': `${duration}s`,
     '--confetti-delay': `${delay}s`,
-    '--confetti-size': `${size}rem`,
     '--confetti-opacity': opacity,
   };
 };
 
+const CONFETTI_PIECES = range(CONFETTI_PIECE_COUNT).map((index) => ({
+  className: confettiShapeClass(index),
+  id: index,
+  style: buildConfettiStyle(index),
+}));
+
 const Confetti = () => (
-  <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden [perspective:700px]">
-    {range(CONFETTI_PIECES).map((i) => (
-      <span
-        key={i}
-        className={`confetti-piece ${confettiShapeClass(i)}`}
-        style={buildConfettiStyle(i)}
-      />
+  <div
+    aria-hidden="true"
+    className="pointer-events-none fixed inset-0 z-50 overflow-hidden"
+  >
+    {CONFETTI_PIECES.map(({ className, id, style }) => (
+      <span key={id} className={`confetti-piece ${className}`} style={style} />
     ))}
   </div>
 );

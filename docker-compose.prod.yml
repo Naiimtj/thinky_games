@@ -1,15 +1,15 @@
 # =============================================================================
-# Thinky Games — despliegue en el servidor Debian compartido.
+# Thinky Games — stack de aplicacion (sin proxy propio)
 #
-# Este stack NO crea su propio proxy/TLS: se conecta a la red externa donde
+# Este compose es el archivo canonico para ThinkyGames en produccion.
+# NO crea su propio proxy/TLS: se conecta a la red externa donde
 # ya corre `nginx-proxy` + `acme-companion` (el mismo stack que usas para
 # Komga/NexReel). nginx-proxy detecta este contenedor por las variables
 # VIRTUAL_HOST/LETSENCRYPT_HOST y genera el certificado automáticamente.
 #
 # Requisitos previos en el servidor:
 #   1. El stack de nginx-proxy + acme-companion ya está levantado en el servidor.
-#   2. Averigua el nombre real de esa red externa:  docker network ls | grep web
-#      y ajusta `networks.web.name` más abajo si no es "naiteca_web".
+#   2. La red externa `server_proxy` ya existe.
 #   3. Un registro DNS (ej. A/CNAME en DuckDNS) apuntando al servidor para el
 #      dominio que pongas en VIRTUAL_HOST/LETSENCRYPT_HOST.
 #   4. Copia env.prod.example a .env y rellena los secretos.
@@ -17,6 +17,10 @@
 # Despliegue:
 #   cd ~/thinky-games
 #   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Nota importante sobre subidas:
+#   El límite `client_max_body_size` se configura en el stack del proxy
+#   compartido (archivos persistentes en `../nginx/conf.d` y `../nginx/vhost`).
 # =============================================================================
 
 services:
@@ -46,7 +50,7 @@ services:
     ports:
       - '127.0.0.1:3306:3306'
     networks:
-      - web
+      - thinky
 
   backend:
     build: ./backend
@@ -73,8 +77,22 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      dictionary-service:
+        condition: service_healthy
     networks:
-      - web
+      - thinky
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'python',
+          '-c',
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
 
   frontend:
     build:
@@ -84,14 +102,17 @@ services:
     container_name: thinky-frontend
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     environment:
       - VIRTUAL_HOST=${VIRTUAL_HOST:-thinkygames.duckdns.org}
       - LETSENCRYPT_HOST=${LETSENCRYPT_HOST:-thinkygames.duckdns.org}
       - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL:-tu-email@ejemplo.com}
       - VIRTUAL_PORT=80
+      - CLIENT_MAX_BODY_SIZE=8m
     networks:
-      - web
+      - thinky
+      - proxy
 
   backup:
     build: ./backup
@@ -110,7 +131,7 @@ services:
       db:
         condition: service_healthy
     networks:
-      - web
+      - thinky
 
   dictionary-db:
     image: postgres:16
@@ -137,7 +158,7 @@ services:
       timeout: 5s
       retries: 10
     networks:
-      - web
+      - thinky
 
   dictionary-service:
     build: ./dictionary-service
@@ -154,13 +175,26 @@ services:
       dictionary-db:
         condition: service_healthy
     networks:
-      - web
+      - thinky
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'python',
+          '-c',
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/health', timeout=2)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
 
 networks:
-  web:
+  thinky:
+    driver: bridge
+  proxy:
     external: true
-    # Ajusta este nombre al que devuelva `docker network ls | grep web` en el servidor.
-    name: naiteca_web
+    name: server_proxy
 
 volumes:
   thinky_mysql_data:
