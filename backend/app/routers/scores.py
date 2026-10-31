@@ -125,7 +125,7 @@ def read_my_scores(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> list[MyScoreEntry]:
-    """The authenticated user's own scores for a game, fastest first."""
+    """The authenticated user's latest 10 scores for a game, newest first."""
     return score_crud.get_user_scores(
         db, user_id=current_user.id, game_type=game_type
     )

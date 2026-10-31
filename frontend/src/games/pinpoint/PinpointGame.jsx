@@ -60,6 +60,7 @@ const PinpointBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
 
   return (
     <GameShell
+      gameId="pinpoint"
       title={meta?.name ?? t('games.pinpoint.name')}
       tagline={t('pinpointGame.tagline')}
       mode={mode}

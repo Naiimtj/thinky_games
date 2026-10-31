@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 
 import { PLAYABLE_GAMES } from '../games/registry';
 import { useDailyGamesStore } from '../store/useDailyGamesStore';
-import { formatTime } from '../utils/formatTime';
+import { formatGameTime } from '../utils/formatTime';
 import BaseModal from './base/BaseModal';
 import Leaderboard from './Leaderboard';
 
@@ -52,7 +52,7 @@ const RankBadge = ({ label, rank }) => (
   </span>
 );
 
-const DailyTopMini = ({ entries }) => {
+const DailyTopMini = ({ entries, gameType, t }) => {
   const entriesByRank = new Map(
     (entries ?? []).map((entry) => [entry.rank, entry]),
   );
@@ -65,23 +65,28 @@ const DailyTopMini = ({ entries }) => {
       },
   );
   return (
-    <ol className="flex flex-col items-start gap-1 text-xs">
-      {slots.map((entry) => (
-        <li key={entry.rank} className="flex items-center gap-1">
-          <span className={`font-mono font-bold ${colorForRank(entry.rank)}`}>
-            {entry.rank}
-          </span>
-          <span className="max-w-[6rem] truncate text-slate-500 dark:text-slate-400">
-            {entry.username ?? '-'}
-          </span>
-          <span className="font-mono text-slate-600 dark:text-slate-300">
-            {entry.completion_time !== null
-              ? formatTime(entry.completion_time)
-              : '-'}
-          </span>
-        </li>
-      ))}
-    </ol>
+    <div className="flex flex-col gap-1">
+      <span className="text-xs font-bold text-slate-400 dark:text-slate-500">
+        {t('dailySummary.topToday')}
+      </span>
+      <ol className="flex flex-col items-start gap-1 text-xs">
+        {slots.map((entry) => (
+          <li key={entry.rank} className="flex items-center gap-1">
+            <span className={`font-mono font-bold ${colorForRank(entry.rank)}`}>
+              {entry.rank}
+            </span>
+            <span className="max-w-[6rem] truncate text-slate-500 dark:text-slate-400">
+              {entry.username ?? '-'}
+            </span>
+            <span className="font-mono text-slate-600 dark:text-slate-300">
+              {entry.completion_time !== null
+                ? formatGameTime(gameType, entry.completion_time)
+                : '-'}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 };
 
@@ -116,25 +121,35 @@ const GameSummaryRow = ({ game, stat, onClick, t }) => {
                   : 'text-slate-800 dark:text-slate-100'
               }`}
             >
-              {stat.played_today ? formatTime(stat.today_time) : '-'}
+              {stat.played_today
+                ? formatGameTime(stat.game_type, stat.today_time)
+                : '-'}
             </span>
             <div className="flex flex-row items-start justify-between gap-4 w-full">
               <div className="flex flex-col gap-1">
                 <span className="text-slate-400 dark:text-slate-500 font-bold">
                   {t('dailySummary.best')}:{' '}
                   <span className="font-normal">
-                    {hasHistory ? formatTime(stat.best_time) : '-'}
+                    {hasHistory
+                      ? formatGameTime(stat.game_type, stat.best_time)
+                      : '-'}
                   </span>
                 </span>
                 <span className="text-slate-400 dark:text-slate-500 font-bold">
                   {t('dailySummary.worst')}:{' '}
                   <span className="font-normal">
-                    {hasHistory ? formatTime(stat.worst_time) : '-'}
+                    {hasHistory
+                      ? formatGameTime(stat.game_type, stat.worst_time)
+                      : '-'}
                   </span>
                 </span>
               </div>
 
-              <DailyTopMini entries={stat.top_entries} />
+              <DailyTopMini
+                entries={stat.top_entries}
+                gameType={stat.game_type}
+                t={t}
+              />
             </div>
           </div>
         </div>

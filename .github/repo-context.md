@@ -12,7 +12,8 @@ Purpose: quick orientation so future work starts with the right folders, service
 
 ## Current schema baseline (important)
 
-- Alembic head is a single consolidated migration: `005_user_privacy`.
+- Alembic head is `006_pinpoint_ms`, on top of the consolidated baseline `005_user_privacy`.
+- Migration `006_pinpoint_ms` converts existing Pinpoint `scores.completion_time` from seconds to milliseconds (Pinpoint stores ms; all other games store seconds).
 - Migration `005_user_privacy` includes:
   - `users.share_results_globally`
   - `users.avatar_url`

@@ -13,7 +13,7 @@ Use these rules to avoid repeated exploration and reduce unnecessary token/tool 
 
 ## High-Value Facts (do not re-discover unless changed)
 
-- Alembic head is `005_user_privacy`.
+- Alembic head is `006_pinpoint_ms` (on top of the squashed baseline `005_user_privacy`).
 - Avatar upload uses Cloudinary in folder `thinkyGames`, URL stored in `users.avatar_url`.
 - Avatar max size is `5MB`.
 - Allowed avatar formats are PNG/JPG/WEBP.

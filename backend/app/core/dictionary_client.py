@@ -66,36 +66,6 @@ def common_words(lang: str = "es") -> list[WordEntry]:
     ]
 
 
-def crossword_candidates(
-    lang: str = "es",
-    min_length: int = 5,
-    max_length: int = 8,
-) -> list[dict[str, str]]:
-    """Return words suitable for crossword generation."""
-    if not _is_configured():
-        return []
-
-    try:
-        response = _request(
-            "GET",
-            f"/words/{lang}",
-            params={
-                "limit": 200,
-                "suitable_for_crossword": True,
-                "min_length": min_length,
-                "max_length": max_length,
-            },
-        )
-    except Exception:  # pragma: no cover - network fallback
-        return []
-
-    items = response.json().get("items", [])
-    return [
-        {"answer": item["normalized_word"].upper(), "clue": item["clue"]}
-        for item in items
-    ]
-
-
 def fetch_clue(word: str, lang: str = "es") -> str | None:
     """Return a curated clue for a specific normalized word."""
     if not _is_configured():

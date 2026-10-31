@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import BaseButton from '../components/base/BaseButton';
-import { formatTime } from '../utils/formatTime';
+import { formatGameTime } from '../utils/formatTime';
 import { range } from '../utils/range';
 import { GAME_STATE } from './useGameSession';
 import { useDailyCountdown } from './useDailyCountdown';
@@ -118,6 +118,7 @@ export const RulesSection = ({ children }) => {
 };
 
 export const GameShell = ({
+  gameId,
   title,
   tagline,
   mode,
@@ -151,7 +152,7 @@ export const GameShell = ({
             {t('gameShell.restart')}
           </BaseButton>
           <div className="font-mono text-2xl font-bold tabular-nums dark:text-slate-200 text-slate-800">
-            {formatTime(elapsed)}
+            {formatGameTime(gameId, elapsed)}
           </div>
           {mode === 'daily' && (
             <p className="text-xs text-slate-400 dark:text-slate-500">
@@ -173,7 +174,7 @@ export const GameShell = ({
       {state === GAME_STATE.WON && (
         <div className="mt-4 rounded-xl bg-emerald-50 p-3 text-center text-emerald-700">
           <p className="font-bold">
-            {t('gameShell.solvedIn', { time: formatTime(elapsed) })}
+            {t('gameShell.solvedIn', { time: formatGameTime(gameId, elapsed) })}
           </p>
           <p className="text-sm">
             {mode === 'daily'

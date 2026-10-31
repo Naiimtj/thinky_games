@@ -3,9 +3,12 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 MAX_COMPLETION_SECONDS = 86_400  # a puzzle time above 24h is rejected as invalid
+# These games store completion_time in milliseconds instead of seconds.
+MILLISECOND_GAME_TYPES = frozenset({"pinpoint"})
+MAX_COMPLETION_MILLISECONDS = MAX_COMPLETION_SECONDS * 1000
 
 
 class ScoreCreate(BaseModel):
@@ -13,8 +16,11 @@ class ScoreCreate(BaseModel):
 
     completion_time: int = Field(
         gt=0,
-        le=MAX_COMPLETION_SECONDS,
-        description="Seconds the player took to solve the puzzle.",
+        le=MAX_COMPLETION_MILLISECONDS,
+        description=(
+            "Time the player took to solve the puzzle: seconds, or milliseconds "
+            "for the games in MILLISECOND_GAME_TYPES."
+        ),
     )
     game_type: str = Field(default="zip", max_length=30)
     locale: str = Field(default="es", pattern="^(es|en|de)$")
@@ -22,6 +28,15 @@ class ScoreCreate(BaseModel):
         default=None,
         description="Submitted solution, validated server-side for backend games.",
     )
+
+    @model_validator(mode="after")
+    def _check_max_time_for_unit(self) -> "ScoreCreate":
+        if (
+            self.game_type not in MILLISECOND_GAME_TYPES
+            and self.completion_time > MAX_COMPLETION_SECONDS
+        ):
+            raise ValueError("completion_time exceeds 24 hours")
+        return self
 
 
 class ScorePublic(BaseModel):

@@ -62,7 +62,12 @@ async def lifespan(app: FastAPI):
     # --- Shutdown: nothing to clean up ---
 
 
-app = FastAPI(title="Thinky Games API", version="1.0.0", lifespan=lifespan)
+app = FastAPI(
+    title="Thinky Games API",
+    version="1.0.0",
+    lifespan=lifespan,
+    root_path="/api",
+)
 
 app.add_middleware(
     CORSMiddleware,

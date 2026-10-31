@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 from app.core.database.models import FriendPreference, Score, User
 from app.core.schemas.score import GameTopEntries, RankingEntry, UserGameRank
 
-DEFAULT_RANKING_LIMIT = 50
+DEFAULT_RANKING_LIMIT = 10
 DEFAULT_TOP_N = 3
 
 

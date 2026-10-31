@@ -18,7 +18,7 @@ from app.core.games.wiktionary import fetch_definition
 
 
 SUPPORTED_LOCALES = ("es", "en", "de")
-LOCALIZED_GAME_IDS = frozenset({"pinpoint", "crossword", "wend"})
+LOCALIZED_GAME_IDS = frozenset({"pinpoint", "wend"})
 
 
 @dataclass(frozen=True)

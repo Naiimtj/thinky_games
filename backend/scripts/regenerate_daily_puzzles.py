@@ -3,7 +3,7 @@
 
 Usage:
     uv run python scripts/regenerate_daily_puzzles.py
-    uv run python scripts/regenerate_daily_puzzles.py --games wend pinpoint crossword --days 14 --locales es en de
+    uv run python scripts/regenerate_daily_puzzles.py --games wend pinpoint --days 14 --locales es en de
 """
 
 from __future__ import annotations
@@ -39,8 +39,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--games",
         nargs="+",
-        default=["wend", "pinpoint", "crossword"],
-        help="Game IDs to regenerate (default: wend pinpoint crossword).",
+        default=["wend", "pinpoint"],
+        help="Game IDs to regenerate (default: wend pinpoint).",
     )
     parser.add_argument(
         "--locales",

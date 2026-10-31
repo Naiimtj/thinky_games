@@ -96,7 +96,7 @@ class Score(Base):
         index=True,
     )
     game_type = Column(String(30), default="zip", nullable=False, index=True)
-    completion_time = Column(Integer, nullable=False, index=True)  # seconds
+    completion_time = Column(Integer, nullable=False, index=True)  # seconds (ms for pinpoint)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
 
     user = relationship("User", back_populates="scores")

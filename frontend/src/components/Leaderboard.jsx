@@ -1,6 +1,6 @@
 /**
- * Leaderboard with Daily / Monthly / Global tabs, plus a second table with
- * only the authenticated user's own results for the same game.
+ * Leaderboard with Daily / Monthly / Global tabs (top 10 each), plus a second
+ * table with the authenticated user's latest 10 results for the same game.
  *
  * Times are shown fastest first. The backend already orders ascending, and we
  * sort again defensively so the UI guarantees "lowest time wins".
@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { fetchMyScores, fetchRankings } from '../api/scoreApi';
-import { formatTime } from '../utils/formatTime';
+import { formatGameTime } from '../utils/formatTime';
 import BaseSegmentedControl from './base/BaseSegmentedControl';
 
 const rankingTabs = (t) => [
@@ -37,7 +37,7 @@ const colorForRank = (rank) => {
   return 'text-slate-400 dark:text-slate-500';
 };
 
-const RankingRow = ({ entry }) => (
+const RankingRow = ({ entry, gameType }) => (
   <li className="flex items-center justify-between border-b border-slate-100 py-1 last:border-0 dark:border-slate-700">
     <span className="flex items-center gap-3">
       <span className={`w-6 text-right font-mono ${colorForRank(entry.rank)}`}>
@@ -48,23 +48,20 @@ const RankingRow = ({ entry }) => (
       </span>
     </span>
     <span className="font-mono font-semibold tabular-nums text-slate-800 dark:text-slate-100">
-      {formatTime(entry.completion_time)}
+      {formatGameTime(gameType, entry.completion_time)}
     </span>
   </li>
 );
 
-const MyScoreRow = ({ entry, locale }) => (
+const MyScoreRow = ({ entry, locale, gameType }) => (
   <li className="flex items-center justify-between border-b border-slate-100 py-1 last:border-0 dark:border-slate-700">
     <span className="flex items-center gap-3">
-      <span className={`w-6 text-right font-mono ${colorForRank(entry.rank)}`}>
-        {entry.rank}
-      </span>
       <span className="text-slate-500 dark:text-slate-400">
         {formatDate(entry.created_at, locale)}
       </span>
     </span>
     <span className="font-mono font-semibold tabular-nums text-slate-800 dark:text-slate-100">
-      {formatTime(entry.completion_time)}
+      {formatGameTime(gameType, entry.completion_time)}
     </span>
   </li>
 );
@@ -164,6 +161,7 @@ const Leaderboard = ({ gameType = 'zip' }) => {
               <RankingRow
                 key={`${entry.rank}-${entry.username}`}
                 entry={entry}
+                gameType={gameType}
               />
             ))}
           </ol>
@@ -199,6 +197,7 @@ const Leaderboard = ({ gameType = 'zip' }) => {
               <MyScoreRow
                 key={`${entry.rank}-${entry.created_at}`}
                 entry={entry}
+                gameType={gameType}
                 locale={i18n.resolvedLanguage ?? 'es'}
               />
             ))}

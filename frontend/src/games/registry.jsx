@@ -1,10 +1,10 @@
-import CrosswordGame from './crossword/CrosswordGame';
 import PatchesGame from './patches/PatchesGame';
 import PinpointGame from './pinpoint/PinpointGame';
 import QueensGame from './queens/QueensGame';
 import SudokuGame from './sudoku/SudokuGame';
 import TangoGame from './tango/TangoGame';
 import WendGame from './wend/WendGame';
+import WendWords from './wend/WendWords';
 import ZipGame from './zip/ZipGame';
 
 /**
@@ -53,19 +53,12 @@ export const GAMES = [
     playable: true,
   },
   {
-    id: 'crossword',
-    name: 'Crucigrama',
-    tagline: 'Completa la rejilla',
-    icon: '/images/Crossword_icon.svg',
-    Component: CrosswordGame,
-    playable: true,
-  },
-  {
     id: 'wend',
     name: 'Wend',
     tagline: 'Ábrete paso entre palabras',
     icon: '/images/Wend_icon.svg',
     Component: WendGame,
+    LockedExtra: WendWords,
     playable: true,
   },
   {

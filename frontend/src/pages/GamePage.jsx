@@ -21,6 +21,7 @@ const CELEBRATION_MS = 5_000;
 const DailyLockedNotice = ({ game }) => {
   const { t } = useTranslation();
   const countdown = useDailyCountdown();
+  const LockedExtra = game.LockedExtra;
   return (
     <div className="mx-auto max-w-md">
       <div className="text-center">
@@ -38,7 +39,8 @@ const DailyLockedNotice = ({ game }) => {
           {t('gamePage.backToGames')}
         </Link>
       </div>
-      <div className="mt-6">
+      <div className="mt-6 flex flex-col gap-6">
+        {LockedExtra && <LockedExtra />}
         <Leaderboard gameType={game.id} />
       </div>
     </div>

@@ -8,6 +8,8 @@ from sqlalchemy.orm import Session
 from app.core.database.models import Score
 from app.core.schemas.score import GameStatEntry, MyScoreEntry, ScoreCreate
 
+MY_SCORES_LIMIT = 10
+
 
 def create_score(db: Session, user_id: int, payload: ScoreCreate) -> Score:
     """Persist a solved-puzzle time for the given user."""
@@ -62,14 +64,14 @@ def played_game_types_today(db: Session, user_id: int) -> list[str]:
 def get_user_scores(
     db: Session, user_id: int, game_type: str
 ) -> list[MyScoreEntry]:
-    """The user's own scores for a game, fastest first, each ranked within their own history."""
+    """The user's latest scores for a game (newest first), ranked within their full history."""
     rows = (
         db.query(Score.completion_time, Score.created_at)
         .filter(Score.user_id == user_id, Score.game_type == game_type)
         .order_by(Score.completion_time.asc(), Score.created_at.asc())
         .all()
     )
-    return [
+    ranked = [
         MyScoreEntry(
             rank=position,
             completion_time=row.completion_time,
@@ -77,6 +79,8 @@ def get_user_scores(
         )
         for position, row in enumerate(rows, start=1)
     ]
+    ranked.sort(key=lambda entry: entry.created_at, reverse=True)
+    return ranked[:MY_SCORES_LIMIT]
 
 
 def get_user_game_stats(db: Session, user_id: int) -> list[GameStatEntry]:

@@ -20,10 +20,6 @@
       "name": "Pinpoint",
       "tagline": "Guess the category"
     },
-    "crossword": {
-      "name": "Crossword",
-      "tagline": "Complete the grid"
-    },
     "wend": {
       "name": "Wend",
       "tagline": "Make your way through words"
@@ -198,26 +194,6 @@
       "hintReveals": "Use Hint to reveal one additional clue (+10 s)."
     }
   },
-  "crosswordGame": {
-    "tagline": "Complete the words that cross in the grid.",
-    "hint": "Select a clue or cell and type a letter.",
-    "sortSelectedFirst": "Show selected clue first",
-    "gridLabel": "Crossword grid",
-    "cellLabel": "Cell for clues {{numbers}}",
-    "hintButton": "Hint (+10 s)",
-    "clearWordButton": "Clear word {{number}}",
-    "clearWordButtonNone": "Clear selected word",
-    "directions": {
-      "across": "Across",
-      "down": "Down"
-    },
-    "rules": {
-      "select": "Choose an across or down clue to highlight it in the grid.",
-      "write": "Type one letter per cell; shared letters work for both words.",
-      "complete": "Complete every clue to solve the crossword.",
-      "hint": "Use Hint to reveal one letter (+10 s)."
-    }
-  },
   "wendGame": {
     "tagline": "Find 5 hidden words among the letters in a straight line.",
     "hint": "Drag in a straight line: horizontal, vertical, or diagonal (no zigzag).",
@@ -225,6 +201,7 @@
     "letterHint": "Letter hint (+10 s)",
     "definitionHint": "Definition hint (+5 s)",
     "wordLength": "{{count}} letters",
+    "wordsTitle": "Today's words",
     "rules": {
       "find": "There are 5 words hidden among filler letters: find them by dragging in a straight line (horizontal, vertical, or diagonal), without zigzagging.",
       "form": "Each path must form one of the words in the list.",
@@ -311,7 +288,7 @@
     "loading": "Loading…",
     "error": "The leaderboard could not be loaded.",
     "empty": "No times have been recorded yet.",
-    "personalTitle": "Your results",
+    "personalTitle": "Your last 10 results",
     "personalError": "Your results could not be loaded.",
     "personalEmpty": "You have not played this game yet."
   },
@@ -320,6 +297,7 @@
     "rank": "Rank",
     "best": "Your best",
     "worst": "Your worst",
+    "topToday": "Today's top",
     "loading": "Loading…",
     "error": "Your summary could not be loaded."
   },

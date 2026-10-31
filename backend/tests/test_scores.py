@@ -387,7 +387,7 @@ def test_my_scores_empty_before_playing(client, auth_headers):
     assert response.json() == []
 
 
-def test_my_scores_lists_own_scores_fastest_first(db_session, client, auth_headers):
+def test_my_scores_lists_own_scores_newest_first(db_session, client, auth_headers):
     client.post(
         "/scores",
         json={"completion_time": 42, "game_type": "mock-a"},
@@ -412,8 +412,59 @@ def test_my_scores_lists_own_scores_fastest_first(db_session, client, auth_heade
 
     assert response.status_code == 200
     body = response.json()
-    assert [entry["completion_time"] for entry in body] == [30, 42]
-    assert [entry["rank"] for entry in body] == [1, 2]
+    assert [entry["completion_time"] for entry in body] == [42, 30]
+    assert [entry["rank"] for entry in body] == [2, 1]
+
+
+def test_my_scores_returns_only_the_latest_ten(db_session, client, auth_headers):
+    user = db_session.query(User).filter(User.username == "player").one()
+    for days_ago in range(1, 13):
+        db_session.add(
+            Score(
+                user_id=user.id,
+                game_type="mock-a",
+                completion_time=100 + days_ago,
+                created_at=datetime.utcnow() - timedelta(days=days_ago),
+            )
+        )
+    db_session.commit()
+
+    body = client.get("/scores/me?game_type=mock-a", headers=auth_headers).json()
+
+    assert len(body) == 10
+    assert [entry["completion_time"] for entry in body] == list(range(101, 111))
+
+
+def test_rankings_return_at_most_ten_entries(db_session, client, auth_headers):
+    for index in range(12):
+        user = User(
+            username=f"u{index}", email=f"u{index}@example.com", password_hash="x"
+        )
+        db_session.add(user)
+        db_session.flush()
+        db_session.add(
+            Score(user_id=user.id, game_type="mock-a", completion_time=10 + index)
+        )
+    db_session.commit()
+
+    board = client.get(
+        "/rankings?period=global&game_type=mock-a", headers=auth_headers
+    ).json()
+
+    assert len(board) == 10
+
+
+def test_pinpoint_scores_allow_millisecond_times():
+    from pydantic import ValidationError
+
+    from app.core.schemas.score import ScoreCreate
+
+    assert ScoreCreate(game_type="pinpoint", completion_time=90_000).completion_time == 90_000
+    try:
+        ScoreCreate(game_type="zip", completion_time=90_000)
+    except ValidationError:
+        return
+    raise AssertionError("seconds-based games must keep the 24h cap")
 
 
 def test_my_scores_is_scoped_per_game_type(client, auth_headers):

@@ -44,7 +44,6 @@ src/
 │   ├── useDailyPuzzle.js             # Hook: fetches the backend-generated puzzle for a game/mode
 │   ├── useDailyCountdown.js          # Hook: countdown to next daily puzzle
 │   ├── useGameSession.js              # Hook: session timer + one-shot score submission
-│   ├── crossword/   {CrosswordGame.jsx, crosswordLogic.js}
 │   ├── patches/      {PatchesGame.jsx, patchesLogic.js}
 │   ├── pinpoint/     {PinpointGame.jsx}
 │   ├── queens/       {QueensGame.jsx, queensLogic.js}
@@ -114,12 +113,12 @@ All three read `VITE_API_BASE_URL` (fallback `http://localhost:8000`). There is 
 
 ## Logic Modules
 
-| File                              | Purpose                                                               |
-| --------------------------------- | --------------------------------------------------------------------- |
-| `src/logic/zipLogic.js`           | Pure Zip game logic (path validation, solving)                        |
-| `src/games/{game}/{game}Logic.js` | Per-game pure logic (crossword, patches, queens, sudoku, tango, wend) |
-| `src/utils/formatTime.js`         | Shared mm:ss formatter (Leaderboard, GameShell)                       |
-| `src/utils/range.js`              | Shared `[0..n-1]` helper (GameShell, PatchesGame)                     |
+| File                              | Purpose                                                    |
+| --------------------------------- | ---------------------------------------------------------- |
+| `src/logic/zipLogic.js`           | Pure Zip game logic (path validation, solving)             |
+| `src/games/{game}/{game}Logic.js` | Per-game pure logic (patches, queens, sudoku, tango, wend) |
+| `src/utils/formatTime.js`         | Shared mm:ss formatter (Leaderboard, GameShell)            |
+| `src/utils/range.js`              | Shared `[0..n-1]` helper (GameShell, PatchesGame)          |
 
 ## Puzzle Fetching (backend-generated)
 
@@ -135,16 +134,15 @@ All three read `VITE_API_BASE_URL` (fallback `http://localhost:8000`). There is 
 
 Registered in `src/games/registry.jsx` (`GAMES` array), rendered via `src/games/GameShell.jsx`. All games are currently `playable: true`:
 
-| Game        | Folder       | Playable | Notes                                                 |
-| ----------- | ------------ | :------: | ----------------------------------------------------- |
-| Zip         | `zip/`       |    ✅    | Has dedicated Zustand store + `src/logic/zipLogic.js` |
-| Queens      | `queens/`    |    ✅    |                                                       |
-| Tango       | `tango/`     |    ✅    |                                                       |
-| Mini Sudoku | `sudoku/`    |    ✅    |                                                       |
-| Pinpoint    | `pinpoint/`  |    ✅    | No `*Logic.js` file (data-only puzzles)               |
-| Crucigrama  | `crossword/` |    ✅    |                                                       |
-| Wend        | `wend/`      |    ✅    |                                                       |
-| Patches     | `patches/`   |    ✅    |                                                       |
+| Game        | Folder      | Playable | Notes                                                 |
+| ----------- | ----------- | :------: | ----------------------------------------------------- |
+| Zip         | `zip/`      |    ✅    | Has dedicated Zustand store + `src/logic/zipLogic.js` |
+| Queens      | `queens/`   |    ✅    |                                                       |
+| Tango       | `tango/`    |    ✅    |                                                       |
+| Mini Sudoku | `sudoku/`   |    ✅    |                                                       |
+| Pinpoint    | `pinpoint/` |    ✅    | No `*Logic.js` file (data-only puzzles)               |
+| Wend        | `wend/`     |    ✅    |                                                       |
+| Patches     | `patches/`  |    ✅    |                                                       |
 
 > Check `src/games/registry.jsx` for the current `playable` status of each game — it changes as games are finished.
 

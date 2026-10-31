@@ -7,7 +7,7 @@ to the backend so far.
 
 from __future__ import annotations
 
-from app.core.games import crossword, patches, pinpoint, queens, sudoku, tango, wend
+from app.core.games import patches, pinpoint, queens, sudoku, tango, wend
 from app.core.games import zip as zip_puzzle
 from app.core.games.base import GameSpec
 
@@ -66,18 +66,6 @@ GAMES: dict[str, GameSpec] = {
         generate=pinpoint.generate,
         validate=pinpoint.validate,
         solve=pinpoint.solve,
-    ),
-    "crossword": GameSpec(
-        id="crossword",
-        name="Crucigrama",
-        tagline="Completa la rejilla",
-        emoji="✏️",
-        playable=True,
-        demo_seed=crossword.DEMO_SEED,
-        generate=crossword.generate,
-        validate=crossword.validate,
-        solve=crossword.solve,
-        generate_daily=crossword.generate_for_date,
     ),
     "wend": GameSpec(
         id="wend",

@@ -20,13 +20,13 @@ BACKUP_DIR = Path(settings.backup_data_dir)
 
 
 def _mysql_conn_args() -> list[str]:
-    """Common mysql/mysqldump connection arguments."""
     return [
         f"--host={settings.MYSQL_HOST}",
         f"--port={settings.MYSQL_PORT}",
         f"--user={settings.MYSQL_USER}",
         f"--password={settings.MYSQL_PASSWORD}",
         "--protocol=TCP",
+        "--skip-ssl",
     ]
 
 

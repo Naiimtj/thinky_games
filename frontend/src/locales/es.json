@@ -20,10 +20,6 @@
       "name": "Pinpoint",
       "tagline": "Adivina la categoría"
     },
-    "crossword": {
-      "name": "Crucigrama",
-      "tagline": "Completa la rejilla"
-    },
     "wend": {
       "name": "Wend",
       "tagline": "Ábrete paso entre palabras"
@@ -198,26 +194,6 @@
       "hintReveals": "Usa Pista para revelar una pista adicional (+10 s)."
     }
   },
-  "crosswordGame": {
-    "tagline": "Completa las palabras que se cruzan en la rejilla.",
-    "hint": "Selecciona una pista o casilla y escribe una letra.",
-    "sortSelectedFirst": "Poner primero la pista seleccionada",
-    "gridLabel": "Rejilla del crucigrama",
-    "cellLabel": "Casilla de las pistas {{numbers}}",
-    "hintButton": "Pista (+10 s)",
-    "clearWordButton": "Borrar palabra {{number}}",
-    "clearWordButtonNone": "Borrar palabra seleccionada",
-    "directions": {
-      "across": "Horizontal",
-      "down": "Vertical"
-    },
-    "rules": {
-      "select": "Elige una pista horizontal o vertical para resaltarla en la rejilla.",
-      "write": "Escribe una letra por casilla; las letras compartidas sirven para ambas palabras.",
-      "complete": "Completa todas las pistas para resolver el crucigrama.",
-      "hint": "Usa Pista para revelar una letra (+10 s)."
-    }
-  },
   "wendGame": {
     "tagline": "Encuentra 5 palabras ocultas entre las letras, en línea recta.",
     "hint": "Arrastra en línea recta: horizontal, vertical o diagonal (sin zigzag).",
@@ -225,6 +201,7 @@
     "letterHint": "Pista letra (+10 s)",
     "definitionHint": "Pista definición (+5 s)",
     "wordLength": "{{count}} letras",
+    "wordsTitle": "Palabras de hoy",
     "rules": {
       "find": "Hay 5 palabras ocultas entre letras de relleno: encuéntralas arrastrando en línea recta (horizontal, vertical o diagonal), sin zigzag.",
       "form": "Cada trazo debe formar una de las palabras de la lista.",
@@ -311,7 +288,7 @@
     "loading": "Cargando…",
     "error": "No se pudo cargar la clasificación.",
     "empty": "Aún no hay tiempos registrados.",
-    "personalTitle": "Tus resultados",
+    "personalTitle": "Tus últimos 10 resultados",
     "personalError": "No se pudieron cargar tus resultados.",
     "personalEmpty": "Aún no has jugado este juego."
   },
@@ -320,6 +297,7 @@
     "rank": "Puesto",
     "best": "Tu mejor",
     "worst": "Tu peor",
+    "topToday": "Top de hoy",
     "loading": "Cargando…",
     "error": "No se pudo cargar tu resumen."
   },

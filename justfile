@@ -174,9 +174,9 @@ prod-seed-dictionary-local:
 prod-regenerate-all-puzzles:
     docker compose -f docker-compose.prod.yml exec -T backend uv run python scripts/regenerate_daily_puzzles.py --all-games --delete-existing --days 14
 
-# Regenerate daily puzzles for wend, pinpoint and crossword in production.
+# Regenerate daily puzzles for wend and pinpoint in production.
 prod-regenerate-puzzles:
-    docker compose -f docker-compose.prod.yml exec -T backend uv run python scripts/regenerate_daily_puzzles.py --games wend pinpoint crossword --delete-existing --days 14
+    docker compose -f docker-compose.prod.yml exec -T backend uv run python scripts/regenerate_daily_puzzles.py --games wend pinpoint --delete-existing --days 14
 
 # Same as prod-regenerate-all-puzzles but for a local deploy started with `prod-deploy-local`.
 prod-regenerate-all-puzzles-local:
@@ -184,7 +184,7 @@ prod-regenerate-all-puzzles-local:
 
 # Same as prod-regenerate-puzzles but for a local deploy started with `prod-deploy-local`.
 prod-regenerate-puzzles-local:
-    docker compose -f docker-compose.prod.yml exec -T backend uv run python scripts/regenerate_daily_puzzles.py --games wend pinpoint crossword --delete-existing --days 14
+    docker compose -f docker-compose.prod.yml exec -T backend uv run python scripts/regenerate_daily_puzzles.py --games wend pinpoint --delete-existing --days 14
 
 # Wipe dictionary DB and regenerate all daily puzzles in production.
 prod-rebuild-content: prod-seed-dictionary prod-regenerate-all-puzzles
@@ -217,9 +217,9 @@ import-dictionary-seeds:
 # Daily puzzle regeneration
 # ---------------------------------------------------------------------------
 
-# Regenerate daily puzzles for wend, pinpoint and crossword across es/en/de.
+# Regenerate daily puzzles for wend and pinpoint across es/en/de.
 regenerate-puzzles:
-    cd backend && uv run python scripts/regenerate_daily_puzzles.py --games wend pinpoint crossword --delete-existing --days 14
+    cd backend && uv run python scripts/regenerate_daily_puzzles.py --games wend pinpoint --delete-existing --days 14
 
 # Regenerate daily puzzles for all playable games across all locales.
 regenerate-all-puzzles:

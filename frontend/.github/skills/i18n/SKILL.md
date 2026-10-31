@@ -18,4 +18,4 @@ Spanish (`es`) is the source/fallback language.
 | Page-specific    | `{page}.{label}`         | `rankingsPage.title`             |
 | Feature-specific | `{feature}.{label}`      | `authForm.submit`                |
 | Shared labels    | `shared.{label}`         | `shared.loading`, `shared.error` |
-| Game metadata    | `games.{gameId}.{label}` | `games.crossword.name`           |
+| Game metadata    | `games.{gameId}.{label}` | `games.wend.name`                |

@@ -82,7 +82,7 @@ Open [localhost:8080](http://localhost:8080). Stop the stack with `docker compos
 - Daily puzzle sessions with a countdown to the next challenge.
 - Guest demo mode alongside authenticated daily play.
 - Puzzle completion times, persistent scores, and protected leaderboards.
-- Eight puzzle formats: Zip, Queens, Tango, Mini Sudoku, Pinpoint, Crossword, Wend, and Patches.
+- Seven puzzle formats: Zip, Queens, Tango, Mini Sudoku, Pinpoint, Wend, and Patches.
 - English, Spanish, and German interface translations.
 - Database migrations, automated puzzle generation, and backup support.
 - A container-ready development and deployment setup.
@@ -111,7 +111,7 @@ docker compose logs -f # Follow all container logs
 
 A standalone FastAPI service manages curated words for word games. It stores words in PostgreSQL with one table per language (`spanish_words`, `english_words`, `german_words`) and exposes CRUD and bulk-import endpoints.
 
-When `DICTIONARY_SERVICE_URL` is configured, the main backend reads word pools from this service for Crossword, Wend, and Pinpoint instead of using the local hardcoded lists.
+When `DICTIONARY_SERVICE_URL` is configured, the main backend reads word pools from this service for Wend and Pinpoint instead of using the local hardcoded lists.
 
 Seed data lives in `dictionary-service/scripts/data/` and can be imported with:
 

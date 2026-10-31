@@ -20,10 +20,6 @@
       "name": "Pinpoint",
       "tagline": "Errate die Kategorie"
     },
-    "crossword": {
-      "name": "Kreuzworträtsel",
-      "tagline": "Vervollständige das Gitter"
-    },
     "wend": {
       "name": "Wend",
       "tagline": "Bahne dir einen Weg durch Wörter"
@@ -198,26 +194,6 @@
       "hintReveals": "Nutze Hinweis, um einen weiteren Hinweis aufzudecken (+10 s)."
     }
   },
-  "crosswordGame": {
-    "tagline": "Vervollständige die Wörter, die sich im Gitter kreuzen.",
-    "hint": "Wähle einen Hinweis oder ein Feld und gib einen Buchstaben ein.",
-    "sortSelectedFirst": "Ausgewählten Hinweis zuerst anzeigen",
-    "gridLabel": "Kreuzworträtselgitter",
-    "cellLabel": "Feld für die Hinweise {{numbers}}",
-    "hintButton": "Hinweis (+10 s)",
-    "clearWordButton": "Wort {{number}} löschen",
-    "clearWordButtonNone": "Ausgewähltes Wort löschen",
-    "directions": {
-      "across": "Waagerecht",
-      "down": "Senkrecht"
-    },
-    "rules": {
-      "select": "Wähle einen waagerechten oder senkrechten Hinweis, um ihn im Gitter hervorzuheben.",
-      "write": "Gib einen Buchstaben pro Feld ein; gemeinsame Buchstaben gelten für beide Wörter.",
-      "complete": "Vervollständige alle Hinweise, um das Kreuzworträtsel zu lösen.",
-      "hint": "Nutze Hinweis, um einen Buchstaben aufzudecken (+10 s)."
-    }
-  },
   "wendGame": {
     "tagline": "Finde 5 versteckte Wörter zwischen den Buchstaben in einer geraden Linie.",
     "hint": "Ziehe eine gerade Linie: waagerecht, senkrecht oder diagonal (ohne Zickzack).",
@@ -225,6 +201,7 @@
     "letterHint": "Buchstabenhinweis (+10 s)",
     "definitionHint": "Definitionshinweis (+5 s)",
     "wordLength": "{{count}} Buchstaben",
+    "wordsTitle": "Wörter von heute",
     "rules": {
       "find": "Es gibt 5 Wörter zwischen Füllbuchstaben: Finde sie, indem du eine gerade Linie ziehst (waagerecht, senkrecht oder diagonal), ohne Zickzack.",
       "form": "Jeder Pfad muss eines der Wörter aus der Liste bilden.",
@@ -311,7 +288,7 @@
     "loading": "Laden…",
     "error": "Die Rangliste konnte nicht geladen werden.",
     "empty": "Es wurden noch keine Zeiten erfasst.",
-    "personalTitle": "Deine Ergebnisse",
+    "personalTitle": "Deine letzten 10 Ergebnisse",
     "personalError": "Deine Ergebnisse konnten nicht geladen werden.",
     "personalEmpty": "Du hast dieses Spiel noch nicht gespielt."
   },
@@ -320,6 +297,7 @@
     "rank": "Platz",
     "best": "Deine beste Zeit",
     "worst": "Deine schlechteste Zeit",
+    "topToday": "Top von heute",
     "loading": "Laden…",
     "error": "Deine Zusammenfassung konnte nicht geladen werden."
   },

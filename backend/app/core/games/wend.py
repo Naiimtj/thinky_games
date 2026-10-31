@@ -182,7 +182,7 @@ def _fill_grid(grid: list[list[str]], rng) -> None:
 
 def _lookup_definitions(words: list[str], lang: str = "es") -> dict[str, str]:
     """Return localized curated clues without network-dependent generation."""
-    curated = {entry.answer: entry.clue for entry in common_words(lang)}
+    curated = {_normalize_word(entry.answer): entry.clue for entry in common_words(lang)}
     return {word: curated[word] for word in words if word in curated}
 
 

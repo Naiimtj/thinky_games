@@ -19,6 +19,7 @@ import { useEffect, useRef, useState } from 'react';
 import { submitScore } from '../api/scoreApi';
 import { useAuthStore } from '../store/useAuthStore';
 import { useDailyGamesStore } from '../store/useDailyGamesStore';
+import { usesMilliseconds } from '../utils/formatTime';
 import {
   buildStorageKey,
   clearGameStorage,
@@ -28,6 +29,7 @@ import {
 
 export const GAME_STATE = { PLAYING: 'PLAYING', WON: 'WON' };
 const DAILY_CELEBRATION_MS = 5_000;
+const MS_TICK_INTERVAL = 50;
 
 export const useGameSession = ({
   gameId,
@@ -38,6 +40,7 @@ export const useGameSession = ({
   getSolution,
 }) => {
   const storageKey = buildStorageKey(gameId, mode, puzzleId, 'session');
+  const inMilliseconds = usesMilliseconds(gameId);
 
   const [elapsed, setElapsed] = useState(
     () => readStorage(storageKey)?.elapsed ?? 0,
@@ -63,12 +66,23 @@ export const useGameSession = ({
 
   useEffect(() => {
     if (state !== GAME_STATE.PLAYING) return undefined;
-    const intervalId = setInterval(
-      () => setElapsed((value) => value + 1),
-      1000,
-    );
+    if (!inMilliseconds) {
+      const intervalId = setInterval(
+        () => setElapsed((value) => value + 1),
+        1000,
+      );
+      return () => clearInterval(intervalId);
+    }
+    // Wall-clock deltas keep the count exact even when ticks are throttled.
+    let last = Date.now();
+    const intervalId = setInterval(() => {
+      const now = Date.now();
+      const delta = now - last;
+      last = now;
+      setElapsed((value) => value + delta);
+    }, MS_TICK_INTERVAL);
     return () => clearInterval(intervalId);
-  }, [state]);
+  }, [state, inMilliseconds]);
 
   useEffect(() => {
     if (state === GAME_STATE.PLAYING && isSolved) setState(GAME_STATE.WON);
@@ -130,7 +144,8 @@ export const useGameSession = ({
     setState(GAME_STATE.PLAYING);
   };
 
-  const addSeconds = (seconds) => setElapsed((value) => value + seconds);
+  const addSeconds = (seconds) =>
+    setElapsed((value) => value + (inMilliseconds ? seconds * 1000 : seconds));
 
   return { elapsed, state, reset, addSeconds };
 };

@@ -6,7 +6,7 @@ import pytest
 
 from app.core.crud import puzzles as puzzle_crud
 from app.core.database.models import DailyPuzzle
-from app.core.games import crossword, patches, pinpoint, queens, sudoku, tango, wend
+from app.core.games import patches, pinpoint, queens, sudoku, tango, wend
 from app.core.games import zip as zip_puzzle
 from app.core.games.daily import utc_today
 from app.core.games.localized_words import puzzle_locales
@@ -18,7 +18,6 @@ BACKEND_GAMES = [
     "tango",
     "sudoku",
     "pinpoint",
-    "crossword",
     "wend",
     "patches",
 ]
@@ -67,7 +66,7 @@ def test_demo_puzzle_is_stable(client, game_type):
     assert first["mode"] == "demo"
 
 
-@pytest.mark.parametrize("game_type", ["pinpoint", "crossword", "wend"])
+@pytest.mark.parametrize("game_type", ["pinpoint", "wend"])
 def test_word_game_demo_is_localized(client, game_type):
     spanish = client.get(f"/games/{game_type}/daily?mode=demo&lang=es")
     english = client.get(f"/games/{game_type}/daily?mode=demo&lang=en")
@@ -81,7 +80,7 @@ def test_word_game_demo_is_localized(client, game_type):
     assert english.json()["payload"] != german.json()["payload"]
 
 
-@pytest.mark.parametrize("game_type", ["pinpoint", "crossword", "wend"])
+@pytest.mark.parametrize("game_type", ["pinpoint", "wend"])
 def test_word_game_daily_puzzles_are_stored_per_locale(client, db_session, game_type):
     spanish = client.get(f"/games/{game_type}/daily?lang=es").json()
     english = client.get(f"/games/{game_type}/daily?lang=en").json()
@@ -266,53 +265,7 @@ def test_generated_patches_has_unique_tiling(seed):
     )
 
 
-def test_all_crossword_layouts_are_valid():
-    for puzzle in crossword.CROSSWORD_PUZZLES:
-        assert crossword._is_valid_layout(puzzle) is True
-
-
-def test_crossword_uses_curated_words_and_excludes_recent_answers(monkeypatch):
-    from types import SimpleNamespace
-
-    from app.core.games.localized_words import WordEntry
-
-    monkeypatch.setattr(
-        crossword,
-        "get_settings",
-        lambda: SimpleNamespace(
-            dictionary_service_url="",
-        ),
-    )
-    monkeypatch.setattr(
-        crossword,
-        "_recent_used_words",
-        lambda target_date, lang="es": {"USADO"},
-    )
-    monkeypatch.setattr(
-        crossword,
-        "common_words",
-        lambda lang="es": [
-            WordEntry("USADO", "descartado"),
-            WordEntry("CAMINO", "pista camino"),
-            WordEntry("MARINO", "pista marino"),
-            WordEntry("RATON", "pista raton"),
-            WordEntry("TORRE", "pista torre"),
-            WordEntry("RITMO", "pista ritmo"),
-        ],
-    )
-    monkeypatch.setattr(crossword, "shuffle_in_place", lambda words, rng: words)
-
-    payload = crossword.generate_for_date(2026200, "es", utc_today()).payload
-
-    assert payload["size"] == crossword.GRID_SIZE
-    assert len(payload["entries"]) == crossword.WORD_COUNT
-    assert "USADO" not in {entry["answer"] for entry in payload["entries"]}
-    assert all(entry["clue"].startswith("pista ") for entry in payload["entries"])
-    assert crossword._is_valid_layout(payload["entries"]) is True
-    assert crossword.validate(payload, crossword.solve(payload)) is True
-
-
-@pytest.mark.parametrize("game_type", ["pinpoint", "crossword", "wend", "patches"])
+@pytest.mark.parametrize("game_type", ["pinpoint", "wend", "patches"])
 def test_reference_solution_validates(game_type):
     spec = get_game(game_type)
     puzzle = spec.generate(spec.demo_seed)
@@ -396,7 +349,7 @@ def test_valid_solution_is_accepted(client, auth_headers, game_type):
     assert response.json()["game_type"] == game_type
 
 
-@pytest.mark.parametrize("game_type", ["pinpoint", "crossword", "wend"])
+@pytest.mark.parametrize("game_type", ["pinpoint", "wend"])
 def test_localized_word_game_solution_is_accepted(client, auth_headers, game_type):
     solution = _daily_solution(client, game_type, lang="en")
 
@@ -482,20 +435,6 @@ def test_invalid_pinpoint_solution_is_rejected(client, auth_headers):
             "completion_time": 42,
             "game_type": "pinpoint",
             "solution": "___no-such-category___",
-        },
-        headers=auth_headers,
-    )
-
-    assert response.status_code == 422
-
-
-def test_invalid_crossword_solution_is_rejected(client, auth_headers):
-    response = client.post(
-        "/scores",
-        json={
-            "completion_time": 42,
-            "game_type": "crossword",
-            "solution": {"1A": "AAAA"},
         },
         headers=auth_headers,
     )
