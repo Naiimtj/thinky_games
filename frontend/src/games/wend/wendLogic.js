@@ -18,32 +18,37 @@ export const DIRECTIONS = [
   [-1, -1],
 ];
 
-/** The unit step from `a` to `b`, or `null` if they aren't adjacent (incl. diagonally). */
-export const stepBetween = (a, b) => {
-  const dr = b.row - a.row;
-  const dc = b.col - a.col;
-  if (Math.abs(dr) > 1 || Math.abs(dc) > 1 || (dr === 0 && dc === 0))
-    return null;
-  return { dr, dc };
-};
+/** tan(22.5°): splits the drag angle into 8 equal 45° sectors, one per direction. */
+const SNAP_RATIO = Math.tan(Math.PI / 8);
+
+/** -1, 0 or 1: whether a drag moves along `axis`, given the `other` axis offset. */
+const axisStep = (axis, other) =>
+  Math.abs(axis) > SNAP_RATIO * Math.abs(other) ? Math.sign(axis) : 0;
 
 /**
- * Whether appending `cell` to `path` keeps it a straight line: the first step
- * may go in any of the 8 directions, but every step after that must repeat
- * the exact same direction — no bending, no snaking.
+ * Drag selection: the line from `start` towards the pointer offset (in cells),
+ * snapped to the nearest direction and cell, so finger wobble can't derail it.
  */
-export const continuesStraightLine = (path, cell) => {
-  if (path.length === 0) return true;
-  const last = path[path.length - 1];
-  const step = stepBetween(last, cell);
-  if (!step) return false;
-  if (path.length === 1) return true;
-  const anchor = stepBetween(path[path.length - 2], last);
-  return anchor !== null && anchor.dr === step.dr && anchor.dc === step.dc;
+export const snapLine = (grid, start, dRow, dCol) => {
+  const dr = axisStep(dRow, dCol);
+  const dc = axisStep(dCol, dRow);
+  const path = [start];
+  if (dr === 0 && dc === 0) return path;
+  const steps = Math.round((dRow * dr + dCol * dc) / (dr * dr + dc * dc));
+  for (let step = 1; step <= steps; step += 1) {
+    const row = start.row + dr * step;
+    const col = start.col + dc * step;
+    if (!grid[row]?.[col]) break;
+    path.push({ row, col });
+  }
+  return path;
 };
 
-export const pathIncludes = (path, cell) =>
-  path.some((step) => step.row === cell.row && step.col === cell.col);
+export const samePath = (a, b) =>
+  a.length === b.length &&
+  a.every(
+    (cell, index) => cell.row === b[index].row && cell.col === b[index].col,
+  );
 
 /** The straight-line path from `(row, col)` along `(dr, dc)` if it spells `word`, else `null`. */
 const matchLine = (grid, word, row, col, dr, dc) => {

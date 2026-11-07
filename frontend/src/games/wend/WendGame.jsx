@@ -9,17 +9,11 @@ import { useDailyPuzzle } from '../useDailyPuzzle';
 import { useGameSession } from '../useGameSession';
 import {
   cellKey,
-  continuesStraightLine,
   findWordPath,
-  pathIncludes,
+  samePath,
+  snapLine,
   wordFromPath,
 } from './wendLogic';
-
-const readCell = (element) => {
-  const target = element?.closest?.('[data-cell]');
-  if (!target) return null;
-  return { row: Number(target.dataset.row), col: Number(target.dataset.col) };
-};
 
 const cellTone = (isFound, isActive, isWrong, isHintFound, isHintActive) => {
   if (isWrong) return 'bg-red-300 text-red-900 animate-pulse';
@@ -43,6 +37,8 @@ const WendBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
   const [wrong, setWrong] = useState([]);
   const [hinting, setHinting] = useState(false);
   const drawing = useRef(false);
+  const dragOrigin = useRef(null);
+  const boardRef = useRef(null);
   const wrongTimer = useRef(null);
 
   useEffect(() => {
@@ -85,30 +81,18 @@ const WendBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
   // legitimately cross at a shared intersection cell, and locking that cell
   // out the moment one word is found would make the other unwinnable.
   const begin = (cell) => {
+    const { left, top, width } = boardRef.current.getBoundingClientRect();
+    const pitch = width / size;
+    dragOrigin.current = {
+      cell,
+      pitch,
+      x: left + (cell.col + 0.5) * pitch,
+      y: top + (cell.row + 0.5) * pitch,
+    };
     drawing.current = true;
     setHinting(false);
     setWrong([]);
     setPath([cell]);
-  };
-
-  const extend = (cell) => {
-    if (!drawing.current) return;
-    setPath((current) => {
-      if (current.length === 0) return current;
-      const last = current[current.length - 1];
-      if (last.row === cell.row && last.col === cell.col) return current;
-      const secondLast = current[current.length - 2];
-      if (
-        secondLast &&
-        secondLast.row === cell.row &&
-        secondLast.col === cell.col
-      ) {
-        return current.slice(0, -1);
-      }
-      if (pathIncludes(current, cell) || !continuesStraightLine(current, cell))
-        return current;
-      return [...current, cell];
-    });
   };
 
   const finish = () => {
@@ -131,10 +115,14 @@ const WendBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
 
   const handlePointerMove = (event) => {
     if (!drawing.current) return;
-    const cell = readCell(
-      document.elementFromPoint(event.clientX, event.clientY),
+    const { cell, pitch, x, y } = dragOrigin.current;
+    const next = snapLine(
+      grid,
+      cell,
+      (event.clientY - y) / pitch,
+      (event.clientX - x) / pitch,
     );
-    if (cell) extend(cell);
+    setPath((current) => (samePath(current, next) ? current : next));
   };
 
   const handleReset = () => {
@@ -234,6 +222,7 @@ const WendBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
         </div>
 
         <div
+          ref={boardRef}
           className="mx-auto grid touch-none select-none gap-0.5 rounded-md border border-slate-700 bg-slate-700"
           style={{
             gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))`,
@@ -255,9 +244,6 @@ const WendBoard = ({ puzzle, puzzleId, puzzleLocale, mode, meta }) => {
                 <button
                   key={key}
                   type="button"
-                  data-cell
-                  data-row={row}
-                  data-col={col}
                   onPointerDown={(event) => {
                     event.preventDefault();
                     begin({ row, col });
